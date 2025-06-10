@@ -1,0 +1,12 @@
+/* Ensure your build process uses Tailwind CSS (e.g., via PostCSS) */
+@import "tailwindcss";
+
+.home-footer {
+  color: #fff;
+  background-color: #1e3855;
+  height: auto;
+  line-height: 1.5;
+  display: flex;
+  justify-content: center;
+  padding: 40px 15px;
+}
