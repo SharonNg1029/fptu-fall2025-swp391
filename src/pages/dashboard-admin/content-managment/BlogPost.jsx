@@ -33,7 +33,9 @@ import {
   ReadOutlined,
   LikeOutlined,
   CommentOutlined,
+  ReloadOutlined,
 } from "@ant-design/icons"
+import api from "../../../configs/axios"
 
 const { Title, Text } = Typography
 const { TextArea } = Input
@@ -52,103 +54,25 @@ const BlogPosts = () => {
   const [dateRange, setDateRange] = useState(null)
   const [statusFilter, setStatusFilter] = useState("")
 
-  // Fetch blogs data
-  useEffect(() => {
-    setLoading(true)
-    // Simulate API call
-    setTimeout(() => {
-      const mockBlogs = [
-        {
-          id: 1,
-          title: "Understanding DNA Testing: A Comprehensive Guide",
-          content:
-            "DNA testing has revolutionized the way we understand genetics and heredity. This comprehensive guide explains the different types of DNA tests available, how they work, and what information they can provide. From paternity testing to ancestry analysis, learn everything you need to know about modern DNA testing procedures.",
-          excerpt: "DNA testing has revolutionized the way we understand genetics...",
-          author: "Dr. Sarah Johnson",
-          createdAt: "2023-06-01",
-          updatedAt: "2023-06-05",
-          status: "Published",
-          category: "Education",
-          tags: ["DNA", "Testing", "Science", "Genetics"],
-          featuredImage: "https://example.com/images/dna-testing.jpg",
-          views: 1245,
-          likes: 87,
-          comments: 23,
-        },
-        {
-          id: 2,
-          title: "Paternity Testing: What You Need to Know",
-          content:
-            "Paternity testing is one of the most common types of DNA tests. This article covers everything from how to prepare for a paternity test, what to expect during the process, and how to interpret the results. We also discuss the legal implications of paternity testing and when it might be necessary to pursue this option.",
-          excerpt: "Paternity testing is one of the most common types of DNA tests...",
-          author: "Dr. Michael Chen",
-          createdAt: "2023-06-02",
-          updatedAt: "2023-06-02",
-          status: "Published",
-          category: "Information",
-          tags: ["Paternity", "DNA Test", "Family"],
-          featuredImage: "https://example.com/images/paternity-test.jpg",
-          views: 980,
-          likes: 56,
-          comments: 14,
-        },
-        {
-          id: 3,
-          title: "The Science Behind Ancestry DNA Testing",
-          content:
-            "Ancestry DNA testing can reveal fascinating insights about your heritage and family history. This post explains the scientific principles behind ancestry testing, how genetic markers are used to determine ethnicity, and what limitations exist in current testing methods. Discover how these tests can connect you with relatives and help you build your family tree.",
-          excerpt: "Ancestry DNA testing can reveal fascinating insights about your heritage...",
-          author: "Dr. Emily Rodriguez",
-          createdAt: "2023-06-03",
-          updatedAt: "2023-06-04",
-          status: "Draft",
-          category: "Education",
-          tags: ["Ancestry", "Heritage", "Genealogy"],
-          featuredImage: "https://example.com/images/ancestry-dna.jpg",
-          views: 0,
-          likes: 0,
-          comments: 0,
-        },
-        {
-          id: 4,
-          title: "How to Collect DNA Samples at Home",
-          content:
-            "Collecting DNA samples at home is simple and straightforward with the right guidance. This step-by-step guide walks you through the process of using a home DNA collection kit, ensuring you get accurate results. Learn about common mistakes to avoid and best practices for sample collection.",
-          excerpt: "Collecting DNA samples at home is simple and straightforward...",
-          author: "James Wilson",
-          createdAt: "2023-06-04",
-          updatedAt: "2023-06-04",
-          status: "Published",
-          category: "How-to",
-          tags: ["Sample Collection", "Home Testing", "DIY"],
-          featuredImage: "https://example.com/images/dna-collection.jpg",
-          views: 756,
-          likes: 42,
-          comments: 8,
-        },
-        {
-          id: 5,
-          title: "DNA Testing Ethics and Privacy Concerns",
-          content:
-            "As DNA testing becomes more widespread, important ethical and privacy questions arise. This article examines the ethical implications of DNA testing, including privacy concerns, data security, and potential misuse of genetic information. We discuss current regulations and best practices for protecting your genetic data.",
-          excerpt: "As DNA testing becomes more widespread, important ethical and privacy questions arise...",
-          author: "Dr. Lisa Thompson",
-          createdAt: "2023-06-05",
-          updatedAt: "2023-06-06",
-          status: "Scheduled",
-          category: "Ethics",
-          tags: ["Privacy", "Ethics", "Data Security"],
-          featuredImage: "https://example.com/images/dna-privacy.jpg",
-          views: 0,
-          likes: 0,
-          comments: 0,
-          scheduledDate: "2023-06-10",
-        },
-      ]
+  // Fetch blogs data from API
+  const fetchBlogs = async () => {
+    try {
+      setLoading(true)
+      const response = await api.get("/admin/blogs")
+      console.log("Blogs response:", response)
 
-      setBlogs(mockBlogs)
+      const blogsData = response.data?.data || response.data || []
+      setBlogs(blogsData)
+    } catch (error) {
+      console.error("Error fetching blogs:", error)
+      message.error("Failed to fetch blogs: " + (error.response?.data?.message || error.message))
+    } finally {
       setLoading(false)
-    }, 1000)
+    }
+  }
+
+  useEffect(() => {
+    fetchBlogs()
   }, [])
 
   // Handle blog edit
@@ -173,37 +97,21 @@ const BlogPosts = () => {
   }
 
   // Handle blog delete
-  const handleDelete = (id) => {
-    setBlogs(blogs.filter((blog) => blog.id !== id))
-    message.success("Blog post deleted successfully")
+  const handleDelete = async (id) => {
+    try {
+      await api.delete(`/admin/blogs/${id}`)
+      message.success("Blog post deleted successfully")
+      fetchBlogs() // Refresh the list
+    } catch (error) {
+      console.error("Error deleting blog:", error)
+      message.error("Failed to delete blog: " + (error.response?.data?.message || error.message))
+    }
   }
 
   // Handle form submission
-  const handleFormSubmit = (values) => {
-    if (editingBlog) {
-      // Update existing blog
-      setBlogs(
-        blogs.map((blog) =>
-          blog.id === editingBlog.id
-            ? {
-                ...blog,
-                title: values.title,
-                content: values.content,
-                excerpt: values.excerpt,
-                author: values.author,
-                status: values.status,
-                category: values.category,
-                tags: values.tags,
-                updatedAt: new Date().toISOString().split("T")[0],
-              }
-            : blog,
-        ),
-      )
-      message.success("Blog post updated successfully")
-    } else {
-      // Create new blog
-      const newBlog = {
-        id: blogs.length + 1,
+  const handleFormSubmit = async (values) => {
+    try {
+      const blogData = {
         title: values.title,
         content: values.content,
         excerpt: values.excerpt,
@@ -211,29 +119,36 @@ const BlogPosts = () => {
         status: values.status,
         category: values.category,
         tags: values.tags,
-        createdAt: new Date().toISOString().split("T")[0],
-        updatedAt: new Date().toISOString().split("T")[0],
-        views: 0,
-        likes: 0,
-        comments: 0,
-        featuredImage: "https://example.com/images/default.jpg",
       }
-      setBlogs([...blogs, newBlog])
-      message.success("Blog post created successfully")
+
+      if (editingBlog) {
+        // Update existing blog
+        await api.put(`/admin/blogs/${editingBlog.id}`, blogData)
+        message.success("Blog post updated successfully")
+      } else {
+        // Create new blog
+        await api.post("/admin/blogs", blogData)
+        message.success("Blog post created successfully")
+      }
+
+      setIsModalVisible(false)
+      form.resetFields()
+      setEditingBlog(null)
+      fetchBlogs() // Refresh the list
+    } catch (error) {
+      console.error("Error saving blog:", error)
+      message.error("Failed to save blog: " + (error.response?.data?.message || error.message))
     }
-    setIsModalVisible(false)
-    form.resetFields()
-    setEditingBlog(null)
   }
 
   // Filter blogs based on search text, date range, and status
   const filteredBlogs = blogs.filter((blog) => {
     const matchesSearch =
-      blog.title.toLowerCase().includes(searchText.toLowerCase()) ||
-      blog.content.toLowerCase().includes(searchText.toLowerCase()) ||
-      blog.author.toLowerCase().includes(searchText.toLowerCase()) ||
-      blog.category.toLowerCase().includes(searchText.toLowerCase()) ||
-      blog.tags.some((tag) => tag.toLowerCase().includes(searchText.toLowerCase()))
+      blog.title?.toLowerCase().includes(searchText.toLowerCase()) ||
+      blog.content?.toLowerCase().includes(searchText.toLowerCase()) ||
+      blog.author?.toLowerCase().includes(searchText.toLowerCase()) ||
+      blog.category?.toLowerCase().includes(searchText.toLowerCase()) ||
+      (blog.tags && blog.tags.some((tag) => tag.toLowerCase().includes(searchText.toLowerCase())))
 
     const matchesStatus = statusFilter === "" || blog.status === statusFilter
 
@@ -253,9 +168,9 @@ const BlogPosts = () => {
     published: blogs.filter((blog) => blog.status === "Published").length,
     draft: blogs.filter((blog) => blog.status === "Draft").length,
     scheduled: blogs.filter((blog) => blog.status === "Scheduled").length,
-    totalViews: blogs.reduce((sum, blog) => sum + blog.views, 0),
-    totalLikes: blogs.reduce((sum, blog) => sum + blog.likes, 0),
-    totalComments: blogs.reduce((sum, blog) => sum + blog.comments, 0),
+    totalViews: blogs.reduce((sum, blog) => sum + (blog.views || 0), 0),
+    totalLikes: blogs.reduce((sum, blog) => sum + (blog.likes || 0), 0),
+    totalComments: blogs.reduce((sum, blog) => sum + (blog.comments || 0), 0),
   }
 
   // Blog table columns
@@ -276,7 +191,7 @@ const BlogPosts = () => {
           <Text strong>{text}</Text>
         </Space>
       ),
-      sorter: (a, b) => a.title.localeCompare(b.title),
+      sorter: (a, b) => (a.title || "").localeCompare(b.title || ""),
     },
     {
       title: "Author",
@@ -293,7 +208,7 @@ const BlogPosts = () => {
       title: "Category",
       dataIndex: "category",
       key: "category",
-      render: (category) => <Tag color="blue">{category}</Tag>,
+      render: (category) => <Tag color="blue">{category || "Uncategorized"}</Tag>,
     },
     {
       title: "Status",
@@ -314,10 +229,10 @@ const BlogPosts = () => {
       render: (date) => (
         <Space>
           <CalendarOutlined />
-          {date}
+          {date ? new Date(date).toLocaleDateString() : "N/A"}
         </Space>
       ),
-      sorter: (a, b) => new Date(a.createdAt) - new Date(b.createdAt),
+      sorter: (a, b) => new Date(a.createdAt || 0) - new Date(b.createdAt || 0),
     },
     {
       title: "Stats",
@@ -327,19 +242,19 @@ const BlogPosts = () => {
           <Tooltip title="Views">
             <Space>
               <ReadOutlined />
-              {record.views}
+              {record.views || 0}
             </Space>
           </Tooltip>
           <Tooltip title="Likes">
             <Space>
               <LikeOutlined />
-              {record.likes}
+              {record.likes || 0}
             </Space>
           </Tooltip>
           <Tooltip title="Comments">
             <Space>
               <CommentOutlined />
-              {record.comments}
+              {record.comments || 0}
             </Space>
           </Tooltip>
         </Space>
@@ -377,18 +292,23 @@ const BlogPosts = () => {
       {/* Header */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
         <Title level={2}>Blog Posts</Title>
-        <Button
-          type="primary"
-          icon={<PlusOutlined />}
-          size="large"
-          onClick={() => {
-            setEditingBlog(null)
-            form.resetFields()
-            setIsModalVisible(true)
-          }}
-        >
-          Create New Post
-        </Button>
+        <Space>
+          <Button icon={<ReloadOutlined />} onClick={fetchBlogs} loading={loading}>
+            Refresh
+          </Button>
+          <Button
+            type="primary"
+            icon={<PlusOutlined />}
+            size="large"
+            onClick={() => {
+              setEditingBlog(null)
+              form.resetFields()
+              setIsModalVisible(true)
+            }}
+          >
+            Create New Post
+          </Button>
+        </Space>
       </div>
 
       {/* Statistics Cards */}
@@ -482,15 +402,19 @@ const BlogPosts = () => {
             expandedRowRender: (record) => (
               <div>
                 <p style={{ margin: 0 }}>
-                  <strong>Excerpt:</strong> {record.excerpt}
+                  <strong>Excerpt:</strong> {record.excerpt || "No excerpt available"}
                 </p>
                 <p style={{ margin: "8px 0 0 0" }}>
                   <strong>Tags:</strong>{" "}
-                  {record.tags.map((tag) => (
-                    <Tag key={tag} color="blue">
-                      {tag}
-                    </Tag>
-                  ))}
+                  {record.tags && record.tags.length > 0 ? (
+                    record.tags.map((tag) => (
+                      <Tag key={tag} color="blue">
+                        {tag}
+                      </Tag>
+                    ))
+                  ) : (
+                    <Text type="secondary">No tags</Text>
+                  )}
                 </p>
               </div>
             ),
@@ -533,9 +457,9 @@ const BlogPosts = () => {
               <Form.Item
                 name="category"
                 label="Category"
-                rules={[{ required: true, message: "Please select category" }]}
+                rules={[{ required: true, message: "Please enter category" }]}
               >
-                <Select placeholder="Select category">
+                <Select placeholder="Select or enter category" mode="combobox">
                   <Option value="Education">Education</Option>
                   <Option value="Information">Information</Option>
                   <Option value="How-to">How-to</Option>
@@ -618,16 +542,19 @@ const BlogPosts = () => {
               </Space>
               <span style={{ margin: "0 8px" }}>|</span>
               <Space>
-                <CalendarOutlined /> {selectedBlog.createdAt}
+                <CalendarOutlined />{" "}
+                {selectedBlog.createdAt ? new Date(selectedBlog.createdAt).toLocaleDateString() : "N/A"}
               </Space>
               <span style={{ margin: "0 8px" }}>|</span>
-              <Tag color="blue">{selectedBlog.category}</Tag>
+              <Tag color="blue">{selectedBlog.category || "Uncategorized"}</Tag>
             </div>
 
             <div style={{ marginBottom: "16px" }}>
-              {selectedBlog.tags.map((tag) => (
-                <Tag key={tag}>{tag}</Tag>
-              ))}
+              {selectedBlog.tags && selectedBlog.tags.length > 0 ? (
+                selectedBlog.tags.map((tag) => <Tag key={tag}>{tag}</Tag>)
+              ) : (
+                <Text type="secondary">No tags</Text>
+              )}
             </div>
 
             <div style={{ marginBottom: "24px" }}>
@@ -642,9 +569,9 @@ const BlogPosts = () => {
 
             <div style={{ display: "flex", justifyContent: "space-between" }}>
               <Space>
-                <Button icon={<ReadOutlined />}>{selectedBlog.views} Views</Button>
-                <Button icon={<LikeOutlined />}>{selectedBlog.likes} Likes</Button>
-                <Button icon={<CommentOutlined />}>{selectedBlog.comments} Comments</Button>
+                <Button icon={<ReadOutlined />}>{selectedBlog.views || 0} Views</Button>
+                <Button icon={<LikeOutlined />}>{selectedBlog.likes || 0} Likes</Button>
+                <Button icon={<CommentOutlined />}>{selectedBlog.comments || 0} Comments</Button>
               </Space>
               <Space>
                 <Button

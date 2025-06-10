@@ -30,7 +30,9 @@ import {
   EyeOutlined,
   UpOutlined,
   DownOutlined,
+  ReloadOutlined,
 } from "@ant-design/icons"
+import api from "../../../configs/axios"
 
 const { Title, Text } = Typography
 const { TextArea } = Input
@@ -47,77 +49,25 @@ const FAQs = () => {
   const [categoryFilter, setCategoryFilter] = useState("")
   const [previewMode, setPreviewMode] = useState(false)
 
-  // Fetch FAQs data
-  useEffect(() => {
-    setLoading(true)
-    // Simulate API call
-    setTimeout(() => {
-      const mockFaqs = [
-        {
-          id: 1,
-          question: "How accurate are DNA tests?",
-          answer:
-            "DNA tests are highly accurate, with most tests having an accuracy rate of 99.9% or higher. However, the accuracy can vary depending on the type of test and the quality of the sample provided. For paternity tests, the accuracy is typically 99.9% or higher when confirming paternity and 100% when excluding paternity.",
-          isActive: true,
-          category: "General",
-          sortOrder: 1,
-          views: 1245,
-        },
-        {
-          id: 2,
-          question: "How long does it take to get results?",
-          answer:
-            "Most DNA test results are available within 3-5 business days for standard tests. Express testing options can provide results in 1-2 business days for an additional fee. More complex tests like ancestry or health-related genetic testing may take 2-8 weeks to process. The timeline begins once your sample arrives at our laboratory.",
-          isActive: true,
-          category: "Testing Process",
-          sortOrder: 2,
-          views: 980,
-        },
-        {
-          id: 3,
-          question: "Can I collect samples at home?",
-          answer:
-            "Yes, we provide home collection kits with detailed instructions for easy sample collection. Our kits use cheek swabs which are simple, painless, and can be done in the comfort of your home. Each kit contains everything needed for proper collection and secure return shipping to our laboratory.",
-          isActive: true,
-          category: "Sample Collection",
-          sortOrder: 3,
-          views: 756,
-        },
-        {
-          id: 4,
-          question: "What types of DNA tests do you offer?",
-          answer:
-            "We offer a comprehensive range of DNA testing services including paternity, maternity, sibling, ancestry, and prenatal DNA testing. We also provide specialized tests for immigration purposes, legal cases, and health-related genetic screening. Each test is conducted in our accredited laboratory using the latest technology.",
-          isActive: false,
-          category: "Services",
-          sortOrder: 4,
-          views: 645,
-        },
-        {
-          id: 5,
-          question: "Are DNA tests legally admissible in court?",
-          answer:
-            "Yes, our legal DNA tests are court-admissible. These tests follow a strict chain of custody procedure where all participants must be properly identified, and samples are collected by an authorized professional. The entire process is documented to ensure the results can be used for legal matters such as child support, custody cases, or immigration.",
-          isActive: true,
-          category: "Legal",
-          sortOrder: 5,
-          views: 532,
-        },
-        {
-          id: 6,
-          question: "How much do DNA tests cost?",
-          answer:
-            "The cost of DNA tests varies depending on the type of test and turnaround time. Basic paternity tests start at $99, while more complex tests like ancestry or health screening can range from $199 to $499. Legal tests that are court-admissible have additional fees for professional collection and documentation. Please contact us for a detailed price list.",
-          isActive: true,
-          category: "Pricing",
-          sortOrder: 6,
-          views: 890,
-        },
-      ]
+  // Fetch FAQs data from API
+  const fetchFaqs = async () => {
+    try {
+      setLoading(true)
+      const response = await api.get("/admin/faqs")
+      console.log("FAQs response:", response)
 
-      setFaqs(mockFaqs)
+      const faqsData = response.data?.data || response.data || []
+      setFaqs(faqsData)
+    } catch (error) {
+      console.error("Error fetching FAQs:", error)
+      message.error("Failed to fetch FAQs: " + (error.response?.data?.message || error.message))
+    } finally {
       setLoading(false)
-    }, 1000)
+    }
+  }
+
+  useEffect(() => {
+    fetchFaqs()
   }, [])
 
   // Handle FAQ edit
@@ -134,71 +84,68 @@ const FAQs = () => {
   }
 
   // Handle FAQ delete
-  const handleDelete = (id) => {
-    setFaqs(faqs.filter((faq) => faq.id !== id))
-    message.success("FAQ deleted successfully")
+  const handleDelete = async (id) => {
+    try {
+      await api.delete(`/admin/faqs/${id}`)
+      message.success("FAQ deleted successfully")
+      fetchFaqs() // Refresh the list
+    } catch (error) {
+      console.error("Error deleting FAQ:", error)
+      message.error("Failed to delete FAQ: " + (error.response?.data?.message || error.message))
+    }
   }
 
   // Handle form submission
-  const handleFormSubmit = (values) => {
-    if (editingFaq) {
-      // Update existing FAQ
-      setFaqs(
-        faqs.map((faq) =>
-          faq.id === editingFaq.id
-            ? {
-                ...faq,
-                question: values.question,
-                answer: values.answer,
-                category: values.category,
-                isActive: values.isActive,
-                sortOrder: values.sortOrder,
-              }
-            : faq,
-        ),
-      )
-      message.success("FAQ updated successfully")
-    } else {
-      // Create new FAQ
-      const newFaq = {
-        id: faqs.length + 1,
+  const handleFormSubmit = async (values) => {
+    try {
+      const faqData = {
         question: values.question,
         answer: values.answer,
         category: values.category,
         isActive: values.isActive,
-        sortOrder: values.sortOrder || faqs.length + 1,
-        views: 0,
+        sortOrder: values.sortOrder,
       }
-      setFaqs([...faqs, newFaq])
-      message.success("FAQ created successfully")
+
+      if (editingFaq) {
+        // Update existing FAQ
+        await api.put(`/admin/faqs/${editingFaq.id}`, faqData)
+        message.success("FAQ updated successfully")
+      } else {
+        // Create new FAQ
+        await api.post("/admin/faqs", faqData)
+        message.success("FAQ created successfully")
+      }
+
+      setIsModalVisible(false)
+      form.resetFields()
+      setEditingFaq(null)
+      fetchFaqs() // Refresh the list
+    } catch (error) {
+      console.error("Error saving FAQ:", error)
+      message.error("Failed to save FAQ: " + (error.response?.data?.message || error.message))
     }
-    setIsModalVisible(false)
-    form.resetFields()
-    setEditingFaq(null)
   }
 
   // Handle sort order change
-  const handleMoveUp = (id) => {
-    const index = faqs.findIndex((faq) => faq.id === id)
-    if (index > 0) {
-      const newFaqs = [...faqs]
-      const currentSortOrder = newFaqs[index].sortOrder
-      newFaqs[index].sortOrder = newFaqs[index - 1].sortOrder
-      newFaqs[index - 1].sortOrder = currentSortOrder
-      setFaqs(newFaqs.sort((a, b) => a.sortOrder - b.sortOrder))
+  const handleMoveUp = async (id) => {
+    try {
+      await api.put(`/admin/faqs/${id}/move-up`)
       message.success("FAQ moved up successfully")
+      fetchFaqs() // Refresh the list
+    } catch (error) {
+      console.error("Error moving FAQ up:", error)
+      message.error("Failed to move FAQ up: " + (error.response?.data?.message || error.message))
     }
   }
 
-  const handleMoveDown = (id) => {
-    const index = faqs.findIndex((faq) => faq.id === id)
-    if (index < faqs.length - 1) {
-      const newFaqs = [...faqs]
-      const currentSortOrder = newFaqs[index].sortOrder
-      newFaqs[index].sortOrder = newFaqs[index + 1].sortOrder
-      newFaqs[index + 1].sortOrder = currentSortOrder
-      setFaqs(newFaqs.sort((a, b) => a.sortOrder - b.sortOrder))
+  const handleMoveDown = async (id) => {
+    try {
+      await api.put(`/admin/faqs/${id}/move-down`)
       message.success("FAQ moved down successfully")
+      fetchFaqs() // Refresh the list
+    } catch (error) {
+      console.error("Error moving FAQ down:", error)
+      message.error("Failed to move FAQ down: " + (error.response?.data?.message || error.message))
     }
   }
 
@@ -206,18 +153,18 @@ const FAQs = () => {
   const filteredFaqs = faqs
     .filter((faq) => {
       const matchesSearch =
-        faq.question.toLowerCase().includes(searchText.toLowerCase()) ||
-        faq.answer.toLowerCase().includes(searchText.toLowerCase()) ||
-        faq.category.toLowerCase().includes(searchText.toLowerCase())
+        faq.question?.toLowerCase().includes(searchText.toLowerCase()) ||
+        faq.answer?.toLowerCase().includes(searchText.toLowerCase()) ||
+        faq.category?.toLowerCase().includes(searchText.toLowerCase())
 
       const matchesCategory = categoryFilter === "" || faq.category === categoryFilter
 
       return matchesSearch && matchesCategory
     })
-    .sort((a, b) => a.sortOrder - b.sortOrder)
+    .sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0))
 
   // Get unique categories for filter
-  const categories = [...new Set(faqs.map((faq) => faq.category))]
+  const categories = [...new Set(faqs.map((faq) => faq.category).filter(Boolean))]
 
   // Calculate statistics
   const stats = {
@@ -225,7 +172,7 @@ const FAQs = () => {
     active: faqs.filter((faq) => faq.isActive).length,
     inactive: faqs.filter((faq) => !faq.isActive).length,
     categories: categories.length,
-    totalViews: faqs.reduce((sum, faq) => sum + faq.views, 0),
+    totalViews: faqs.reduce((sum, faq) => sum + (faq.views || 0), 0),
   }
 
   // FAQ table columns
@@ -235,7 +182,7 @@ const FAQs = () => {
       dataIndex: "sortOrder",
       key: "sortOrder",
       width: 80,
-      render: (sortOrder) => <Text strong>{sortOrder}</Text>,
+      render: (sortOrder) => <Text strong>{sortOrder || 0}</Text>,
     },
     {
       title: "Question",
@@ -252,7 +199,7 @@ const FAQs = () => {
       title: "Category",
       dataIndex: "category",
       key: "category",
-      render: (category) => <Tag color="blue">{category}</Tag>,
+      render: (category) => <Tag color="blue">{category || "Uncategorized"}</Tag>,
       width: 150,
     },
     {
@@ -267,7 +214,8 @@ const FAQs = () => {
       dataIndex: "views",
       key: "views",
       width: 100,
-      sorter: (a, b) => a.views - b.views,
+      render: (views) => views || 0,
+      sorter: (a, b) => (a.views || 0) - (b.views || 0),
     },
     {
       title: "Actions",
@@ -319,6 +267,9 @@ const FAQs = () => {
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
         <Title level={2}>Frequently Asked Questions</Title>
         <Space>
+          <Button icon={<ReloadOutlined />} onClick={fetchFaqs} loading={loading}>
+            Refresh
+          </Button>
           <Button
             type={previewMode ? "default" : "primary"}
             icon={<EyeOutlined />}
@@ -409,7 +360,7 @@ const FAQs = () => {
                 <Panel header={faq.question} key={faq.id}>
                   <p>{faq.answer}</p>
                   <div style={{ marginTop: 8 }}>
-                    <Tag color="blue">{faq.category}</Tag>
+                    <Tag color="blue">{faq.category || "Uncategorized"}</Tag>
                   </div>
                 </Panel>
               ))}
@@ -479,15 +430,14 @@ const FAQs = () => {
               <Form.Item
                 name="category"
                 label="Category"
-                rules={[{ required: true, message: "Please select a category" }]}
+                rules={[{ required: true, message: "Please enter a category" }]}
               >
-                <Select placeholder="Select category">
+                <Select placeholder="Select or enter category" mode="combobox">
                   {categories.map((category) => (
                     <Option key={category} value={category}>
                       {category}
                     </Option>
                   ))}
-                  <Option value="new">+ Add New Category</Option>
                 </Select>
               </Form.Item>
             </Col>

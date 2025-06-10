@@ -1,3 +1,4 @@
+// Description: Inventory Management Dashboard for Admins
 import React from "react"
 import { useState, useEffect } from "react"
 import {
@@ -46,6 +47,7 @@ import {
   ArrowDownOutlined,
   SwapOutlined,
 } from "@ant-design/icons"
+import api from "../../../configs/axios"
 
 const { Title, Text } = Typography
 const { Option } = Select
@@ -88,175 +90,24 @@ const Inventory = () => {
   const [batchItems, setBatchItems] = useState([])
   const [addMode, setAddMode] = useState("single")
 
-  // Fetch data
-  useEffect(() => {
-    setLoading(true)
-    setTimeout(() => {
-      // Mock inventory data
-      const mockInventory = [
-        {
-          id: "KIT001",
-          code: "DNA-PAT-001",
-          name: "Paternity Test Kit",
-          quantity: 45,
-          threshold: 20,
-          status: "In Stock",
-          unitPrice: 89.99,
-          location: "Warehouse A",
-          lastRestocked: "2023-05-15",
-          expiryDate: "2024-05-15",
-          supplier: "BioGenetics Inc.",
-          batchNumber: "BG2023001",
-        },
-        {
-          id: "KIT002",
-          code: "DNA-MAT-001",
-          name: "Maternity Test Kit",
-          quantity: 32,
-          threshold: 15,
-          status: "In Stock",
-          unitPrice: 89.99,
-          location: "Warehouse A",
-          lastRestocked: "2023-05-20",
-          expiryDate: "2024-05-20",
-          supplier: "BioGenetics Inc.",
-          batchNumber: "BG2023002",
-        },
-        {
-          id: "KIT003",
-          code: "DNA-SIB-001",
-          name: "Sibling Test Kit",
-          quantity: 18,
-          threshold: 20,
-          status: "Low Stock",
-          unitPrice: 109.99,
-          location: "Warehouse B",
-          lastRestocked: "2023-05-10",
-          expiryDate: "2024-05-10",
-          supplier: "GeneTech Solutions",
-          batchNumber: "GT2023001",
-        },
-        {
-          id: "KIT004",
-          code: "DNA-ANC-001",
-          name: "Ancestry Test Kit",
-          quantity: 56,
-          threshold: 25,
-          status: "In Stock",
-          unitPrice: 129.99,
-          location: "Warehouse A",
-          lastRestocked: "2023-05-25",
-          expiryDate: "2024-05-25",
-          supplier: "Heritage Genetics",
-          batchNumber: "HG2023001",
-        },
-        {
-          id: "KIT005",
-          code: "DNA-PRE-001",
-          name: "Prenatal Test Kit",
-          quantity: 0,
-          threshold: 10,
-          status: "Out of Stock",
-          unitPrice: 249.99,
-          location: "Warehouse C",
-          lastRestocked: "2023-04-15",
-          expiryDate: "2024-04-15",
-          supplier: "MedGen Labs",
-          batchNumber: "MG2023001",
-        },
-      ]
+  // Fetch inventory data
+  const fetchInventory = async () => {
+    try {
+      setLoading(true)
+      const response = await api.get("/admin/inventory")
+      console.log("Inventory response:", response)
 
-      // Mock transactions data
-      const mockTransactions = [
-        {
-          id: "TXN001",
-          date: "2023-06-01 10:30:00",
-          type: "Stock In",
-          kitCode: "DNA-PAT-001",
-          kitName: "Paternity Test Kit",
-          quantity: 50,
-          unitPrice: 89.99,
-          totalValue: 4499.5,
-          location: "Warehouse A",
-          performedBy: "Admin User",
-          supplier: "BioGenetics Inc.",
-          batchNumber: "BG2023001",
-          notes: "Monthly stock replenishment",
-          status: "Completed",
-        },
-        {
-          id: "TXN002",
-          date: "2023-06-01 14:15:00",
-          type: "Stock Out",
-          kitCode: "DNA-PAT-001",
-          kitName: "Paternity Test Kit",
-          quantity: -5,
-          unitPrice: 89.99,
-          totalValue: -449.95,
-          location: "Warehouse A",
-          performedBy: "Staff User",
-          orderNumber: "ORD-2023-001",
-          customerName: "John Doe",
-          notes: "Customer order fulfillment",
-          status: "Completed",
-        },
-        {
-          id: "TXN003",
-          date: "2023-06-02 09:00:00",
-          type: "Stock In",
-          kitCode: "DNA-ANC-001",
-          kitName: "Ancestry Test Kit",
-          quantity: 30,
-          unitPrice: 129.99,
-          totalValue: 3899.7,
-          location: "Warehouse A",
-          performedBy: "Manager User",
-          supplier: "Heritage Genetics",
-          batchNumber: "HG2023002",
-          notes: "New product line introduction",
-          status: "Completed",
-        },
-        {
-          id: "TXN004",
-          date: "2023-06-02 11:30:00",
-          type: "Transfer",
-          kitCode: "DNA-SIB-001",
-          kitName: "Sibling Test Kit",
-          quantity: 10,
-          unitPrice: 109.99,
-          totalValue: 1099.9,
-          fromLocation: "Warehouse A",
-          toLocation: "Warehouse B",
-          performedBy: "Staff User",
-          notes: "Inventory redistribution",
-          status: "Completed",
-        },
-        {
-          id: "TXN005",
-          date: "2023-06-03 08:45:00",
-          type: "Adjustment",
-          kitCode: "DNA-PRE-001",
-          kitName: "Prenatal Test Kit",
-          quantity: -2,
-          unitPrice: 249.99,
-          totalValue: -499.98,
-          location: "Warehouse C",
-          performedBy: "Admin User",
-          reason: "Damaged items",
-          notes: "Items damaged during handling",
-          status: "Completed",
-        },
-      ]
-
-      setInventory(mockInventory)
-      setTransactions(mockTransactions)
+      const inventoryData = response.data?.data || response.data || []
+      setInventory(inventoryData)
 
       // Calculate stats
-      const totalKits = mockInventory.reduce((sum, kit) => sum + kit.quantity, 0)
-      const availableKits = mockInventory.filter((kit) => kit.quantity > 0).length
-      const lowStockKits = mockInventory.filter((kit) => kit.quantity > 0 && kit.quantity <= kit.threshold).length
-      const outOfStockKits = mockInventory.filter((kit) => kit.quantity === 0).length
-      const totalValue = mockInventory.reduce((sum, kit) => sum + kit.quantity * kit.unitPrice, 0)
+      const totalKits = inventoryData.reduce((sum, kit) => sum + (kit.quantity || 0), 0)
+      const availableKits = inventoryData.filter((kit) => (kit.quantity || 0) > 0).length
+      const lowStockKits = inventoryData.filter(
+        (kit) => (kit.quantity || 0) > 0 && (kit.quantity || 0) <= (kit.threshold || 0),
+      ).length
+      const outOfStockKits = inventoryData.filter((kit) => (kit.quantity || 0) === 0).length
+      const totalValue = inventoryData.reduce((sum, kit) => sum + (kit.quantity || 0) * (kit.unitPrice || 0), 0)
 
       setInventoryStats({
         totalKits,
@@ -265,117 +116,79 @@ const Inventory = () => {
         outOfStockKits,
         totalValue,
       })
-
+    } catch (error) {
+      console.error("Error fetching inventory:", error)
+      message.error("Failed to fetch inventory: " + (error.response?.data?.message || error.message))
+    } finally {
       setLoading(false)
-    }, 1000)
+    }
+  }
+
+  // Fetch transactions data
+  const fetchTransactions = async () => {
+    try {
+      const response = await api.get("/admin/inventory/transactions")
+      console.log("Transactions response:", response)
+
+      const transactionsData = response.data?.data || response.data || []
+      setTransactions(transactionsData)
+    } catch (error) {
+      console.error("Error fetching transactions:", error)
+      message.error("Failed to fetch transactions: " + (error.response?.data?.message || error.message))
+    }
+  }
+
+  // Fetch data
+  useEffect(() => {
+    fetchInventory()
+    fetchTransactions()
   }, [])
 
   // Handle add stock
-  const handleAddStock = (values) => {
-    const updatedInventory = inventory.map((kit) =>
-      kit.id === selectedKit.id
-        ? {
-            ...kit,
-            quantity: kit.quantity + values.quantity,
-            status:
-              kit.quantity + values.quantity > kit.threshold
-                ? "In Stock"
-                : kit.quantity + values.quantity > 0
-                  ? "Low Stock"
-                  : "Out of Stock",
-            lastRestocked: new Date().toISOString().split("T")[0],
-          }
-        : kit,
-    )
+  const handleAddStock = async (values) => {
+    try {
+      await api.post(`/admin/inventory/${selectedKit.id}/add-stock`, {
+        quantity: values.quantity,
+        notes: values.notes,
+      })
 
-    setInventory(updatedInventory)
-
-    // Add transaction record
-    const newTransaction = {
-      id: `TXN${String(transactions.length + 1).padStart(3, "0")}`,
-      date: new Date().toISOString().replace("T", " ").split(".")[0],
-      type: "Stock In",
-      kitCode: selectedKit.code,
-      kitName: selectedKit.name,
-      quantity: values.quantity,
-      unitPrice: selectedKit.unitPrice,
-      totalValue: values.quantity * selectedKit.unitPrice,
-      location: selectedKit.location,
-      performedBy: "Current User",
-      notes: values.notes || "Manual stock addition",
-      status: "Completed",
+      message.success(`Added ${values.quantity} units to ${selectedKit.name}`)
+      setIsAddStockModalVisible(false)
+      form.resetFields()
+      setSelectedKit(null)
+      fetchInventory() // Refresh the list
+      fetchTransactions() // Refresh transactions
+    } catch (error) {
+      console.error("Error adding stock:", error)
+      message.error("Failed to add stock: " + (error.response?.data?.message || error.message))
     }
-
-    setTransactions([newTransaction, ...transactions])
-
-    // Update stats
-    const totalKits = updatedInventory.reduce((sum, kit) => sum + kit.quantity, 0)
-    const availableKits = updatedInventory.filter((kit) => kit.quantity > 0).length
-    const lowStockKits = updatedInventory.filter((kit) => kit.quantity > 0 && kit.quantity <= kit.threshold).length
-    const outOfStockKits = updatedInventory.filter((kit) => kit.quantity === 0).length
-    const totalValue = updatedInventory.reduce((sum, kit) => sum + kit.quantity * kit.unitPrice, 0)
-
-    setInventoryStats({
-      totalKits,
-      availableKits,
-      lowStockKits,
-      outOfStockKits,
-      totalValue,
-    })
-
-    message.success(`Added ${values.quantity} units to ${selectedKit.name}`)
-    setIsAddStockModalVisible(false)
-    form.resetFields()
-    setSelectedKit(null)
   }
 
   // Handle single item form submission
   const handleSingleSubmit = async (values) => {
-    setLoading(true)
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1000))
-
-      const newKit = {
-        id: `KIT${String(inventory.length + 1).padStart(3, "0")}`,
+      setLoading(true)
+      const kitData = {
         code: values.kitCode,
         name: values.kitName,
         quantity: values.quantity,
         threshold: values.threshold,
-        status: values.quantity > values.threshold ? "In Stock" : values.quantity > 0 ? "Low Stock" : "Out of Stock",
         unitPrice: values.unitPrice,
         location: values.location,
-        lastRestocked: new Date().toISOString().split("T")[0],
-        expiryDate: values.expiryDate?.format("YYYY-MM-DD") || null,
         supplier: values.supplier,
-        batchNumber: values.batchNumber || `BATCH${Date.now()}`,
+        expiryDate: values.expiryDate?.format("YYYY-MM-DD") || null,
+        batchNumber: values.batchNumber,
+        notes: values.notes,
       }
 
-      setInventory([...inventory, newKit])
-
-      // Add transaction record
-      const newTransaction = {
-        id: `TXN${String(transactions.length + 1).padStart(3, "0")}`,
-        date: new Date().toISOString().replace("T", " ").split(".")[0],
-        type: "Stock In",
-        kitCode: newKit.code,
-        kitName: newKit.name,
-        quantity: newKit.quantity,
-        unitPrice: newKit.unitPrice,
-        totalValue: newKit.quantity * newKit.unitPrice,
-        location: newKit.location,
-        performedBy: "Current User",
-        supplier: newKit.supplier,
-        batchNumber: newKit.batchNumber,
-        notes: values.notes || "New inventory item added",
-        status: "Completed",
-      }
-
-      setTransactions([newTransaction, ...transactions])
-
+      await api.post("/admin/inventory", kitData)
       message.success("Inventory item added successfully!")
       addInventoryForm.resetFields()
+      fetchInventory() // Refresh the list
+      fetchTransactions() // Refresh transactions
     } catch (error) {
-      message.error("Failed to add inventory item")
+      console.error("Error adding inventory item:", error)
+      message.error("Failed to add inventory item: " + (error.response?.data?.message || error.message))
     } finally {
       setLoading(false)
     }
@@ -413,49 +226,26 @@ const Inventory = () => {
       return
     }
 
-    setLoading(true)
     try {
-      await new Promise((resolve) => setTimeout(resolve, 2000))
-
-      const newKits = batchItems.map((item, index) => ({
-        id: `KIT${String(inventory.length + index + 1).padStart(3, "0")}`,
+      setLoading(true)
+      const batchData = batchItems.map((item) => ({
         code: item.kitCode,
         name: item.kitName,
         quantity: item.quantity,
         threshold: item.threshold || 10,
-        status: item.quantity > (item.threshold || 10) ? "In Stock" : item.quantity > 0 ? "Low Stock" : "Out of Stock",
         unitPrice: item.unitPrice,
         location: item.location,
-        lastRestocked: new Date().toISOString().split("T")[0],
-        expiryDate: null,
         supplier: item.supplier || "Unknown",
-        batchNumber: `BATCH${Date.now()}_${index}`,
       }))
 
-      setInventory([...inventory, ...newKits])
-
-      // Add transaction records
-      const newTransactions = batchItems.map((item, index) => ({
-        id: `TXN${String(transactions.length + index + 1).padStart(3, "0")}`,
-        date: new Date().toISOString().replace("T", " ").split(".")[0],
-        type: "Stock In",
-        kitCode: item.kitCode,
-        kitName: item.kitName,
-        quantity: item.quantity,
-        unitPrice: item.unitPrice,
-        totalValue: item.totalValue,
-        location: item.location,
-        performedBy: "Current User",
-        notes: "Batch inventory addition",
-        status: "Completed",
-      }))
-
-      setTransactions([...newTransactions, ...transactions])
-
+      await api.post("/admin/inventory/batch", { items: batchData })
       message.success(`Successfully added ${batchItems.length} inventory items!`)
       setBatchItems([])
+      fetchInventory() // Refresh the list
+      fetchTransactions() // Refresh transactions
     } catch (error) {
-      message.error("Failed to submit batch")
+      console.error("Error submitting batch:", error)
+      message.error("Failed to submit batch: " + (error.response?.data?.message || error.message))
     } finally {
       setLoading(false)
     }
@@ -464,10 +254,10 @@ const Inventory = () => {
   // Filter functions
   const filteredInventory = inventory.filter((kit) => {
     const matchesSearch =
-      kit.name.toLowerCase().includes(searchText.toLowerCase()) ||
-      kit.code.toLowerCase().includes(searchText.toLowerCase()) ||
-      kit.id.toLowerCase().includes(searchText.toLowerCase()) ||
-      kit.supplier.toLowerCase().includes(searchText.toLowerCase())
+      kit.name?.toLowerCase().includes(searchText.toLowerCase()) ||
+      kit.code?.toLowerCase().includes(searchText.toLowerCase()) ||
+      kit.id?.toString().toLowerCase().includes(searchText.toLowerCase()) ||
+      kit.supplier?.toLowerCase().includes(searchText.toLowerCase())
 
     const matchesStatus = statusFilter === "" || kit.status === statusFilter
 
@@ -476,10 +266,10 @@ const Inventory = () => {
 
   const filteredTransactions = transactions.filter((transaction) => {
     const matchesSearch =
-      transaction.kitCode.toLowerCase().includes(searchText.toLowerCase()) ||
-      transaction.kitName.toLowerCase().includes(searchText.toLowerCase()) ||
-      transaction.id.toLowerCase().includes(searchText.toLowerCase()) ||
-      transaction.performedBy.toLowerCase().includes(searchText.toLowerCase())
+      transaction.kitCode?.toLowerCase().includes(searchText.toLowerCase()) ||
+      transaction.kitName?.toLowerCase().includes(searchText.toLowerCase()) ||
+      transaction.id?.toLowerCase().includes(searchText.toLowerCase()) ||
+      transaction.performedBy?.toLowerCase().includes(searchText.toLowerCase())
 
     const matchesType = typeFilter === "" || transaction.type === typeFilter
 
@@ -499,45 +289,64 @@ const Inventory = () => {
       title: "Kit ID",
       dataIndex: "id",
       key: "id",
-      sorter: (a, b) => a.id.localeCompare(b.id),
+      sorter: (a, b) => (a.id || "").toString().localeCompare((b.id || "").toString()),
     },
     {
       title: "Code",
       dataIndex: "code",
       key: "code",
-      sorter: (a, b) => a.code.localeCompare(b.code),
+      sorter: (a, b) => (a.code || "").localeCompare(b.code || ""),
     },
     {
       title: "Name",
       dataIndex: "name",
       key: "name",
-      sorter: (a, b) => a.name.localeCompare(b.name),
+      sorter: (a, b) => (a.name || "").localeCompare(b.name || ""),
     },
     {
       title: "Quantity",
       dataIndex: "quantity",
       key: "quantity",
-      sorter: (a, b) => a.quantity - b.quantity,
+      render: (quantity) => quantity || 0,
+      sorter: (a, b) => (a.quantity || 0) - (b.quantity || 0),
     },
     {
       title: "Status",
       dataIndex: "status",
       key: "status",
-      render: (status) => {
+      render: (status, record) => {
         let color = "green"
         let icon = <CheckCircleOutlined />
+        let displayStatus = status
 
-        if (status === "Low Stock") {
-          color = "orange"
-          icon = <WarningOutlined />
-        } else if (status === "Out of Stock") {
-          color = "red"
-          icon = <ExclamationCircleOutlined />
+        if (!status) {
+          // Calculate status based on quantity and threshold
+          if ((record.quantity || 0) === 0) {
+            displayStatus = "Out of Stock"
+            color = "red"
+            icon = <ExclamationCircleOutlined />
+          } else if ((record.quantity || 0) <= (record.threshold || 0)) {
+            displayStatus = "Low Stock"
+            color = "orange"
+            icon = <WarningOutlined />
+          } else {
+            displayStatus = "In Stock"
+            color = "green"
+            icon = <CheckCircleOutlined />
+          }
+        } else {
+          if (status === "Low Stock") {
+            color = "orange"
+            icon = <WarningOutlined />
+          } else if (status === "Out of Stock") {
+            color = "red"
+            icon = <ExclamationCircleOutlined />
+          }
         }
 
         return (
           <Tag color={color} icon={icon}>
-            {status}
+            {displayStatus}
           </Tag>
         )
       },
@@ -546,32 +355,41 @@ const Inventory = () => {
         { text: "Low Stock", value: "Low Stock" },
         { text: "Out of Stock", value: "Out of Stock" },
       ],
-      onFilter: (value, record) => record.status === value,
+      onFilter: (value, record) => {
+        const status =
+          record.status ||
+          ((record.quantity || 0) === 0
+            ? "Out of Stock"
+            : (record.quantity || 0) <= (record.threshold || 0)
+              ? "Low Stock"
+              : "In Stock")
+        return status === value
+      },
     },
     {
       title: "Stock Level",
       key: "stockLevel",
       render: (_, record) => {
         let color = "#52c41a"
+        const quantity = record.quantity || 0
+        const threshold = record.threshold || 0
 
-        if (record.quantity === 0) {
+        if (quantity === 0) {
           color = "#ff4d4f"
-        } else if (record.quantity <= record.threshold) {
+        } else if (quantity <= threshold) {
           color = "#faad14"
         }
 
-        const percent = Math.min(100, Math.round((record.quantity / record.threshold) * 100))
+        const percent = threshold > 0 ? Math.min(100, Math.round((quantity / threshold) * 100)) : 100
 
-        return (
-          <Progress percent={percent} strokeColor={color} format={() => `${record.quantity}/${record.threshold}`} />
-        )
+        return <Progress percent={percent} strokeColor={color} format={() => `${quantity}/${threshold}`} />
       },
     },
     {
       title: "Value",
       key: "value",
-      render: (_, record) => `$${(record.quantity * record.unitPrice).toFixed(2)}`,
-      sorter: (a, b) => a.quantity * a.unitPrice - b.quantity * b.unitPrice,
+      render: (_, record) => `$${((record.quantity || 0) * (record.unitPrice || 0)).toFixed(2)}`,
+      sorter: (a, b) => (a.quantity || 0) * (a.unitPrice || 0) - (b.quantity || 0) * (b.unitPrice || 0),
     },
     {
       title: "Actions",
@@ -610,13 +428,14 @@ const Inventory = () => {
       title: "Transaction ID",
       dataIndex: "id",
       key: "id",
-      sorter: (a, b) => a.id.localeCompare(b.id),
+      sorter: (a, b) => (a.id || "").localeCompare(b.id || ""),
     },
     {
       title: "Date & Time",
       dataIndex: "date",
       key: "date",
-      sorter: (a, b) => new Date(a.date) - new Date(b.date),
+      render: (date) => (date ? new Date(date).toLocaleString() : "N/A"),
+      sorter: (a, b) => new Date(a.date || 0) - new Date(b.date || 0),
     },
     {
       title: "Type",
@@ -669,21 +488,21 @@ const Inventory = () => {
       dataIndex: "quantity",
       key: "quantity",
       render: (quantity) => (
-        <Text style={{ color: quantity > 0 ? "#52c41a" : "#ff4d4f" }}>
-          {quantity > 0 ? "+" : ""}
-          {quantity}
+        <Text style={{ color: (quantity || 0) > 0 ? "#52c41a" : "#ff4d4f" }}>
+          {(quantity || 0) > 0 ? "+" : ""}
+          {quantity || 0}
         </Text>
       ),
-      sorter: (a, b) => a.quantity - b.quantity,
+      sorter: (a, b) => (a.quantity || 0) - (b.quantity || 0),
     },
     {
       title: "Total Value",
       dataIndex: "totalValue",
       key: "totalValue",
       render: (value) => (
-        <Text style={{ color: value > 0 ? "#52c41a" : "#ff4d4f" }}>${Math.abs(value).toFixed(2)}</Text>
+        <Text style={{ color: (value || 0) > 0 ? "#52c41a" : "#ff4d4f" }}>${Math.abs(value || 0).toFixed(2)}</Text>
       ),
-      sorter: (a, b) => a.totalValue - b.totalValue,
+      sorter: (a, b) => (a.totalValue || 0) - (b.totalValue || 0),
     },
     {
       title: "Performed By",
@@ -696,7 +515,7 @@ const Inventory = () => {
       key: "status",
       render: (status) => {
         const color = status === "Completed" ? "green" : "orange"
-        return <Tag color={color}>{status}</Tag>
+        return <Tag color={color}>{status || "Completed"}</Tag>
       },
     },
     {
@@ -738,13 +557,13 @@ const Inventory = () => {
       title: "Unit Price",
       dataIndex: "unitPrice",
       key: "unitPrice",
-      render: (price) => `$${price.toFixed(2)}`,
+      render: (price) => `$${(price || 0).toFixed(2)}`,
     },
     {
       title: "Total Value",
       dataIndex: "totalValue",
       key: "totalValue",
-      render: (value) => `$${value.toFixed(2)}`,
+      render: (value) => `$${(value || 0).toFixed(2)}`,
     },
     {
       title: "Location",
@@ -787,7 +606,7 @@ const Inventory = () => {
     stockOut: transactions.filter((t) => t.type === "Stock Out").length,
     transfers: transactions.filter((t) => t.type === "Transfer").length,
     adjustments: transactions.filter((t) => t.type === "Adjustment").length,
-    totalValue: transactions.reduce((sum, t) => sum + Math.abs(t.totalValue), 0),
+    totalValue: transactions.reduce((sum, t) => sum + Math.abs(t.totalValue || 0), 0),
   }
 
   return (
@@ -801,9 +620,10 @@ const Inventory = () => {
             type="primary"
             icon={<ReloadOutlined />}
             onClick={() => {
-              setLoading(true)
-              setTimeout(() => setLoading(false), 1000)
+              fetchInventory()
+              fetchTransactions()
             }}
+            loading={loading}
           >
             Refresh
           </Button>
@@ -943,24 +763,24 @@ const Inventory = () => {
                   <div>
                     <Row gutter={[16, 16]}>
                       <Col span={8}>
-                        <Text strong>Unit Price:</Text> ${record.unitPrice.toFixed(2)}
+                        <Text strong>Unit Price:</Text> ${(record.unitPrice || 0).toFixed(2)}
                       </Col>
                       <Col span={8}>
-                        <Text strong>Location:</Text> {record.location}
+                        <Text strong>Location:</Text> {record.location || "N/A"}
                       </Col>
                       <Col span={8}>
-                        <Text strong>Supplier:</Text> {record.supplier}
+                        <Text strong>Supplier:</Text> {record.supplier || "N/A"}
                       </Col>
                     </Row>
                     <Row gutter={[16, 16]} style={{ marginTop: 8 }}>
                       <Col span={8}>
-                        <Text strong>Last Restocked:</Text> {record.lastRestocked}
+                        <Text strong>Last Restocked:</Text> {record.lastRestocked || "N/A"}
                       </Col>
                       <Col span={8}>
-                        <Text strong>Expiry Date:</Text> {record.expiryDate}
+                        <Text strong>Expiry Date:</Text> {record.expiryDate || "N/A"}
                       </Col>
                       <Col span={8}>
-                        <Text strong>Batch Number:</Text> {record.batchNumber}
+                        <Text strong>Batch Number:</Text> {record.batchNumber || "N/A"}
                       </Col>
                     </Row>
                   </div>
@@ -1236,14 +1056,7 @@ const Inventory = () => {
             <Title level={3}>Kit Transactions</Title>
             <Space>
               <Button icon={<DownloadOutlined />}>Export</Button>
-              <Button
-                type="primary"
-                icon={<ReloadOutlined />}
-                onClick={() => {
-                  setLoading(true)
-                  setTimeout(() => setLoading(false), 1000)
-                }}
-              >
+              <Button type="primary" icon={<ReloadOutlined />} onClick={fetchTransactions} loading={loading}>
                 Refresh
               </Button>
             </Space>
@@ -1373,10 +1186,10 @@ const Inventory = () => {
                     <Text strong>Name:</Text> {selectedKit.name}
                   </Col>
                   <Col span={12}>
-                    <Text strong>Current Stock:</Text> {selectedKit.quantity}
+                    <Text strong>Current Stock:</Text> {selectedKit.quantity || 0}
                   </Col>
                   <Col span={12}>
-                    <Text strong>Threshold:</Text> {selectedKit.threshold}
+                    <Text strong>Threshold:</Text> {selectedKit.threshold || 0}
                   </Col>
                 </Row>
               </Card>
@@ -1445,25 +1258,34 @@ const Inventory = () => {
             <Descriptions.Item label="Kit Name" span={2}>
               {selectedKit.name}
             </Descriptions.Item>
-            <Descriptions.Item label="Current Quantity">{selectedKit.quantity}</Descriptions.Item>
-            <Descriptions.Item label="Threshold">{selectedKit.threshold}</Descriptions.Item>
+            <Descriptions.Item label="Current Quantity">{selectedKit.quantity || 0}</Descriptions.Item>
+            <Descriptions.Item label="Threshold">{selectedKit.threshold || 0}</Descriptions.Item>
             <Descriptions.Item label="Status">
               <Tag
                 color={
-                  selectedKit.status === "In Stock" ? "green" : selectedKit.status === "Low Stock" ? "orange" : "red"
+                  selectedKit.status === "In Stock" || (selectedKit.quantity || 0) > (selectedKit.threshold || 0)
+                    ? "green"
+                    : selectedKit.status === "Low Stock" || (selectedKit.quantity || 0) <= (selectedKit.threshold || 0)
+                      ? "orange"
+                      : "red"
                 }
               >
-                {selectedKit.status}
+                {selectedKit.status ||
+                  ((selectedKit.quantity || 0) === 0
+                    ? "Out of Stock"
+                    : (selectedKit.quantity || 0) <= (selectedKit.threshold || 0)
+                      ? "Low Stock"
+                      : "In Stock")}
               </Tag>
             </Descriptions.Item>
-            <Descriptions.Item label="Unit Price">${selectedKit.unitPrice.toFixed(2)}</Descriptions.Item>
+            <Descriptions.Item label="Unit Price">${(selectedKit.unitPrice || 0).toFixed(2)}</Descriptions.Item>
             <Descriptions.Item label="Total Value">
-              ${(selectedKit.quantity * selectedKit.unitPrice).toFixed(2)}
+              ${((selectedKit.quantity || 0) * (selectedKit.unitPrice || 0)).toFixed(2)}
             </Descriptions.Item>
-            <Descriptions.Item label="Location">{selectedKit.location}</Descriptions.Item>
-            <Descriptions.Item label="Supplier">{selectedKit.supplier}</Descriptions.Item>
-            <Descriptions.Item label="Batch Number">{selectedKit.batchNumber}</Descriptions.Item>
-            <Descriptions.Item label="Last Restocked">{selectedKit.lastRestocked}</Descriptions.Item>
+            <Descriptions.Item label="Location">{selectedKit.location || "N/A"}</Descriptions.Item>
+            <Descriptions.Item label="Supplier">{selectedKit.supplier || "N/A"}</Descriptions.Item>
+            <Descriptions.Item label="Batch Number">{selectedKit.batchNumber || "N/A"}</Descriptions.Item>
+            <Descriptions.Item label="Last Restocked">{selectedKit.lastRestocked || "N/A"}</Descriptions.Item>
             <Descriptions.Item label="Expiry Date">{selectedKit.expiryDate || "N/A"}</Descriptions.Item>
           </Descriptions>
         )}
@@ -1493,7 +1315,9 @@ const Inventory = () => {
         {selectedTransaction && (
           <Descriptions title="Transaction Information" bordered column={2}>
             <Descriptions.Item label="Transaction ID">{selectedTransaction.id}</Descriptions.Item>
-            <Descriptions.Item label="Date & Time">{selectedTransaction.date}</Descriptions.Item>
+            <Descriptions.Item label="Date & Time">
+              {selectedTransaction.date ? new Date(selectedTransaction.date).toLocaleString() : "N/A"}
+            </Descriptions.Item>
             <Descriptions.Item label="Type">
               <Tag
                 color={
@@ -1511,15 +1335,17 @@ const Inventory = () => {
             </Descriptions.Item>
             <Descriptions.Item label="Status">
               <Tag color={selectedTransaction.status === "Completed" ? "green" : "orange"}>
-                {selectedTransaction.status}
+                {selectedTransaction.status || "Completed"}
               </Tag>
             </Descriptions.Item>
             <Descriptions.Item label="Kit Code">{selectedTransaction.kitCode}</Descriptions.Item>
             <Descriptions.Item label="Kit Name">{selectedTransaction.kitName}</Descriptions.Item>
-            <Descriptions.Item label="Quantity">{selectedTransaction.quantity}</Descriptions.Item>
-            <Descriptions.Item label="Unit Price">${selectedTransaction.unitPrice.toFixed(2)}</Descriptions.Item>
-            <Descriptions.Item label="Total Value">${selectedTransaction.totalValue.toFixed(2)}</Descriptions.Item>
-            <Descriptions.Item label="Performed By">{selectedTransaction.performedBy}</Descriptions.Item>
+            <Descriptions.Item label="Quantity">{selectedTransaction.quantity || 0}</Descriptions.Item>
+            <Descriptions.Item label="Unit Price">${(selectedTransaction.unitPrice || 0).toFixed(2)}</Descriptions.Item>
+            <Descriptions.Item label="Total Value">
+              ${(selectedTransaction.totalValue || 0).toFixed(2)}
+            </Descriptions.Item>
+            <Descriptions.Item label="Performed By">{selectedTransaction.performedBy || "N/A"}</Descriptions.Item>
 
             {selectedTransaction.location && (
               <Descriptions.Item label="Location">{selectedTransaction.location}</Descriptions.Item>

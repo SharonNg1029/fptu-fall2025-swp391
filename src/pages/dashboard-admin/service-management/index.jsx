@@ -1,5 +1,4 @@
-"use client"
-
+import React from "react"
 import { useState, useEffect } from "react"
 import {
   Table,
@@ -28,7 +27,10 @@ import {
   FileTextOutlined,
   MedicineBoxOutlined,
   BarChartOutlined,
+  ReloadOutlined,
+  PlusOutlined,
 } from "@ant-design/icons"
+import api from "../../../configs/axios"
 
 const { Title, Text } = Typography
 const { TextArea } = Input
@@ -46,73 +48,25 @@ const ServiceManagement = () => {
   const [pricingForm] = Form.useForm()
   const [activeTab, setActiveTab] = useState("services")
 
-  // Fetch services data
-  useEffect(() => {
-    setLoading(true)
-    // Simulate API call
-    setTimeout(() => {
-      const mockData = [
-        {
-          id: 1,
-          name: "Paternity DNA Test",
-          type: "Relationship",
-          cost: 199.99,
-          estimatedTime: "3-5 days",
-          instruction: "Collect cheek swab samples from all participants using the provided collection kit.",
-          description: "Determines biological relationship between alleged father and child with 99.9% accuracy.",
-          popularity: 85,
-          monthlyOrders: 45,
-        },
-        {
-          id: 2,
-          name: "Maternity DNA Test",
-          type: "Relationship",
-          cost: 199.99,
-          estimatedTime: "3-5 days",
-          instruction: "Collect cheek swab samples from all participants using the provided collection kit.",
-          description: "Confirms biological relationship between alleged mother and child.",
-          popularity: 65,
-          monthlyOrders: 25,
-        },
-        {
-          id: 3,
-          name: "Sibling DNA Test",
-          type: "Relationship",
-          cost: 249.99,
-          estimatedTime: "5-7 days",
-          instruction: "Collect cheek swab samples from all participants. Additional samples may be required.",
-          description: "Determines if two individuals share one or both biological parents.",
-          popularity: 45,
-          monthlyOrders: 15,
-        },
-        {
-          id: 4,
-          name: "Ancestry DNA Test",
-          type: "Ancestry",
-          cost: 149.99,
-          estimatedTime: "14-21 days",
-          instruction:
-            "Collect saliva sample using the provided collection tube. Do not eat or drink 30 minutes before collection.",
-          description: "Reveals ethnic background and geographical origins of your ancestors.",
-          popularity: 75,
-          monthlyOrders: 56,
-        },
-        {
-          id: 5,
-          name: "Prenatal DNA Test",
-          type: "Medical",
-          cost: 599.99,
-          estimatedTime: "7-10 days",
-          instruction:
-            "Blood sample required from mother (after 9 weeks of pregnancy). Cheek swab from alleged father.",
-          description: "Non-invasive prenatal paternity test with 99.9% accuracy.",
-          popularity: 30,
-          monthlyOrders: 8,
-        },
-      ]
-      setServices(mockData)
+  // Fetch services data from API
+  const fetchServices = async () => {
+    try {
+      setLoading(true)
+      const response = await api.get("/admin/services")
+      console.log("Services response:", response)
+
+      const servicesData = response.data?.data || response.data || []
+      setServices(servicesData)
+    } catch (error) {
+      console.error("Error fetching services:", error)
+      message.error("Failed to fetch services: " + (error.response?.data?.message || error.message))
+    } finally {
       setLoading(false)
-    }, 1000)
+    }
+  }
+
+  useEffect(() => {
+    fetchServices()
   }, [])
 
   // Handle service edit
@@ -130,53 +84,64 @@ const ServiceManagement = () => {
   }
 
   // Handle edit form submission
-  const handleEditSubmit = (values) => {
-    setServices(
-      services.map((service) =>
-        service.id === editingService.id
-          ? {
-              ...service,
-              name: values.name,
-              type: values.type,
-              cost: values.cost,
-              estimatedTime: values.estimatedTime,
-              instruction: values.instruction,
-              description: values.description,
-            }
-          : service,
-      ),
-    )
-    message.success("Service updated successfully")
-    setIsEditModalVisible(false)
-    editForm.resetFields()
-    setEditingService(null)
+  const handleEditSubmit = async (values) => {
+    try {
+      const serviceData = {
+        name: values.name,
+        type: values.type,
+        cost: values.cost,
+        estimatedTime: values.estimatedTime,
+        instruction: values.instruction,
+        description: values.description,
+      }
+
+      if (editingService) {
+        await api.put(`/admin/services/${editingService.id}`, serviceData)
+        message.success("Service updated successfully")
+      } else {
+        await api.post("/admin/services", serviceData)
+        message.success("Service created successfully")
+      }
+
+      setIsEditModalVisible(false)
+      editForm.resetFields()
+      setEditingService(null)
+      fetchServices() // Refresh the list
+    } catch (error) {
+      console.error("Error saving service:", error)
+      message.error("Failed to save service: " + (error.response?.data?.message || error.message))
+    }
   }
 
   // Handle pricing update
-  const handlePricingUpdate = (values) => {
-    setServices(
-      services.map((service) => (service.id === selectedService.id ? { ...service, cost: values.cost } : service)),
-    )
-    message.success("Pricing updated successfully")
-    setIsPricingModalVisible(false)
-    pricingForm.resetFields()
-    setSelectedService(null)
+  const handlePricingUpdate = async (values) => {
+    try {
+      await api.put(`/admin/services/${selectedService.id}/pricing`, { cost: values.cost })
+      message.success("Pricing updated successfully")
+      setIsPricingModalVisible(false)
+      pricingForm.resetFields()
+      setSelectedService(null)
+      fetchServices() // Refresh the list
+    } catch (error) {
+      console.error("Error updating pricing:", error)
+      message.error("Failed to update pricing: " + (error.response?.data?.message || error.message))
+    }
   }
 
   // Filter services based on search text
   const filteredServices = services.filter(
     (service) =>
-      service.name.toLowerCase().includes(searchText.toLowerCase()) ||
-      service.type.toLowerCase().includes(searchText.toLowerCase()) ||
-      service.description.toLowerCase().includes(searchText.toLowerCase()),
+      service.name?.toLowerCase().includes(searchText.toLowerCase()) ||
+      service.type?.toLowerCase().includes(searchText.toLowerCase()) ||
+      service.description?.toLowerCase().includes(searchText.toLowerCase()),
   )
 
   // Calculate statistics
   const stats = {
     totalServices: services.length,
-    totalRevenue: services.reduce((sum, service) => sum + service.cost * service.monthlyOrders, 0),
-    totalOrders: services.reduce((sum, service) => sum + service.monthlyOrders, 0),
-    avgPrice: services.reduce((sum, service) => sum + service.cost, 0) / services.length,
+    totalRevenue: services.reduce((sum, service) => sum + service.cost * (service.monthlyOrders || 0), 0),
+    totalOrders: services.reduce((sum, service) => sum + (service.monthlyOrders || 0), 0),
+    avgPrice: services.length > 0 ? services.reduce((sum, service) => sum + service.cost, 0) / services.length : 0,
   }
 
   // Service table columns
@@ -222,16 +187,17 @@ const ServiceManagement = () => {
       title: "Price",
       dataIndex: "cost",
       key: "cost",
-      render: (cost) => `$${cost.toFixed(2)}`,
-      sorter: (a, b) => a.cost - b.cost,
+      render: (cost) => `$${cost?.toFixed(2) || "0.00"}`,
+      sorter: (a, b) => (a.cost || 0) - (b.cost || 0),
     },
     {
       title: "Estimated Time",
       dataIndex: "estimatedTime",
-      key: "estimatedTime",      render: (time) => (
+      key: "estimatedTime",
+      render: (time) => (
         <Space>
           <ClockCircleOutlined />
-          {time}
+          {time || "N/A"}
         </Space>
       ),
     },
@@ -242,10 +208,10 @@ const ServiceManagement = () => {
       render: (orders) => (
         <Space>
           <BarChartOutlined />
-          {orders}
+          {orders || 0}
         </Space>
       ),
-      sorter: (a, b) => a.monthlyOrders - b.monthlyOrders,
+      sorter: (a, b) => (a.monthlyOrders || 0) - (b.monthlyOrders || 0),
     },
     {
       title: "Actions",
@@ -304,22 +270,22 @@ const ServiceManagement = () => {
       key: "cost",
       render: (cost) => (
         <Text strong style={{ fontSize: "16px" }}>
-          ${cost.toFixed(2)}
+          ${cost?.toFixed(2) || "0.00"}
         </Text>
       ),
-      sorter: (a, b) => a.cost - b.cost,
+      sorter: (a, b) => (a.cost || 0) - (b.cost || 0),
     },
     {
       title: "Monthly Orders",
       dataIndex: "monthlyOrders",
       key: "monthlyOrders",
-      render: (orders) => `${orders} orders`,
+      render: (orders) => `${orders || 0} orders`,
     },
     {
       title: "Monthly Revenue",
       key: "revenue",
-      render: (_, record) => `$${(record.cost * record.monthlyOrders).toFixed(2)}`,
-      sorter: (a, b) => a.cost * a.monthlyOrders - b.cost * b.monthlyOrders,
+      render: (_, record) => `$${((record.cost || 0) * (record.monthlyOrders || 0)).toFixed(2)}`,
+      sorter: (a, b) => (a.cost || 0) * (a.monthlyOrders || 0) - (b.cost || 0) * (b.monthlyOrders || 0),
     },
     {
       title: "Actions",
@@ -345,14 +311,30 @@ const ServiceManagement = () => {
       {/* Header */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
         <Title level={2}>Service Management</Title>
-        <Input
-          placeholder="Search services..."
-          prefix={<SearchOutlined />}
-          value={searchText}
-          onChange={(e) => setSearchText(e.target.value)}
-          style={{ width: 300 }}
-          allowClear
-        />
+        <Space>
+          <Input
+            placeholder="Search services..."
+            prefix={<SearchOutlined />}
+            value={searchText}
+            onChange={(e) => setSearchText(e.target.value)}
+            style={{ width: 300 }}
+            allowClear
+          />
+          <Button icon={<ReloadOutlined />} onClick={fetchServices} loading={loading}>
+            Refresh
+          </Button>
+          <Button
+            type="primary"
+            icon={<PlusOutlined />}
+            onClick={() => {
+              setEditingService(null)
+              editForm.resetFields()
+              setIsEditModalVisible(true)
+            }}
+          >
+            Add Service
+          </Button>
+        </Space>
       </div>
 
       {/* Statistics Cards */}
@@ -415,14 +397,14 @@ const ServiceManagement = () => {
                 expandedRowRender: (record) => (
                   <Card style={{ margin: 0 }}>
                     <Descriptions title="Service Details" bordered column={1}>
-                      <Descriptions.Item label="Description">{record.description}</Descriptions.Item>
+                      <Descriptions.Item label="Description">{record.description || "N/A"}</Descriptions.Item>
                       <Descriptions.Item label="Instructions">
                         <Space>
                           <FileTextOutlined />
-                          {record.instruction}
+                          {record.instruction || "N/A"}
                         </Space>
                       </Descriptions.Item>
-                      <Descriptions.Item label="Popularity">{record.popularity}%</Descriptions.Item>
+                      <Descriptions.Item label="Popularity">{record.popularity || 0}%</Descriptions.Item>
                     </Descriptions>
                   </Card>
                 ),
@@ -449,7 +431,7 @@ const ServiceManagement = () => {
 
       {/* Edit Service Modal */}
       <Modal
-        title="Edit Service Information"
+        title={editingService ? "Edit Service Information" : "Add New Service"}
         open={isEditModalVisible}
         onCancel={() => {
           setIsEditModalVisible(false)
@@ -517,7 +499,7 @@ const ServiceManagement = () => {
           <Form.Item>
             <Space>
               <Button type="primary" htmlType="submit" size="large">
-                Update Service
+                {editingService ? "Update Service" : "Add Service"}
               </Button>
               <Button
                 size="large"
@@ -559,16 +541,16 @@ const ServiceManagement = () => {
             </Form.Item>
 
             <Form.Item label="Current Price">
-              <Text style={{ fontSize: "18px", color: "#1890ff" }}>${selectedService.cost.toFixed(2)}</Text>
+              <Text style={{ fontSize: "18px", color: "#1890ff" }}>${selectedService.cost?.toFixed(2) || "0.00"}</Text>
             </Form.Item>
 
             <Form.Item label="Monthly Orders">
-              <Text>{selectedService.monthlyOrders} orders</Text>
+              <Text>{selectedService.monthlyOrders || 0} orders</Text>
             </Form.Item>
 
             <Form.Item label="Current Monthly Revenue">
               <Text style={{ fontSize: "16px", color: "#52c41a" }}>
-                ${(selectedService.cost * selectedService.monthlyOrders).toFixed(2)}
+                ${((selectedService.cost || 0) * (selectedService.monthlyOrders || 0)).toFixed(2)}
               </Text>
             </Form.Item>
 

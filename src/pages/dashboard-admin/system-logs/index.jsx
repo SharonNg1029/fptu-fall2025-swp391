@@ -1,3 +1,4 @@
+// Description: Inventory Management Dashboard for Admins
 import React from "react"
 import { useState, useEffect } from "react"
 import {
@@ -35,6 +36,7 @@ import {
   BellOutlined,
   ClockCircleOutlined,
 } from "@ant-design/icons"
+import api from "../../../configs/axios"
 
 const { Title, Text } = Typography
 const { Option } = Select
@@ -66,359 +68,87 @@ const SystemLogs = () => {
   const [selectedSecurityLog, setSelectedSecurityLog] = useState(null)
   const [selectedAlert, setSelectedAlert] = useState(null)
 
-  // Fetch logs data
-  useEffect(() => {
-    setLoading(true)
-    setTimeout(() => {
-      // Mock activity logs
-      const mockActivityLogs = [
-        {
-          id: "ACT001",
-          timestamp: "2023-06-01 10:30:00",
-          user: "admin@genetix.com",
-          userRole: "Admin",
-          action: "User Login",
-          details: "Successful login from IP: 192.168.1.100",
-          type: "Authentication",
-          status: "Success",
-          ipAddress: "192.168.1.100",
-          userAgent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
-          sessionId: "sess_123456789",
+  // Fetch activity logs
+  const fetchActivityLogs = async () => {
+    try {
+      const response = await api.get("/admin/logs/activity", {
+        params: {
+          search: searchText,
+          type: typeFilter,
+          user: userFilter,
+          startDate: dateRange?.[0]?.format("YYYY-MM-DD"),
+          endDate: dateRange?.[1]?.format("YYYY-MM-DD"),
         },
-        {
-          id: "ACT002",
-          timestamp: "2023-06-01 10:35:00",
-          user: "admin@genetix.com",
-          userRole: "Admin",
-          action: "Account Created",
-          details: "Created new staff account: staff3@genetix.com",
-          type: "Account Management",
-          status: "Success",
-          ipAddress: "192.168.1.100",
-          targetUser: "staff3@genetix.com",
-          changes: "Created new staff account with role: Staff",
-        },
-        {
-          id: "ACT003",
-          timestamp: "2023-06-01 11:00:00",
-          user: "manager@genetix.com",
-          userRole: "Manager",
-          action: "Service Updated",
-          details: "Updated pricing for Paternity DNA Test from $199.99 to $189.99",
-          type: "Service Management",
-          status: "Success",
-          ipAddress: "192.168.1.105",
-          serviceId: "SRV001",
-          oldValue: "$199.99",
-          newValue: "$189.99",
-        },
-        {
-          id: "ACT004",
-          timestamp: "2023-06-01 11:15:00",
-          user: "staff1@genetix.com",
-          userRole: "Staff",
-          action: "Inventory Added",
-          details: "Added 50 units of DNA-PAT-001 kits to Warehouse A",
-          type: "Inventory Management",
-          status: "Success",
-          ipAddress: "192.168.1.110",
-          kitCode: "DNA-PAT-001",
-          quantity: 50,
-          location: "Warehouse A",
-        },
-        {
-          id: "ACT005",
-          timestamp: "2023-06-01 11:30:00",
-          user: "admin@genetix.com",
-          userRole: "Admin",
-          action: "Account Deleted",
-          details: "Deleted customer account: customer5@genetix.com",
-          type: "Account Management",
-          status: "Success",
-          ipAddress: "192.168.1.100",
-          targetUser: "customer5@genetix.com",
-          reason: "Account closure requested by customer",
-        },
-        {
-          id: "ACT006",
-          timestamp: "2023-06-01 12:00:00",
-          user: "staff2@genetix.com",
-          userRole: "Staff",
-          action: "Test Result Updated",
-          details: "Updated test result for order ORD-2023-001",
-          type: "Test Management",
-          status: "Success",
-          ipAddress: "192.168.1.115",
-          orderId: "ORD-2023-001",
-          testStatus: "Completed",
-        },
-        {
-          id: "ACT007",
-          timestamp: "2023-06-01 14:20:00",
-          user: "manager@genetix.com",
-          userRole: "Manager",
-          action: "Blog Post Published",
-          details: "Published blog post: Understanding DNA Testing",
-          type: "Content Management",
-          status: "Success",
-          ipAddress: "192.168.1.105",
-          postId: "BLOG001",
-          postTitle: "Understanding DNA Testing",
-        },
-        {
-          id: "ACT008",
-          timestamp: "2023-06-01 15:45:00",
-          user: "staff1@genetix.com",
-          userRole: "Staff",
-          action: "Password Change Failed",
-          details: "Failed password change attempt - incorrect current password",
-          type: "Authentication",
-          status: "Failed",
-          ipAddress: "192.168.1.110",
-          failureReason: "Incorrect current password",
-        },
-      ]
+      })
+      console.log("Activity logs response:", response)
 
-      // Mock security logs
-      const mockSecurityLogs = [
-        {
-          id: "SEC001",
-          timestamp: "2023-06-01 09:45:00",
-          user: "unknown@example.com",
-          action: "Failed Login Attempt",
-          details: "Multiple failed login attempts from IP: 203.0.113.1",
-          severity: "High",
-          status: "Blocked",
-          ipAddress: "203.0.113.1",
-          userAgent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
-          attemptCount: 5,
-          location: "Unknown",
-          threatType: "Brute Force Attack",
-        },
-        {
-          id: "SEC002",
-          timestamp: "2023-06-01 10:00:00",
-          user: "admin@genetix.com",
-          action: "Password Changed",
-          details: "Password successfully changed for admin account",
-          severity: "Low",
-          status: "Success",
-          ipAddress: "192.168.1.100",
-          userAgent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
-          location: "Office Network",
-          previousPasswordAge: "90 days",
-        },
-        {
-          id: "SEC003",
-          timestamp: "2023-06-01 10:15:00",
-          user: "staff2@genetix.com",
-          action: "Suspicious Activity",
-          details: "Unusual access pattern detected - login from new location",
-          severity: "Medium",
-          status: "Monitoring",
-          ipAddress: "198.51.100.42",
-          userAgent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36",
-          location: "New York, USA",
-          riskScore: 75,
-          previousLocation: "San Francisco, USA",
-        },
-        {
-          id: "SEC004",
-          timestamp: "2023-06-01 10:30:00",
-          user: "system",
-          action: "Account Locked",
-          details: "Account automatically locked due to multiple failed attempts: test@example.com",
-          severity: "Medium",
-          status: "Locked",
-          ipAddress: "203.0.113.5",
-          targetAccount: "test@example.com",
-          lockDuration: "30 minutes",
-          attemptCount: 3,
-        },
-        {
-          id: "SEC005",
-          timestamp: "2023-06-01 11:00:00",
-          user: "admin@genetix.com",
-          action: "Privilege Escalation",
-          details: "Admin privileges granted to manager@genetix.com",
-          severity: "High",
-          status: "Success",
-          ipAddress: "192.168.1.100",
-          targetUser: "manager@genetix.com",
-          oldRole: "Manager",
-          newRole: "Admin",
-          approvedBy: "admin@genetix.com",
-        },
-        {
-          id: "SEC006",
-          timestamp: "2023-06-01 12:30:00",
-          user: "unknown",
-          action: "SQL Injection Attempt",
-          details: "Malicious SQL injection attempt detected on login form",
-          severity: "Critical",
-          status: "Blocked",
-          ipAddress: "198.51.100.100",
-          userAgent: "sqlmap/1.6.12",
-          attackVector: "Login Form",
-          payload: "' OR '1'='1' --",
-          threatType: "SQL Injection",
-        },
-        {
-          id: "SEC007",
-          timestamp: "2023-06-01 14:15:00",
-          user: "staff1@genetix.com",
-          action: "Data Export",
-          details: "Large dataset exported - customer information",
-          severity: "Medium",
-          status: "Success",
-          ipAddress: "192.168.1.110",
-          dataType: "Customer Information",
-          recordCount: 1500,
-          exportFormat: "CSV",
-          approvedBy: "manager@genetix.com",
-        },
-        {
-          id: "SEC008",
-          timestamp: "2023-06-01 16:45:00",
-          user: "unknown",
-          action: "DDoS Attack",
-          details: "Distributed denial of service attack detected",
-          severity: "Critical",
-          status: "Mitigated",
-          ipAddress: "Multiple IPs",
-          attackType: "HTTP Flood",
-          requestCount: 10000,
-          duration: "15 minutes",
-          mitigationMethod: "Rate Limiting",
-        },
-      ]
+      const logsData = response.data?.data || response.data || []
+      setActivityLogs(logsData)
+    } catch (error) {
+      console.error("Error fetching activity logs:", error)
+      message.error("Failed to fetch activity logs: " + (error.response?.data?.message || error.message))
+    }
+  }
 
-      // Mock system alerts
-      const mockSystemAlerts = [
-        {
-          id: "ALT001",
-          timestamp: "2023-06-01 08:00:00",
-          type: "Inventory",
-          title: "Low Stock Alert",
-          message: "DNA-SIB-001 kits below threshold (18/20)",
-          severity: "Warning",
-          status: "Active",
-          affectedSystem: "Inventory Management",
-          threshold: 20,
-          currentValue: 18,
-          recommendedAction: "Restock DNA-SIB-001 kits immediately",
-          priority: "Medium",
+  // Fetch security logs
+  const fetchSecurityLogs = async () => {
+    try {
+      const response = await api.get("/admin/logs/security", {
+        params: {
+          search: searchText,
+          severity: severityFilter,
+          status: statusFilter,
+          startDate: dateRange?.[0]?.format("YYYY-MM-DD"),
+          endDate: dateRange?.[1]?.format("YYYY-MM-DD"),
         },
-        {
-          id: "ALT002",
-          timestamp: "2023-06-01 08:30:00",
-          type: "System",
-          title: "Database Backup Completed",
-          message: "Daily database backup completed successfully",
-          severity: "Info",
-          status: "Resolved",
-          affectedSystem: "Database",
-          backupSize: "2.5 GB",
-          duration: "15 minutes",
-          location: "AWS S3 Backup",
-          priority: "Low",
-        },
-        {
-          id: "ALT003",
-          timestamp: "2023-06-01 09:00:00",
-          type: "Security",
-          title: "Unusual Login Pattern",
-          message: "Multiple login attempts from IP: 203.0.113.1",
-          severity: "High",
-          status: "Active",
-          affectedSystem: "Authentication",
-          ipAddress: "203.0.113.1",
-          attemptCount: 15,
-          timeWindow: "5 minutes",
-          recommendedAction: "Block IP address and investigate",
-          priority: "High",
-        },
-        {
-          id: "ALT004",
-          timestamp: "2023-06-01 09:30:00",
-          type: "Performance",
-          title: "High Server Response Time",
-          message: "Server response time above normal threshold (2.5s avg)",
-          severity: "Medium",
-          status: "Monitoring",
-          affectedSystem: "Web Server",
-          threshold: "2.0s",
-          currentValue: "2.5s",
-          duration: "10 minutes",
-          recommendedAction: "Monitor server performance and check for bottlenecks",
-          priority: "Medium",
-        },
-        {
-          id: "ALT005",
-          timestamp: "2023-06-01 10:15:00",
-          type: "Inventory",
-          title: "Out of Stock Alert",
-          message: "DNA-PRE-001 kits are completely out of stock",
-          severity: "Critical",
-          status: "Active",
-          affectedSystem: "Inventory Management",
-          threshold: 10,
-          currentValue: 0,
-          recommendedAction: "Emergency restock required - contact supplier immediately",
-          priority: "Critical",
-        },
-        {
-          id: "ALT006",
-          timestamp: "2023-06-01 11:00:00",
-          type: "System",
-          title: "Disk Space Warning",
-          message: "Server disk space usage at 85%",
-          severity: "Warning",
-          status: "Active",
-          affectedSystem: "File System",
-          threshold: "80%",
-          currentValue: "85%",
-          availableSpace: "150 GB",
-          recommendedAction: "Clean up old files or expand storage",
-          priority: "Medium",
-        },
-        {
-          id: "ALT007",
-          timestamp: "2023-06-01 12:30:00",
-          type: "Application",
-          title: "Payment Gateway Error",
-          message: "Payment processing failures detected",
-          severity: "High",
-          status: "Investigating",
-          affectedSystem: "Payment System",
-          errorRate: "15%",
-          affectedTransactions: 23,
-          timeWindow: "30 minutes",
-          recommendedAction: "Check payment gateway connection and logs",
-          priority: "High",
-        },
-        {
-          id: "ALT008",
-          timestamp: "2023-06-01 14:00:00",
-          type: "Security",
-          title: "SSL Certificate Expiring",
-          message: "SSL certificate expires in 7 days",
-          severity: "Warning",
-          status: "Active",
-          affectedSystem: "Web Security",
-          expiryDate: "2023-06-08",
-          domain: "genetix.com",
-          daysRemaining: 7,
-          recommendedAction: "Renew SSL certificate before expiry",
-          priority: "Medium",
-        },
-      ]
+      })
+      console.log("Security logs response:", response)
 
-      setActivityLogs(mockActivityLogs)
-      setSecurityLogs(mockSecurityLogs)
-      setSystemAlerts(mockSystemAlerts)
+      const logsData = response.data?.data || response.data || []
+      setSecurityLogs(logsData)
+    } catch (error) {
+      console.error("Error fetching security logs:", error)
+      message.error("Failed to fetch security logs: " + (error.response?.data?.message || error.message))
+    }
+  }
+
+  // Fetch system alerts
+  const fetchSystemAlerts = async () => {
+    try {
+      const response = await api.get("/admin/alerts", {
+        params: {
+          search: searchText,
+          type: typeFilter,
+          severity: severityFilter,
+          status: statusFilter,
+          startDate: dateRange?.[0]?.format("YYYY-MM-DD"),
+          endDate: dateRange?.[1]?.format("YYYY-MM-DD"),
+        },
+      })
+      console.log("System alerts response:", response)
+
+      const alertsData = response.data?.data || response.data || []
+      setSystemAlerts(alertsData)
+    } catch (error) {
+      console.error("Error fetching system alerts:", error)
+      message.error("Failed to fetch system alerts: " + (error.response?.data?.message || error.message))
+    }
+  }
+
+  // Fetch all logs data
+  const fetchAllLogs = async () => {
+    try {
+      setLoading(true)
+      await Promise.all([fetchActivityLogs(), fetchSecurityLogs(), fetchSystemAlerts()])
+    } catch (error) {
+      console.error("Error fetching logs:", error)
+    } finally {
       setLoading(false)
-    }, 1000)
+    }
+  }
+
+  useEffect(() => {
+    fetchAllLogs()
   }, [])
 
   // Handle view details
@@ -438,19 +168,25 @@ const SystemLogs = () => {
   }
 
   // Handle resolve alert
-  const handleResolveAlert = (id) => {
-    setSystemAlerts(systemAlerts.map((alert) => (alert.id === id ? { ...alert, status: "Resolved" } : alert)))
-    message.success("Alert marked as resolved")
+  const handleResolveAlert = async (id) => {
+    try {
+      await api.put(`/admin/alerts/${id}/resolve`)
+      message.success("Alert marked as resolved")
+      fetchSystemAlerts() // Refresh alerts
+    } catch (error) {
+      console.error("Error resolving alert:", error)
+      message.error("Failed to resolve alert: " + (error.response?.data?.message || error.message))
+    }
   }
 
   // Filter functions
   const filterActivityLogs = () => {
     return activityLogs.filter((log) => {
       const matchesSearch =
-        log.user.toLowerCase().includes(searchText.toLowerCase()) ||
-        log.action.toLowerCase().includes(searchText.toLowerCase()) ||
-        log.details.toLowerCase().includes(searchText.toLowerCase()) ||
-        log.id.toLowerCase().includes(searchText.toLowerCase())
+        log.user?.toLowerCase().includes(searchText.toLowerCase()) ||
+        log.action?.toLowerCase().includes(searchText.toLowerCase()) ||
+        log.details?.toLowerCase().includes(searchText.toLowerCase()) ||
+        log.id?.toLowerCase().includes(searchText.toLowerCase())
 
       const matchesType = typeFilter === "" || log.type === typeFilter
       const matchesUser = userFilter === "" || log.user === userFilter
@@ -469,11 +205,11 @@ const SystemLogs = () => {
   const filterSecurityLogs = () => {
     return securityLogs.filter((log) => {
       const matchesSearch =
-        log.user.toLowerCase().includes(searchText.toLowerCase()) ||
-        log.action.toLowerCase().includes(searchText.toLowerCase()) ||
-        log.details.toLowerCase().includes(searchText.toLowerCase()) ||
-        log.id.toLowerCase().includes(searchText.toLowerCase()) ||
-        log.ipAddress.toLowerCase().includes(searchText.toLowerCase())
+        log.user?.toLowerCase().includes(searchText.toLowerCase()) ||
+        log.action?.toLowerCase().includes(searchText.toLowerCase()) ||
+        log.details?.toLowerCase().includes(searchText.toLowerCase()) ||
+        log.id?.toLowerCase().includes(searchText.toLowerCase()) ||
+        log.ipAddress?.toLowerCase().includes(searchText.toLowerCase())
 
       const matchesSeverity = severityFilter === "" || log.severity === severityFilter
       const matchesStatus = statusFilter === "" || log.status === statusFilter
@@ -492,10 +228,10 @@ const SystemLogs = () => {
   const filterSystemAlerts = () => {
     return systemAlerts.filter((alert) => {
       const matchesSearch =
-        alert.title.toLowerCase().includes(searchText.toLowerCase()) ||
-        alert.message.toLowerCase().includes(searchText.toLowerCase()) ||
-        alert.id.toLowerCase().includes(searchText.toLowerCase()) ||
-        alert.affectedSystem.toLowerCase().includes(searchText.toLowerCase())
+        alert.title?.toLowerCase().includes(searchText.toLowerCase()) ||
+        alert.message?.toLowerCase().includes(searchText.toLowerCase()) ||
+        alert.id?.toLowerCase().includes(searchText.toLowerCase()) ||
+        alert.affectedSystem?.toLowerCase().includes(searchText.toLowerCase())
 
       const matchesType = typeFilter === "" || alert.type === typeFilter
       const matchesSeverity = severityFilter === "" || alert.severity === severityFilter
@@ -513,7 +249,7 @@ const SystemLogs = () => {
   }
 
   // Get unique users for filter
-  const users = [...new Set(activityLogs.map((log) => log.user))]
+  const users = [...new Set(activityLogs.map((log) => log.user).filter(Boolean))]
 
   // Calculate statistics
   const activityStats = {
@@ -543,7 +279,8 @@ const SystemLogs = () => {
       title: "Timestamp",
       dataIndex: "timestamp",
       key: "timestamp",
-      sorter: (a, b) => new Date(a.timestamp) - new Date(b.timestamp),
+      render: (timestamp) => (timestamp ? new Date(timestamp).toLocaleString() : "N/A"),
+      sorter: (a, b) => new Date(a.timestamp || 0) - new Date(b.timestamp || 0),
       width: 150,
     },
     {
@@ -554,10 +291,10 @@ const SystemLogs = () => {
         <Space direction="vertical" size="small">
           <Space>
             <UserOutlined />
-            <Text>{text}</Text>
+            <Text>{text || "N/A"}</Text>
           </Space>
           <Tag size="small" color="blue">
-            {record.userRole}
+            {record.userRole || "Unknown"}
           </Tag>
         </Space>
       ),
@@ -581,7 +318,7 @@ const SystemLogs = () => {
         if (type === "Inventory Management") color = "cyan"
         if (type === "Test Management") color = "magenta"
         if (type === "Content Management") color = "geekblue"
-        return <Tag color={color}>{type}</Tag>
+        return <Tag color={color}>{type || "Unknown"}</Tag>
       },
       filters: [
         { text: "Authentication", value: "Authentication" },
@@ -603,7 +340,7 @@ const SystemLogs = () => {
         const icon = status === "Success" ? <CheckCircleOutlined /> : <ExclamationCircleOutlined />
         return (
           <Tag color={color} icon={icon}>
-            {status}
+            {status || "Unknown"}
           </Tag>
         )
       },
@@ -642,7 +379,8 @@ const SystemLogs = () => {
       title: "Timestamp",
       dataIndex: "timestamp",
       key: "timestamp",
-      sorter: (a, b) => new Date(a.timestamp) - new Date(b.timestamp),
+      render: (timestamp) => (timestamp ? new Date(timestamp).toLocaleString() : "N/A"),
+      sorter: (a, b) => new Date(a.timestamp || 0) - new Date(b.timestamp || 0),
       width: 150,
     },
     {
@@ -652,7 +390,7 @@ const SystemLogs = () => {
       render: (text) => (
         <Space>
           <LockOutlined />
-          <Text>{text}</Text>
+          <Text>{text || "N/A"}</Text>
         </Space>
       ),
       width: 180,
@@ -667,7 +405,8 @@ const SystemLogs = () => {
       title: "Severity",
       dataIndex: "severity",
       key: "severity",
-      render: (severity) => {        let color = "blue"
+      render: (severity) => {
+        let color = "blue"
         let icon = <SafetyOutlined />
         if (severity === "Critical") {
           color = "red"
@@ -684,7 +423,7 @@ const SystemLogs = () => {
         }
         return (
           <Tag color={color} icon={icon}>
-            {severity}
+            {severity || "Unknown"}
           </Tag>
         )
       },
@@ -708,7 +447,7 @@ const SystemLogs = () => {
         if (status === "Monitoring") color = "orange"
         if (status === "Locked") color = "purple"
         if (status === "Mitigated") color = "cyan"
-        return <Tag color={color}>{status}</Tag>
+        return <Tag color={color}>{status || "Unknown"}</Tag>
       },
       filters: [
         { text: "Blocked", value: "Blocked" },
@@ -760,7 +499,8 @@ const SystemLogs = () => {
       title: "Timestamp",
       dataIndex: "timestamp",
       key: "timestamp",
-      sorter: (a, b) => new Date(a.timestamp) - new Date(b.timestamp),
+      render: (timestamp) => (timestamp ? new Date(timestamp).toLocaleString() : "N/A"),
+      sorter: (a, b) => new Date(a.timestamp || 0) - new Date(b.timestamp || 0),
       width: 150,
     },
     {
@@ -774,7 +514,7 @@ const SystemLogs = () => {
         if (type === "System") color = "green"
         if (type === "Performance") color = "purple"
         if (type === "Application") color = "cyan"
-        return <Tag color={color}>{type}</Tag>
+        return <Tag color={color}>{type || "Unknown"}</Tag>
       },
       filters: [
         { text: "Security", value: "Security" },
@@ -794,7 +534,7 @@ const SystemLogs = () => {
         <Space direction="vertical" size="small">
           <Text strong>{text}</Text>
           <Text type="secondary" style={{ fontSize: "12px" }}>
-            {record.affectedSystem}
+            {record.affectedSystem || "N/A"}
           </Text>
         </Space>
       ),
@@ -821,7 +561,7 @@ const SystemLogs = () => {
         }
         return (
           <Tag color={color} icon={icon}>
-            {severity}
+            {severity || "Unknown"}
           </Tag>
         )
       },
@@ -857,7 +597,7 @@ const SystemLogs = () => {
         }
         return (
           <Tag color={color} icon={icon}>
-            {status}
+            {status || "Unknown"}
           </Tag>
         )
       },
@@ -880,7 +620,7 @@ const SystemLogs = () => {
         if (priority === "High") color = "orange"
         if (priority === "Medium") color = "yellow"
         if (priority === "Low") color = "green"
-        return <Tag color={color}>{priority}</Tag>
+        return <Tag color={color}>{priority || "Unknown"}</Tag>
       },
       width: 100,
     },
@@ -914,14 +654,7 @@ const SystemLogs = () => {
         <Title level={2}>System Logs & Monitoring</Title>
         <Space>
           <Button icon={<DownloadOutlined />}>Export</Button>
-          <Button
-            type="primary"
-            icon={<ReloadOutlined />}
-            onClick={() => {
-              setLoading(true)
-              setTimeout(() => setLoading(false), 1000)
-            }}
-          >
+          <Button type="primary" icon={<ReloadOutlined />} onClick={fetchAllLogs} loading={loading}>
             Refresh
           </Button>
         </Space>
@@ -1368,21 +1101,25 @@ const SystemLogs = () => {
         {selectedActivityLog && (
           <Descriptions title="Log Information" bordered column={2}>
             <Descriptions.Item label="Log ID">{selectedActivityLog.id}</Descriptions.Item>
-            <Descriptions.Item label="Timestamp">{selectedActivityLog.timestamp}</Descriptions.Item>
-            <Descriptions.Item label="User">{selectedActivityLog.user}</Descriptions.Item>
-            <Descriptions.Item label="User Role">
-              <Tag color="blue">{selectedActivityLog.userRole}</Tag>
+            <Descriptions.Item label="Timestamp">
+              {selectedActivityLog.timestamp ? new Date(selectedActivityLog.timestamp).toLocaleString() : "N/A"}
             </Descriptions.Item>
-            <Descriptions.Item label="Action">{selectedActivityLog.action}</Descriptions.Item>
+            <Descriptions.Item label="User">{selectedActivityLog.user || "N/A"}</Descriptions.Item>
+            <Descriptions.Item label="User Role">
+              <Tag color="blue">{selectedActivityLog.userRole || "Unknown"}</Tag>
+            </Descriptions.Item>
+            <Descriptions.Item label="Action">{selectedActivityLog.action || "N/A"}</Descriptions.Item>
             <Descriptions.Item label="Type">
-              <Tag color="purple">{selectedActivityLog.type}</Tag>
+              <Tag color="purple">{selectedActivityLog.type || "Unknown"}</Tag>
             </Descriptions.Item>
             <Descriptions.Item label="Status">
-              <Tag color={selectedActivityLog.status === "Success" ? "green" : "red"}>{selectedActivityLog.status}</Tag>
+              <Tag color={selectedActivityLog.status === "Success" ? "green" : "red"}>
+                {selectedActivityLog.status || "Unknown"}
+              </Tag>
             </Descriptions.Item>
-            <Descriptions.Item label="IP Address">{selectedActivityLog.ipAddress}</Descriptions.Item>
+            <Descriptions.Item label="IP Address">{selectedActivityLog.ipAddress || "N/A"}</Descriptions.Item>
             <Descriptions.Item label="Details" span={2}>
-              {selectedActivityLog.details}
+              {selectedActivityLog.details || "No details available"}
             </Descriptions.Item>
 
             {/* Additional fields based on log type */}
@@ -1400,26 +1137,6 @@ const SystemLogs = () => {
             )}
             {selectedActivityLog.newValue && (
               <Descriptions.Item label="New Value">{selectedActivityLog.newValue}</Descriptions.Item>
-            )}
-            {selectedActivityLog.kitCode && (
-              <Descriptions.Item label="Kit Code">{selectedActivityLog.kitCode}</Descriptions.Item>
-            )}
-            {selectedActivityLog.quantity && (
-              <Descriptions.Item label="Quantity">{selectedActivityLog.quantity}</Descriptions.Item>
-            )}
-            {selectedActivityLog.location && (
-              <Descriptions.Item label="Location">{selectedActivityLog.location}</Descriptions.Item>
-            )}
-            {selectedActivityLog.orderId && (
-              <Descriptions.Item label="Order ID">{selectedActivityLog.orderId}</Descriptions.Item>
-            )}
-            {selectedActivityLog.postId && (
-              <Descriptions.Item label="Post ID">{selectedActivityLog.postId}</Descriptions.Item>
-            )}
-            {selectedActivityLog.failureReason && (
-              <Descriptions.Item label="Failure Reason" span={2}>
-                {selectedActivityLog.failureReason}
-              </Descriptions.Item>
             )}
             {selectedActivityLog.userAgent && (
               <Descriptions.Item label="User Agent" span={2}>
@@ -1454,9 +1171,11 @@ const SystemLogs = () => {
         {selectedSecurityLog && (
           <Descriptions title="Security Event Information" bordered column={2}>
             <Descriptions.Item label="Event ID">{selectedSecurityLog.id}</Descriptions.Item>
-            <Descriptions.Item label="Timestamp">{selectedSecurityLog.timestamp}</Descriptions.Item>
-            <Descriptions.Item label="User">{selectedSecurityLog.user}</Descriptions.Item>
-            <Descriptions.Item label="Action">{selectedSecurityLog.action}</Descriptions.Item>
+            <Descriptions.Item label="Timestamp">
+              {selectedSecurityLog.timestamp ? new Date(selectedSecurityLog.timestamp).toLocaleString() : "N/A"}
+            </Descriptions.Item>
+            <Descriptions.Item label="User">{selectedSecurityLog.user || "N/A"}</Descriptions.Item>
+            <Descriptions.Item label="Action">{selectedSecurityLog.action || "N/A"}</Descriptions.Item>
             <Descriptions.Item label="Severity">
               <Tag
                 color={
@@ -1469,7 +1188,7 @@ const SystemLogs = () => {
                         : "green"
                 }
               >
-                {selectedSecurityLog.severity}
+                {selectedSecurityLog.severity || "Unknown"}
               </Tag>
             </Descriptions.Item>
             <Descriptions.Item label="Status">
@@ -1484,13 +1203,13 @@ const SystemLogs = () => {
                         : "blue"
                 }
               >
-                {selectedSecurityLog.status}
+                {selectedSecurityLog.status || "Unknown"}
               </Tag>
             </Descriptions.Item>
-            <Descriptions.Item label="IP Address">{selectedSecurityLog.ipAddress}</Descriptions.Item>
-            <Descriptions.Item label="Location">{selectedSecurityLog.location}</Descriptions.Item>
+            <Descriptions.Item label="IP Address">{selectedSecurityLog.ipAddress || "N/A"}</Descriptions.Item>
+            <Descriptions.Item label="Location">{selectedSecurityLog.location || "N/A"}</Descriptions.Item>
             <Descriptions.Item label="Details" span={2}>
-              {selectedSecurityLog.details}
+              {selectedSecurityLog.details || "No details available"}
             </Descriptions.Item>
 
             {/* Additional fields based on log type */}
@@ -1502,47 +1221,6 @@ const SystemLogs = () => {
             )}
             {selectedSecurityLog.riskScore && (
               <Descriptions.Item label="Risk Score">{selectedSecurityLog.riskScore}</Descriptions.Item>
-            )}
-            {selectedSecurityLog.targetAccount && (
-              <Descriptions.Item label="Target Account">{selectedSecurityLog.targetAccount}</Descriptions.Item>
-            )}
-            {selectedSecurityLog.lockDuration && (
-              <Descriptions.Item label="Lock Duration">{selectedSecurityLog.lockDuration}</Descriptions.Item>
-            )}
-            {selectedSecurityLog.targetUser && (
-              <Descriptions.Item label="Target User">{selectedSecurityLog.targetUser}</Descriptions.Item>
-            )}
-            {selectedSecurityLog.oldRole && (
-              <Descriptions.Item label="Old Role">{selectedSecurityLog.oldRole}</Descriptions.Item>
-            )}
-            {selectedSecurityLog.newRole && (
-              <Descriptions.Item label="New Role">{selectedSecurityLog.newRole}</Descriptions.Item>
-            )}
-            {selectedSecurityLog.attackVector && (
-              <Descriptions.Item label="Attack Vector">{selectedSecurityLog.attackVector}</Descriptions.Item>
-            )}
-            {selectedSecurityLog.payload && (
-              <Descriptions.Item label="Payload" span={2}>
-                <code>{selectedSecurityLog.payload}</code>
-              </Descriptions.Item>
-            )}
-            {selectedSecurityLog.dataType && (
-              <Descriptions.Item label="Data Type">{selectedSecurityLog.dataType}</Descriptions.Item>
-            )}
-            {selectedSecurityLog.recordCount && (
-              <Descriptions.Item label="Record Count">{selectedSecurityLog.recordCount}</Descriptions.Item>
-            )}
-            {selectedSecurityLog.attackType && (
-              <Descriptions.Item label="Attack Type">{selectedSecurityLog.attackType}</Descriptions.Item>
-            )}
-            {selectedSecurityLog.requestCount && (
-              <Descriptions.Item label="Request Count">{selectedSecurityLog.requestCount}</Descriptions.Item>
-            )}
-            {selectedSecurityLog.duration && (
-              <Descriptions.Item label="Duration">{selectedSecurityLog.duration}</Descriptions.Item>
-            )}
-            {selectedSecurityLog.mitigationMethod && (
-              <Descriptions.Item label="Mitigation Method">{selectedSecurityLog.mitigationMethod}</Descriptions.Item>
             )}
             {selectedSecurityLog.userAgent && (
               <Descriptions.Item label="User Agent" span={2}>
@@ -1591,9 +1269,11 @@ const SystemLogs = () => {
         {selectedAlert && (
           <Descriptions title="Alert Information" bordered column={2}>
             <Descriptions.Item label="Alert ID">{selectedAlert.id}</Descriptions.Item>
-            <Descriptions.Item label="Timestamp">{selectedAlert.timestamp}</Descriptions.Item>
+            <Descriptions.Item label="Timestamp">
+              {selectedAlert.timestamp ? new Date(selectedAlert.timestamp).toLocaleString() : "N/A"}
+            </Descriptions.Item>
             <Descriptions.Item label="Type">
-              <Tag color="blue">{selectedAlert.type}</Tag>
+              <Tag color="blue">{selectedAlert.type || "Unknown"}</Tag>
             </Descriptions.Item>
             <Descriptions.Item label="Severity">
               <Tag
@@ -1607,7 +1287,7 @@ const SystemLogs = () => {
                         : "green"
                 }
               >
-                {selectedAlert.severity}
+                {selectedAlert.severity || "Unknown"}
               </Tag>
             </Descriptions.Item>
             <Descriptions.Item label="Status">
@@ -1616,7 +1296,7 @@ const SystemLogs = () => {
                   selectedAlert.status === "Active" ? "red" : selectedAlert.status === "Resolved" ? "green" : "orange"
                 }
               >
-                {selectedAlert.status}
+                {selectedAlert.status || "Unknown"}
               </Tag>
             </Descriptions.Item>
             <Descriptions.Item label="Priority">
@@ -1631,13 +1311,13 @@ const SystemLogs = () => {
                         : "green"
                 }
               >
-                {selectedAlert.priority}
+                {selectedAlert.priority || "Unknown"}
               </Tag>
             </Descriptions.Item>
-            <Descriptions.Item label="Affected System">{selectedAlert.affectedSystem}</Descriptions.Item>
-            <Descriptions.Item label="Title">{selectedAlert.title}</Descriptions.Item>
+            <Descriptions.Item label="Affected System">{selectedAlert.affectedSystem || "N/A"}</Descriptions.Item>
+            <Descriptions.Item label="Title">{selectedAlert.title || "N/A"}</Descriptions.Item>
             <Descriptions.Item label="Message" span={2}>
-              {selectedAlert.message}
+              {selectedAlert.message || "No message available"}
             </Descriptions.Item>
 
             {/* Conditional fields based on alert type */}
@@ -1650,34 +1330,6 @@ const SystemLogs = () => {
             {selectedAlert.ipAddress && (
               <Descriptions.Item label="IP Address">{selectedAlert.ipAddress}</Descriptions.Item>
             )}
-            {selectedAlert.attemptCount && (
-              <Descriptions.Item label="Attempt Count">{selectedAlert.attemptCount}</Descriptions.Item>
-            )}
-            {selectedAlert.timeWindow && (
-              <Descriptions.Item label="Time Window">{selectedAlert.timeWindow}</Descriptions.Item>
-            )}
-            {selectedAlert.duration && <Descriptions.Item label="Duration">{selectedAlert.duration}</Descriptions.Item>}
-            {selectedAlert.backupSize && (
-              <Descriptions.Item label="Backup Size">{selectedAlert.backupSize}</Descriptions.Item>
-            )}
-            {selectedAlert.location && <Descriptions.Item label="Location">{selectedAlert.location}</Descriptions.Item>}
-            {selectedAlert.errorRate && (
-              <Descriptions.Item label="Error Rate">{selectedAlert.errorRate}</Descriptions.Item>
-            )}
-            {selectedAlert.affectedTransactions && (
-              <Descriptions.Item label="Affected Transactions">{selectedAlert.affectedTransactions}</Descriptions.Item>
-            )}
-            {selectedAlert.expiryDate && (
-              <Descriptions.Item label="Expiry Date">{selectedAlert.expiryDate}</Descriptions.Item>
-            )}
-            {selectedAlert.domain && <Descriptions.Item label="Domain">{selectedAlert.domain}</Descriptions.Item>}
-            {selectedAlert.daysRemaining && (
-              <Descriptions.Item label="Days Remaining">{selectedAlert.daysRemaining}</Descriptions.Item>
-            )}
-            {selectedAlert.availableSpace && (
-              <Descriptions.Item label="Available Space">{selectedAlert.availableSpace}</Descriptions.Item>
-            )}
-
             {selectedAlert.recommendedAction && (
               <Descriptions.Item label="Recommended Action" span={2}>
                 <Text strong style={{ color: "#1890ff" }}>

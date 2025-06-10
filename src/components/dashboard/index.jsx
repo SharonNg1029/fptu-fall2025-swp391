@@ -1,5 +1,5 @@
 import React from "react"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import {
   UserOutlined,
   DashboardOutlined,
@@ -10,14 +10,13 @@ import {
   LogoutOutlined,
   MenuFoldOutlined,
   MenuUnfoldOutlined,
-  BellOutlined,
 } from "@ant-design/icons"
-import { Layout, Menu, theme, Avatar, Dropdown, Badge, Input, Space, Typography, Breadcrumb, Button } from "antd"
+import { Layout, Menu, theme, Avatar, Typography, Breadcrumb, Button } from "antd"
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom"
+import LogOut from "../authen-form/LogOut"
 
 const { Header, Content, Footer, Sider } = Layout
 const { Title, Text } = Typography
-const { Search } = Input
 
 function getItem(label, key, icon, children) {
   return {
@@ -36,8 +35,8 @@ const items = [
     getItem("Blog Posts", "cm/blog"),
     getItem("FAQs", "cm/faqs"),
   ]),
-  getItem("Test Kit Inventory", "inventory", <InboxOutlined />, ),
-  getItem("System Logs", "logs", <SafetyOutlined />, ),
+  getItem("Test Kit Inventory", "inventory", <InboxOutlined />),
+  getItem("System Logs", "logs", <SafetyOutlined />),
 ]
 
 const Dashboard = () => {
@@ -45,6 +44,7 @@ const Dashboard = () => {
   const [breadcrumbs, setBreadcrumbs] = useState([])
   const location = useLocation()
   const navigate = useNavigate()
+  const searchRef = useRef(null) // eslint-disable-line no-unused-vars
 
   const {
     token: { colorBgContainer, borderRadiusLG },
@@ -64,54 +64,7 @@ const Dashboard = () => {
     setBreadcrumbs(breadcrumbItems)
   }, [location])
 
-  // User dropdown menu
-  const userMenu = [
-    {
-      key: "profile",
-      label: "My Profile",
-      icon: <UserOutlined />,
-      onClick: () => navigate("/dashboard/profile"),
-    },
-    {
-      type: "divider",
-    },
-    {
-      key: "logout",
-      label: "Logout",
-      icon: <LogoutOutlined />,
-      onClick: () => {
-        // Handle logout logic here
-        navigate("/login")
-      },
-    },
-  ]
-
-  // Notification dropdown menu
-  const notificationMenu = [
-    {
-      key: "1",
-      label: "New user registered",
-      onClick: () => console.log("Notification 1 clicked"),
-    },
-    {
-      key: "2",
-      label: "System alert: Low kit inventory",
-      onClick: () => console.log("Notification 2 clicked"),
-    },
-    {
-      key: "3",
-      label: "New test results available",
-      onClick: () => console.log("Notification 3 clicked"),
-    },
-    {
-      type: "divider",
-    },
-    {
-      key: "all",
-      label: "View all notifications",
-      onClick: () => navigate("/dashboard/notifications"),
-    },
-  ]
+  // User dropdown menu items
 
   return (
     <Layout style={{ minHeight: "100vh" }}>
@@ -139,7 +92,14 @@ const Dashboard = () => {
             justifyContent: collapsed ? "center" : "flex-start",
           }}
         >
-          <img src="/images/logo.png" alt="Genetix Logo" style={{ height: 32, marginRight: collapsed ? 0 : 8 }} />
+          <img
+            src="/images/logo.png"
+            alt="Genetix Logo"
+            style={{ height: 32, marginRight: collapsed ? 0 : 8 }}
+            onError={(e) => {
+              e.target.style.display = "none"
+            }}
+          />
           {!collapsed && (
             <div>
               <Title level={4} style={{ margin: 0, color: "#fff", lineHeight: 1.2 }}>
@@ -171,34 +131,50 @@ const Dashboard = () => {
             position: "sticky",
             top: 0,
             zIndex: 999,
+            height: 64,
           }}
         >
-          <Button
-            type="text"
-            icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
-            onClick={() => setCollapsed(!collapsed)}
-            style={{ fontSize: "16px", width: 64, height: 64 }}
-          />
+          <div style={{ display: "flex", alignItems: "center" }}>
+            <Button
+              type="text"
+              icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
+              onClick={() => setCollapsed(!collapsed)}
+              style={{ fontSize: "16px", width: 64, height: 64 }}
+            />
+          </div>
 
-          <Space size={24}>
-            <Search placeholder="Search..." style={{ width: 250 }} />
+          <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+            {/* Profile Button */}
+            <Button
+              type="text"
+              onClick={() => navigate("/dashboard/profile")}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+                height: 40,
+                padding: "0 12px",
+              }}
+            >
+              <Avatar style={{ backgroundColor: "#1890ff" }} icon={<UserOutlined />} />
+              <span>My Profile</span>
+            </Button>
 
-            <Dropdown menu={{ items: notificationMenu }} placement="bottomRight" arrow>
-              <Badge count={3}>
-                <Avatar
-                  icon={<BellOutlined />}
-                  style={{ backgroundColor: "#f0f2f5", color: "#1890ff", cursor: "pointer" }}
-                />
-              </Badge>
-            </Dropdown>
-
-            <Dropdown menu={{ items: userMenu }} placement="bottomRight" arrow>
-              <Space style={{ cursor: "pointer" }}>
-                <Avatar style={{ backgroundColor: "#1890ff" }} icon={<UserOutlined />} />
-                <span className="hide-on-small">Admin User</span>
-              </Space>
-            </Dropdown>
-          </Space>
+            {/* Logout Button */}
+            <Button
+              type="text"
+              danger
+              icon={<LogoutOutlined />}
+              onClick={() => {
+                if (typeof LogOut.performLogout === "function") {
+                  LogOut.performLogout()
+                }
+              }}
+              style={{ height: 40 }}
+            >
+              Logout
+            </Button>
+          </div>
         </Header>
 
         <Content style={{ margin: "16px 16px 0", overflow: "initial" }}>
@@ -229,6 +205,27 @@ const Dashboard = () => {
           DNA Testing Service Management System ©{new Date().getFullYear()}
         </Footer>
       </Layout>
+
+      {/* Hidden LogOut component for confirmation modal */}
+      <LogOut
+        trigger="function"
+        showConfirmation={true}
+        onLogoutSuccess={() => {
+          console.log("Logout successful")
+        }}
+        onLogoutError={(error) => {
+          console.error("Logout error:", error)
+        }}
+      />
+
+      {/* Enhanced CSS for search dropdown and interactions */}
+      <style jsx global>{`
+  @media (max-width: 768px) {
+    .hide-on-small {
+      display: none;
+    }
+  }
+`}</style>
     </Layout>
   )
 }

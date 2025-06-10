@@ -1,6 +1,14 @@
-import { createSlice } from "@reduxjs/toolkit";
+import { createSlice, createAction } from "@reduxjs/toolkit"
 
-const initialState = null;
+// Tạo action để clear user data (sử dụng cho LogOut component)
+export const clearUser = createAction("user/clearUser")
+
+const initialState = {
+  currentUser: null,
+  isAuthenticated: false,
+  userRole: null,
+  loginTime: null,
+}
 
 export const userSlice = createSlice({
   name: "user",
@@ -8,16 +16,48 @@ export const userSlice = createSlice({
   reducers: {
     login: (state, action) => {
       // Lưu thông tin đăng nhập của user vào state
-      return action.payload;
+      const userData = action.payload
+      state.currentUser = userData
+      state.isAuthenticated = true
+      state.userRole = userData?.role || null
+      state.loginTime = new Date().toISOString()
     },
-    logout: () => {
+    logout: (state) => {
       // Xoá thông tin đăng nhập của user khỏi state
-      return initialState;
+      state.currentUser = null
+      state.isAuthenticated = false
+      state.userRole = null
+      state.loginTime = null
+    },
+    updateUser: (state, action) => {
+      // Cập nhật thông tin user
+      if (state.currentUser) {
+        state.currentUser = { ...state.currentUser, ...action.payload }
+      }
+    },
+    setUserRole: (state, action) => {
+      // Cập nhật role của user
+      state.userRole = action.payload
     },
   },
-});
+  extraReducers: (builder) => {
+    builder.addCase(clearUser, (state) => {
+      // Xử lý action clearUser từ LogOut component
+      state.currentUser = null
+      state.isAuthenticated = false
+      state.userRole = null
+      state.loginTime = null
+    })
+  },
+})
 
 // Action creators are generated for each case reducer function
-export const { login, logout } = userSlice.actions;
+export const { login, logout, updateUser, setUserRole } = userSlice.actions
 
-export default userSlice.reducer;
+// Selectors để lấy data từ state
+export const selectCurrentUser = (state) => state.user?.currentUser
+export const selectIsAuthenticated = (state) => state.user?.isAuthenticated || false
+export const selectUserRole = (state) => state.user?.userRole
+export const selectLoginTime = (state) => state.user?.loginTime
+
+export default userSlice.reducer

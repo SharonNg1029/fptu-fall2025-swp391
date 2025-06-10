@@ -32,7 +32,9 @@ import {
   HistoryOutlined,
   TeamOutlined,
   UserAddOutlined,
+  ReloadOutlined,
 } from "@ant-design/icons"
+import api from "../../../configs/axios"
 
 const { Title } = Typography
 const { Option } = Select
@@ -49,95 +51,25 @@ const AccountManagement = () => {
   const [selectedUser, setSelectedUser] = useState(null)
   const [form] = Form.useForm()
 
-  // Fetch accounts data
-  useEffect(() => {
-    setLoading(true)
-    // Simulate API call
-    setTimeout(() => {
-      const mockAccounts = [
-        {
-          id: 1,
-          username: "admin",
-          email: "admin@genetix.com",
-          phone: "0123456789",
-          role: "Admin",
-          status: "Active",
-          createdAt: "2023-01-01",
-          fullName: "Admin User",
-          lastLogin: "2023-06-01 10:30:00",
-          totalTests: 0,
-          totalSpent: 0,
-        },
-        {
-          id: 2,
-          username: "manager1",
-          email: "manager@genetix.com",
-          phone: "0123456788",
-          role: "Manager",
-          status: "Active",
-          createdAt: "2023-01-02",
-          fullName: "Manager User",
-          lastLogin: "2023-06-01 09:15:00",
-          totalTests: 0,
-          totalSpent: 0,
-        },
-        {
-          id: 3,
-          username: "staff1",
-          email: "staff1@genetix.com",
-          phone: "0123456787",
-          role: "Staff",
-          status: "Active",
-          createdAt: "2023-01-03",
-          fullName: "Staff User One",
-          lastLogin: "2023-06-01 08:45:00",
-          totalTests: 0,
-          totalSpent: 0,
-        },
-        {
-          id: 4,
-          username: "customer1",
-          email: "customer1@genetix.com",
-          phone: "0123456786",
-          role: "Customer",
-          status: "Active",
-          createdAt: "2023-01-04",
-          fullName: "John Doe",
-          lastLogin: "2023-05-30 14:20:00",
-          totalTests: 3,
-          totalSpent: 599.97,
-        },
-        {
-          id: 5,
-          username: "staff2",
-          email: "staff2@genetix.com",
-          phone: "0123456785",
-          role: "Staff",
-          status: "Inactive",
-          createdAt: "2023-01-05",
-          fullName: "Staff User Two",
-          lastLogin: "2023-05-25 16:30:00",
-          totalTests: 0,
-          totalSpent: 0,
-        },
-        {
-          id: 6,
-          username: "customer2",
-          email: "customer2@genetix.com",
-          phone: "0123456784",
-          role: "Customer",
-          status: "Active",
-          createdAt: "2023-02-01",
-          fullName: "Jane Smith",
-          lastLogin: "2023-06-01 11:00:00",
-          totalTests: 1,
-          totalSpent: 199.99,
-        },
-      ]
+  // Fetch accounts data from API
+  const fetchAccounts = async () => {
+    try {
+      setLoading(true)
+      const response = await api.get("/admin/accounts")
+      console.log("Accounts response:", response)
 
-      setAccounts(mockAccounts)
+      const accountsData = response.data?.data || response.data || []
+      setAccounts(accountsData)
+    } catch (error) {
+      console.error("Error fetching accounts:", error)
+      message.error("Failed to fetch accounts: " + (error.response?.data?.message || error.message))
+    } finally {
       setLoading(false)
-    }, 1000)
+    }
+  }
+
+  useEffect(() => {
+    fetchAccounts()
   }, [])
 
   // Handle account edit
@@ -148,74 +80,79 @@ const AccountManagement = () => {
       email: record.email,
       phone: record.phone,
       role: record.role,
-      status: record.status === "Active",
+      status: record.status === "ACTIVE",
       fullName: record.fullName,
     })
     setIsModalVisible(true)
   }
 
   // Handle account delete
-  const handleDelete = (id) => {
-    setAccounts(accounts.filter((account) => account.id !== id))
-    message.success("Account deleted successfully")
+  const handleDelete = async (id) => {
+    try {
+      await api.delete(`/admin/accounts/${id}`)
+      message.success("Account deleted successfully")
+      fetchAccounts() // Refresh the list
+    } catch (error) {
+      console.error("Error deleting account:", error)
+      message.error("Failed to delete account: " + (error.response?.data?.message || error.message))
+    }
   }
 
-  // Handle account status toggle (Activate/Deactivate)
-  const handleStatusToggle = (id, currentStatus) => {
-    const newStatus = currentStatus === "Active" ? "Inactive" : "Active"
-    setAccounts(accounts.map((account) => (account.id === id ? { ...account, status: newStatus } : account)))
-    message.success(`Account ${newStatus === "Active" ? "activated" : "deactivated"} successfully`)
+  // Handle account status toggle
+  const handleStatusToggle = async (id, currentStatus) => {
+    try {
+      const newStatus = currentStatus === "ACTIVE" ? "INACTIVE" : "ACTIVE"
+      await api.put(`/admin/accounts/${id}/status`, { status: newStatus })
+      message.success(`Account ${newStatus === "ACTIVE" ? "activated" : "deactivated"} successfully`)
+      fetchAccounts() // Refresh the list
+    } catch (error) {
+      console.error("Error updating account status:", error)
+      message.error("Failed to update account status: " + (error.response?.data?.message || error.message))
+    }
   }
 
   // Handle form submission
-  const handleFormSubmit = (values) => {
-    if (editingAccount) {
-      // Update existing account
-      setAccounts(
-        accounts.map((account) =>
-          account.id === editingAccount.id
-            ? {
-                ...account,
-                username: values.username,
-                email: values.email,
-                phone: values.phone,
-                role: values.role,
-                status: values.status ? "Active" : "Inactive",
-                fullName: values.fullName,
-              }
-            : account,
-        ),
-      )
-      message.success("Account updated successfully")
-    } else {
-      // Create new account
-      const newAccount = {
-        id: accounts.length + 1,
+  const handleFormSubmit = async (values) => {
+    try {
+      const accountData = {
         username: values.username,
         email: values.email,
         phone: values.phone,
         role: values.role,
-        status: values.status ? "Active" : "Inactive",
-        createdAt: new Date().toISOString().split("T")[0],
+        status: values.status ? "ACTIVE" : "INACTIVE",
         fullName: values.fullName,
-        lastLogin: "Never",
-        totalTests: 0,
-        totalSpent: 0,
       }
-      setAccounts([...accounts, newAccount])
-      message.success("Account created successfully")
+
+      if (editingAccount) {
+        // Update existing account
+        await api.put(`/admin/accounts/${editingAccount.id}`, accountData)
+        message.success("Account updated successfully")
+      } else {
+        // Create new account
+        if (values.password) {
+          accountData.password = values.password
+        }
+        await api.post("/admin/accounts", accountData)
+        message.success("Account created successfully")
+      }
+
+      setIsModalVisible(false)
+      form.resetFields()
+      setEditingAccount(null)
+      fetchAccounts() // Refresh the list
+    } catch (error) {
+      console.error("Error saving account:", error)
+      message.error("Failed to save account: " + (error.response?.data?.message || error.message))
     }
-    setIsModalVisible(false)
-    form.resetFields()
-    setEditingAccount(null)
   }
+
   // Filter accounts based on search text, role, and status
   const filteredAccounts = accounts.filter((account) => {
     const matchesSearch =
-      account.username.toLowerCase().includes(searchText.toLowerCase()) ||
-      account.email.toLowerCase().includes(searchText.toLowerCase()) ||
-      account.phone.includes(searchText) ||
-      account.fullName.toLowerCase().includes(searchText.toLowerCase())
+      account.username?.toLowerCase().includes(searchText.toLowerCase()) ||
+      account.email?.toLowerCase().includes(searchText.toLowerCase()) ||
+      account.phone?.includes(searchText) ||
+      account.fullName?.toLowerCase().includes(searchText.toLowerCase())
 
     const matchesRole = roleFilter === "" || roleFilter === "All" || account.role === roleFilter
     const matchesStatus = statusFilter === "" || account.status === statusFilter
@@ -226,10 +163,10 @@ const AccountManagement = () => {
   // Calculate statistics
   const stats = {
     total: accounts.length,
-    active: accounts.filter((acc) => acc.status === "Active").length,
-    inactive: accounts.filter((acc) => acc.status === "Inactive").length,
-    customers: accounts.filter((acc) => acc.role === "Customer").length,
-    staff: accounts.filter((acc) => acc.role === "Staff" || acc.role === "Manager" || acc.role === "Admin").length,
+    active: accounts.filter((acc) => acc.status === "ACTIVE").length,
+    inactive: accounts.filter((acc) => acc.status === "INACTIVE").length,
+    customers: accounts.filter((acc) => acc.role === "CUSTOMER").length,
+    staff: accounts.filter((acc) => ["STAFF", "MANAGER", "ADMIN"].includes(acc.role)).length,
   }
 
   // Account table columns
@@ -248,10 +185,10 @@ const AccountManagement = () => {
       render: (text) => (
         <Space>
           <UserOutlined />
-          {text}
+          {text || "N/A"}
         </Space>
       ),
-      sorter: (a, b) => a.fullName.localeCompare(b.fullName),
+      sorter: (a, b) => (a.fullName || "").localeCompare(b.fullName || ""),
     },
     {
       title: "Username",
@@ -277,20 +214,20 @@ const AccountManagement = () => {
       render: (text) => (
         <Space>
           <PhoneOutlined />
-          {text}
+          {text || "N/A"}
         </Space>
       ),
     },
     {
       title: "Role",
       dataIndex: "role",
-      key: "role",      render: (role) => {
+      key: "role",
+      render: (role) => {
         let color = "blue"
-        if (role === "All") color = "gold"
-        if (role === "Admin") color = "red"
-        if (role === "Manager") color = "purple"
-        if (role === "Staff") color = "green"
-        if (role === "Customer") color = "blue"
+        if (role === "ADMIN") color = "red"
+        if (role === "MANAGER") color = "purple"
+        if (role === "STAFF") color = "green"
+        if (role === "CUSTOMER") color = "blue"
         return <Tag color={color}>{role}</Tag>
       },
     },
@@ -299,15 +236,16 @@ const AccountManagement = () => {
       dataIndex: "status",
       key: "status",
       render: (status) => {
-        const color = status === "Active" ? "green" : "red"
+        const color = status === "ACTIVE" ? "green" : "red"
         return <Tag color={color}>{status}</Tag>
       },
     },
     {
-      title: "Last Login",
-      dataIndex: "lastLogin",
-      key: "lastLogin",
-      sorter: (a, b) => new Date(a.lastLogin) - new Date(b.lastLogin),
+      title: "Created At",
+      dataIndex: "createdAt",
+      key: "createdAt",
+      render: (date) => (date ? new Date(date).toLocaleDateString() : "N/A"),
+      sorter: (a, b) => new Date(a.createdAt) - new Date(b.createdAt),
     },
     {
       title: "Actions",
@@ -318,16 +256,16 @@ const AccountManagement = () => {
             <Button type="primary" icon={<EditOutlined />} size="small" onClick={() => handleEdit(record)} />
           </Tooltip>
 
-          <Tooltip title={record.status === "Active" ? "Deactivate" : "Activate"}>
+          <Tooltip title={record.status === "ACTIVE" ? "Deactivate" : "Activate"}>
             <Button
-              type={record.status === "Active" ? "default" : "primary"}
-              icon={record.status === "Active" ? <LockOutlined /> : <UnlockOutlined />}
+              type={record.status === "ACTIVE" ? "default" : "primary"}
+              icon={record.status === "ACTIVE" ? <LockOutlined /> : <UnlockOutlined />}
               size="small"
               onClick={() => handleStatusToggle(record.id, record.status)}
             />
           </Tooltip>
 
-          {record.role === "Customer" && (
+          {record.role === "CUSTOMER" && (
             <Tooltip title="View Records">
               <Button
                 type="default"
@@ -360,18 +298,23 @@ const AccountManagement = () => {
       {/* Header */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
         <Title level={2}>Account Management</Title>
-        <Button
-          type="primary"
-          icon={<UserAddOutlined />}
-          size="large"
-          onClick={() => {
-            setEditingAccount(null)
-            form.resetFields()
-            setIsModalVisible(true)
-          }}
-        >
-          Create New Account
-        </Button>
+        <Space>
+          <Button icon={<ReloadOutlined />} onClick={fetchAccounts} loading={loading}>
+            Refresh
+          </Button>
+          <Button
+            type="primary"
+            icon={<UserAddOutlined />}
+            size="large"
+            onClick={() => {
+              setEditingAccount(null)
+              form.resetFields()
+              setIsModalVisible(true)
+            }}
+          >
+            Create New Account
+          </Button>
+        </Space>
       </div>
 
       {/* Statistics Cards */}
@@ -425,18 +368,18 @@ const AccountManagement = () => {
               allowClear
             />
           </Col>
-          <Col xs={24} sm={6} lg={4}>            <Select
+          <Col xs={24} sm={6} lg={4}>
+            <Select
               placeholder="Filter by role"
               value={roleFilter}
               onChange={setRoleFilter}
               style={{ width: "100%" }}
               allowClear
             >
-              <Option value="All">All</Option>
-              <Option value="Admin">Admin</Option>
-              <Option value="Manager">Manager</Option>
-              <Option value="Staff">Staff</Option>
-              <Option value="Customer">Customer</Option>
+              <Option value="ADMIN">Admin</Option>
+              <Option value="MANAGER">Manager</Option>
+              <Option value="STAFF">Staff</Option>
+              <Option value="CUSTOMER">Customer</Option>
             </Select>
           </Col>
           <Col xs={24} sm={6} lg={4}>
@@ -447,8 +390,8 @@ const AccountManagement = () => {
               style={{ width: "100%" }}
               allowClear
             >
-              <Option value="Active">Active</Option>
-              <Option value="Inactive">Inactive</Option>
+              <Option value="ACTIVE">Active</Option>
+              <Option value="INACTIVE">Inactive</Option>
             </Select>
           </Col>
         </Row>
@@ -545,14 +488,14 @@ const AccountManagement = () => {
             </Form.Item>
           )}
 
-          <Row gutter={16}>            <Col span={12}>
+          <Row gutter={16}>
+            <Col span={12}>
               <Form.Item name="role" label="Role" rules={[{ required: true, message: "Please select role" }]}>
                 <Select placeholder="Select role">
-                  <Option value="All">All</Option>
-                  <Option value="Admin">Admin</Option>
-                  <Option value="Manager">Manager</Option>
-                  <Option value="Staff">Staff</Option>
-                  <Option value="Customer">Customer</Option>
+                  <Option value="ADMIN">Admin</Option>
+                  <Option value="MANAGER">Manager</Option>
+                  <Option value="STAFF">Staff</Option>
+                  <Option value="CUSTOMER">Customer</Option>
                 </Select>
               </Form.Item>
             </Col>
@@ -610,13 +553,15 @@ const AccountManagement = () => {
               <Descriptions.Item label="Customer ID">
                 CUST{selectedUser.id.toString().padStart(3, "0")}
               </Descriptions.Item>
-              <Descriptions.Item label="Full Name">{selectedUser.fullName}</Descriptions.Item>
+              <Descriptions.Item label="Full Name">{selectedUser.fullName || "N/A"}</Descriptions.Item>
               <Descriptions.Item label="Email">{selectedUser.email}</Descriptions.Item>
-              <Descriptions.Item label="Phone">{selectedUser.phone}</Descriptions.Item>
-              <Descriptions.Item label="Total Tests">{selectedUser.totalTests}</Descriptions.Item>
-              <Descriptions.Item label="Total Spent">${selectedUser.totalSpent.toFixed(2)}</Descriptions.Item>
-              <Descriptions.Item label="Last Login">{selectedUser.lastLogin}</Descriptions.Item>
-              <Descriptions.Item label="Account Created">{selectedUser.createdAt}</Descriptions.Item>
+              <Descriptions.Item label="Phone">{selectedUser.phone || "N/A"}</Descriptions.Item>
+              <Descriptions.Item label="Total Tests">{selectedUser.totalTests || 0}</Descriptions.Item>
+              <Descriptions.Item label="Total Spent">${(selectedUser.totalSpent || 0).toFixed(2)}</Descriptions.Item>
+              <Descriptions.Item label="Last Login">{selectedUser.lastLogin || "Never"}</Descriptions.Item>
+              <Descriptions.Item label="Account Created">
+                {selectedUser.createdAt ? new Date(selectedUser.createdAt).toLocaleDateString() : "N/A"}
+              </Descriptions.Item>
             </Descriptions>
           </div>
         )}
