@@ -11,18 +11,18 @@ import NonLegalServices from "./pages/home-page/services/non-legalDNA/NonLegalDN
 import OverviewPage from "./pages/dashboard-admin/overview";
 import ServicesOverview from "./pages/home-page/services";
 import LegalServices from "./pages/home-page/services/legalDNA/LegalDNA";
-import HomeContent from "./components/home-content/HomeContent"; 
-import Guide from "./pages/home-page/guide"; 
-import Pricing from "./pages/home-page/pricing"; 
-import Blog from "./pages/home-page/blog"; 
+import HomeContent from "./components/home-content/HomeContent";
+import Guide from "./pages/home-page/guide";
+import Pricing from "./pages/home-page/pricing";
+import Blog from "./pages/home-page/blog";
 import VerifyPage from "./components/verify-otp/VerifyPage";
 import ServiceManagement from "./pages/dashboard-admin/service-management";
 import AccountManagement from "./pages/dashboard-admin/account-management";
-import BlogPosts from "./pages/dashboard-admin/content-managment/BlogPost";
-import FAQs from "./pages/dashboard-admin/content-managment/FAQs";
 import ContentManagement from "./pages/dashboard-admin/content-managment";
 import Inventory from "./pages/dashboard-admin/inventory";
 import SystemLogs from "./pages/dashboard-admin/system-logs";
+import Booking from "./pages/dashboard-admin/services/Booking";
+import ServiceManagementPage from "./pages/dashboard-admin/services/ServiceManagement";
 
 function App() {
   const router = createBrowserRouter([
@@ -69,47 +69,40 @@ function App() {
       path: "/register",
       element: <RegisterPage />,
     },
-{
-  path: "/dashboard",
-  element: <Dashboard />,
-  children: [
     {
-      path: "overview",
-      element: <OverviewPage />,
-    },
-    {
-      path: "services",
-      element: <ServiceManagement />,
-    },
-    {
-      path: "accounts",
-      element: <AccountManagement />,
-    },
-    {
-      path: "cm", // Content Management
-      element: <ContentManagement />,
+      path: "/dashboard",
+      element: <Dashboard />,
       children: [
         {
-          path: "blog",
-          element: <BlogPosts />,
+          path: "overview",
+          element: <OverviewPage />,
         },
         {
-          path: "faqs",
-          element: <FAQs />,
+          path: "services",
+          children: [
+            { path: "booking", element: <Booking /> },
+            { path: "service-management", element: <ServiceManagementPage /> },
+            { index: true, element: <ServiceManagementPage /> },
+          ],
+        },
+        {
+          path: "accounts",
+          element: <AccountManagement />,
+        },
+        {
+          path: "blog", // Blog Post Management
+          element: <ContentManagement />,
+        },
+        {
+          path: "inventory", // Test Kit Inventory
+          element: <Inventory />,
+        },
+        {
+          path: "logs", // System Logs
+          element: <SystemLogs />,
         },
       ],
     },
-    {
-      path: "inventory", // Test Kit Inventory
-      element: <Inventory />,
-    },
-    {
-      path: "logs", // System Logs
-      element: <SystemLogs />,
-
-    },
-  ],
-},
     {
       path: "/verify",
       element: <VerifyPage />,

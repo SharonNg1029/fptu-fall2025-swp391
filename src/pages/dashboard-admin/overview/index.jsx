@@ -1,106 +1,215 @@
-import React from "react"
-import { useState, useEffect } from "react"
-import { Row, Col, Card, Statistic, Typography, Table, Tag, Button, DatePicker, Divider, message } from "antd"
+import React from "react";
+import { useState, useEffect, useCallback } from "react";
+import {
+  Row,
+  Col,
+  Card,
+  Statistic,
+  Typography,
+  Table,
+  Tag,
+  Button,
+  DatePicker,
+  Divider,
+  message,
+} from "antd";
 import {
   UserOutlined,
   MedicineBoxOutlined,
   DollarOutlined,
   CheckCircleOutlined,
   ReloadOutlined,
-} from "@ant-design/icons"
-import { Line, Column, Pie } from "@ant-design/plots"
-import api from "../../../configs/axios"
+} from "@ant-design/icons";
+import { Line, Column, Pie } from "@ant-design/plots";
+import api from "../../../configs/axios";
 
-const { Title, Text } = Typography
-const { RangePicker } = DatePicker
+const { Title, Text } = Typography;
+const { RangePicker } = DatePicker;
 
 const Overview = () => {
-  const [loading, setLoading] = useState(true)
-  const [dateRange, setDateRange] = useState([null, null])
+  const [loading, setLoading] = useState(true);
+  const [dateRange, setDateRange] = useState([null, null]);
   const [stats, setStats] = useState({
     totalUsers: 0,
     completedTests: 0,
     revenue: 0,
     kitsSold: 0,
-  })
-  const [revenueData, setRevenueData] = useState([])
-  const [kitSalesData, setKitSalesData] = useState([])
-  const [serviceDistribution, setServiceDistribution] = useState([])
-  const [recentBookings, setRecentBookings] = useState([])
+  });
+  const [revenueData, setRevenueData] = useState([]);
+  const [kitSalesData, setKitSalesData] = useState([]);
+  const [serviceDistribution, setServiceDistribution] = useState([]);
+  const [recentBookings, setRecentBookings] = useState([]); // Helper function to get date params
+  const getDateParams = () => ({
+    startDate: dateRange[0]?.format("YYYY-MM-DD"),
+    endDate: dateRange[1]?.format("YYYY-MM-DD"),
+  });
 
-  // Fetch dashboard data from API
-  const fetchDashboardData = async () => {
+  // Fetch total customers count
+  const fetchTotalCustomers = async () => {
     try {
-      setLoading(true)
+      const response = await api.get("/admin/dashboard/customers", {
+        params: getDateParams(),
+      });
+      console.log("Total customers response:", response);
 
-      // Fetch dashboard statistics
-      const statsResponse = await api.get("/admin/dashboard/stats", {
-        params: {
-          startDate: dateRange[0]?.format("YYYY-MM-DD"),
-          endDate: dateRange[1]?.format("YYYY-MM-DD"),
-        },
-      })
-      console.log("Dashboard stats response:", statsResponse)
-
-      const statsData = statsResponse.data?.data || statsResponse.data || {}
-      setStats({
-        totalUsers: statsData.totalUsers || 0,
-        completedTests: statsData.completedTests || 0,
-        revenue: statsData.revenue || 0,
-        kitsSold: statsData.kitsSold || 0,
-      })
-
-      // Fetch revenue chart data
-      const revenueResponse = await api.get("/admin/dashboard/revenue-chart", {
-        params: {
-          startDate: dateRange[0]?.format("YYYY-MM-DD"),
-          endDate: dateRange[1]?.format("YYYY-MM-DD"),
-        },
-      })
-      console.log("Revenue chart response:", revenueResponse)
-
-      const revenueChartData = revenueResponse.data?.data || revenueResponse.data || []
-      setRevenueData(revenueChartData)
-
-      // Fetch kit sales chart data
-      const kitSalesResponse = await api.get("/admin/dashboard/kit-sales-chart", {
-        params: {
-          startDate: dateRange[0]?.format("YYYY-MM-DD"),
-          endDate: dateRange[1]?.format("YYYY-MM-DD"),
-        },
-      })
-      console.log("Kit sales chart response:", kitSalesResponse)
-
-      const kitSalesChartData = kitSalesResponse.data?.data || kitSalesResponse.data || []
-      setKitSalesData(kitSalesChartData)
-
-      // Fetch service distribution data
-      const serviceDistResponse = await api.get("/admin/dashboard/service-distribution")
-      console.log("Service distribution response:", serviceDistResponse)
-
-      const serviceDistData = serviceDistResponse.data?.data || serviceDistResponse.data || []
-      setServiceDistribution(serviceDistData)
-
-      // Fetch recent bookings
-      const bookingsResponse = await api.get("/admin/dashboard/recent-bookings", {
-        params: { limit: 5 },
-      })
-      console.log("Recent bookings response:", bookingsResponse)
-
-      const bookingsData = bookingsResponse.data?.data || bookingsResponse.data || []
-      setRecentBookings(bookingsData)
+      const customerData = response.data?.data || response.data || {};
+      setStats((prev) => ({
+        ...prev,
+        totalCustomers: customerData.totalCustomers || customerData.count || 0,
+      }));
     } catch (error) {
-      console.error("Error fetching dashboard data:", error)
-      message.error("Failed to fetch dashboard data: " + (error.response?.data?.message || error.message))
-    } finally {
-      setLoading(false)
+      console.error("Error fetching total customers:", error);
+      throw error;
     }
-  }
+  };
 
+  // Fetch completed tests count
+  const fetchCompletedTests = async () => {
+    try {
+      const response = await api.get("/admin/dashboard/completed-tests", {
+        params: getDateParams(),
+      });
+      console.log("Completed tests response:", response);
+
+      const testsData = response.data?.data || response.data || {};
+      setStats((prev) => ({
+        ...prev,
+        completedTests: testsData.completedTests || testsData.count || 0,
+      }));
+    } catch (error) {
+      console.error("Error fetching completed tests:", error);
+      throw error;
+    }
+  };
+
+  // Fetch revenue data
+  const fetchRevenue = async () => {
+    try {
+      const response = await api.get("/admin/dashboard/revenue", {
+        params: getDateParams(),
+      });
+      console.log("Revenue response:", response);
+
+      const revenueData = response.data?.data || response.data || {};
+      setStats((prev) => ({
+        ...prev,
+        revenue: revenueData.revenue || revenueData.total || 0,
+      }));
+    } catch (error) {
+      console.error("Error fetching revenue:", error);
+      throw error;
+    }
+  };
+
+  // Fetch kits sold count
+  const fetchKitsSold = async () => {
+    try {
+      const response = await api.get("/admin/dashboard/kits-sold", {
+        params: getDateParams(),
+      });
+      console.log("Kits sold response:", response);
+
+      const kitsData = response.data?.data || response.data || {};
+      setStats((prev) => ({
+        ...prev,
+        kitsSold: kitsData.kitsSold || kitsData.count || 0,
+      }));
+    } catch (error) {
+      console.error("Error fetching kits sold:", error);
+      throw error;
+    }
+  };
+
+  // Fetch revenue chart data
+  const fetchRevenueData = async () => {
+    try {
+      const response = await api.get("/admin/dashboard/revenue-chart", {
+        params: getDateParams(),
+      });
+      console.log("Revenue chart response:", response);
+
+      const revenueChartData = response.data?.data || response.data || [];
+      setRevenueData(revenueChartData);
+    } catch (error) {
+      console.error("Error fetching revenue data:", error);
+      throw error;
+    }
+  };
+
+  // Fetch kit sales chart data
+  const fetchKitSalesData = async () => {
+    try {
+      const response = await api.get("/admin/dashboard/kit-sales-chart", {
+        params: getDateParams(),
+      });
+      console.log("Kit sales chart response:", response);
+
+      const kitSalesChartData = response.data?.data || response.data || [];
+      setKitSalesData(kitSalesChartData);
+    } catch (error) {
+      console.error("Error fetching kit sales data:", error);
+      throw error;
+    }
+  };
+
+  // Fetch service distribution data
+  const fetchServiceDistribution = async () => {
+    try {
+      const response = await api.get("/admin/dashboard/service-distribution");
+      console.log("Service distribution response:", response);
+
+      const serviceDistData = response.data?.data || response.data || [];
+      setServiceDistribution(serviceDistData);
+    } catch (error) {
+      console.error("Error fetching service distribution:", error);
+      throw error;
+    }
+  };
+
+  // Fetch recent bookings
+  const fetchRecentBookings = async () => {
+    try {
+      const response = await api.get("/booking/bookings", {
+        params: { limit: 5 },
+      });
+      console.log("Recent bookings response:", response);
+
+      const bookingsData = response.data?.data || response.data || [];
+      setRecentBookings(bookingsData);
+    } catch (error) {
+      console.error("Error fetching recent bookings:", error);
+      throw error;
+    }
+  }; // Main function to fetch all dashboard data
+  const fetchDashboardData = useCallback(async () => {
+    try {
+      setLoading(true);
+
+      // Execute all API calls in parallel for better performance
+      await Promise.all([
+        fetchTotalCustomers(),
+        fetchCompletedTests(),
+        fetchRevenue(),
+        fetchKitsSold(),
+        fetchRevenueData(),
+        fetchKitSalesData(),
+        fetchServiceDistribution(),
+        fetchRecentBookings(),
+      ]);
+    } catch (error) {
+      console.error("Error fetching dashboard data:", error);
+      message.error(
+        "Failed to fetch dashboard data: " +
+          (error.response?.data?.message || error.message)
+      );
+    } finally {
+      setLoading(false);
+    }
+  }, [dateRange]); // eslint-disable-line react-hooks/exhaustive-deps
   // Fetch data on component mount and when date range changes
   useEffect(() => {
-    fetchDashboardData()
-  }, [dateRange])
+    fetchDashboardData();
+  }, [fetchDashboardData]);
 
   // Revenue chart config
   const revenueConfig = {
@@ -125,7 +234,7 @@ const Overview = () => {
       fill: "l(270) 0:#ffffff 0.5:#1890ff 1:#1890ff",
       fillOpacity: 0.2,
     },
-  }
+  };
 
   // Kit sales chart config
   const kitSalesConfig = {
@@ -147,7 +256,7 @@ const Overview = () => {
         autoRotate: false,
       },
     },
-  }
+  };
 
   // Service distribution chart config
   const serviceDistributionConfig = {
@@ -164,7 +273,7 @@ const Overview = () => {
         type: "element-active",
       },
     ],
-  }
+  };
 
   // Table columns
   const columns = [
@@ -196,11 +305,11 @@ const Overview = () => {
       dataIndex: "status",
       key: "status",
       render: (status) => {
-        let color = "blue"
-        if (status === "Completed") color = "green"
-        if (status === "Pending") color = "orange"
-        if (status === "Cancelled") color = "red"
-        return <Tag color={color}>{status || "Unknown"}</Tag>
+        let color = "blue";
+        if (status === "Completed") color = "green";
+        if (status === "Pending") color = "orange";
+        if (status === "Cancelled") color = "red";
+        return <Tag color={color}>{status || "Unknown"}</Tag>;
       },
     },
     {
@@ -212,15 +321,28 @@ const Overview = () => {
         </Button>
       ),
     },
-  ]
+  ];
 
   return (
     <div>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginBottom: 24,
+        }}>
         <Title level={2}>Dashboard Overview</Title>
         <div style={{ display: "flex", gap: 16, alignItems: "center" }}>
-          <RangePicker onChange={(dates) => setDateRange(dates)} format="YYYY-MM-DD" />
-          <Button type="primary" icon={<ReloadOutlined />} onClick={fetchDashboardData} loading={loading}>
+          <RangePicker
+            onChange={(dates) => setDateRange(dates)}
+            format="YYYY-MM-DD"
+          />
+          <Button
+            type="primary"
+            icon={<ReloadOutlined />}
+            onClick={fetchDashboardData}
+            loading={loading}>
             Refresh
           </Button>
         </div>
@@ -279,22 +401,40 @@ const Overview = () => {
       {/* Charts */}
       <Row gutter={[16, 16]}>
         <Col xs={24} lg={12}>
-          <Card title="Monthly Revenue" loading={loading} extra={<Button type="link">View Details</Button>}>
+          <Card
+            title="Monthly Revenue"
+            loading={loading}
+            extra={<Button type="link">View Details</Button>}>
             {revenueData.length > 0 ? (
               <Line {...revenueConfig} height={300} />
             ) : (
-              <div style={{ height: 300, display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <div
+                style={{
+                  height: 300,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}>
                 <Text type="secondary">No revenue data available</Text>
               </div>
             )}
           </Card>
         </Col>
         <Col xs={24} lg={12}>
-          <Card title="Weekly Kit Sales" loading={loading} extra={<Button type="link">View Details</Button>}>
+          <Card
+            title="Weekly Kit Sales"
+            loading={loading}
+            extra={<Button type="link">View Details</Button>}>
             {kitSalesData.length > 0 ? (
               <Column {...kitSalesConfig} height={300} />
             ) : (
-              <div style={{ height: 300, display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <div
+                style={{
+                  height: 300,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}>
                 <Text type="secondary">No kit sales data available</Text>
               </div>
             )}
@@ -304,18 +444,32 @@ const Overview = () => {
 
       <Row gutter={[16, 16]} style={{ marginTop: 16 }}>
         <Col xs={24} lg={12}>
-          <Card title="Service Distribution" loading={loading} extra={<Button type="link">View Details</Button>}>
+          <Card
+            title="Service Distribution"
+            loading={loading}
+            extra={<Button type="link">View Details</Button>}>
             {serviceDistribution.length > 0 ? (
               <Pie {...serviceDistributionConfig} height={300} />
             ) : (
-              <div style={{ height: 300, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <Text type="secondary">No service distribution data available</Text>
+              <div
+                style={{
+                  height: 300,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}>
+                <Text type="secondary">
+                  No service distribution data available
+                </Text>
               </div>
             )}
           </Card>
         </Col>
         <Col xs={24} lg={12}>
-          <Card title="Recent Bookings" loading={loading} extra={<Button type="link">View All</Button>}>
+          <Card
+            title="Recent Bookings"
+            loading={loading}
+            extra={<Button type="link">View All</Button>}>
             <Table
               dataSource={recentBookings}
               columns={columns}
@@ -329,7 +483,7 @@ const Overview = () => {
         </Col>
       </Row>
     </div>
-  )
-}
+  );
+};
 
-export default Overview
+export default Overview;

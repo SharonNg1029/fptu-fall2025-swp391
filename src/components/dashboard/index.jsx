@@ -1,5 +1,5 @@
-import React from "react"
-import { useState, useEffect, useRef } from "react"
+import React from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   UserOutlined,
   DashboardOutlined,
@@ -10,13 +10,22 @@ import {
   LogoutOutlined,
   MenuFoldOutlined,
   MenuUnfoldOutlined,
-} from "@ant-design/icons"
-import { Layout, Menu, theme, Avatar, Typography, Breadcrumb, Button } from "antd"
-import { Link, Outlet, useLocation, useNavigate } from "react-router-dom"
-import LogOut from "../authen-form/LogOut"
+} from "@ant-design/icons";
+import {
+  Layout,
+  Menu,
+  theme,
+  Avatar,
+  Typography,
+  Breadcrumb,
+  Button,
+} from "antd";
+import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
+import LogOut from "../authen-form/LogOut";
+import axiosInstance from "../../configs/axios";
 
-const { Header, Content, Footer, Sider } = Layout
-const { Title, Text } = Typography
+const { Header, Content, Footer, Sider } = Layout;
+const { Title, Text } = Typography;
 
 function getItem(label, key, icon, children) {
   return {
@@ -24,45 +33,68 @@ function getItem(label, key, icon, children) {
     icon,
     children,
     label: children ? label : <Link to={`/dashboard/${key}`}>{label}</Link>,
-  }
+  };
 }
 
 const items = [
   getItem("Dashboard", "overview", <DashboardOutlined />),
   getItem("Account Management", "accounts", <UserOutlined />),
-  getItem("Services", "services", <MedicineBoxOutlined />),
-  getItem("Content Management", "cm", <FileTextOutlined />, [
-    getItem("Blog Posts", "cm/blog"),
-    getItem("FAQs", "cm/faqs"),
+  getItem("Services", "services", <MedicineBoxOutlined />, [
+    getItem(
+      <Link to="/dashboard/services/booking">Booking</Link>,
+      "services/booking",
+      <FileTextOutlined />
+    ),
+    getItem(
+      <Link to="/dashboard/services/service-management">
+        Service Management
+      </Link>,
+      "services/service-management",
+      <MedicineBoxOutlined />
+    ),
   ]),
+  getItem("Blog Posts Management", "blog", <FileTextOutlined />),
   getItem("Test Kit Inventory", "inventory", <InboxOutlined />),
   getItem("System Logs", "logs", <SafetyOutlined />),
-]
+];
 
 const Dashboard = () => {
-  const [collapsed, setCollapsed] = useState(false)
-  const [breadcrumbs, setBreadcrumbs] = useState([])
-  const location = useLocation()
-  const navigate = useNavigate()
-  const searchRef = useRef(null) // eslint-disable-line no-unused-vars
+  const [collapsed, setCollapsed] = useState(false);
+  const [breadcrumbs, setBreadcrumbs] = useState([]);
+  const location = useLocation();
+  const navigate = useNavigate();
+  const searchRef = useRef(null); // eslint-disable-line no-unused-vars
 
   const {
     token: { colorBgContainer, borderRadiusLG },
-  } = theme.useToken()
+  } = theme.useToken();
 
   // Update breadcrumbs based on current location
   useEffect(() => {
-    const pathSnippets = location.pathname.split("/").filter((i) => i)
+    const pathSnippets = location.pathname.split("/").filter((i) => i);
     const breadcrumbItems = pathSnippets.map((snippet, index) => {
-      const url = `/${pathSnippets.slice(0, index + 1).join("/")}`
+      const url = `/${pathSnippets.slice(0, index + 1).join("/")}`;
       return {
         title: snippet.charAt(0).toUpperCase() + snippet.slice(1),
         path: url,
-      }
-    })
+      };
+    });
 
-    setBreadcrumbs(breadcrumbItems)
-  }, [location])
+    setBreadcrumbs(breadcrumbItems);
+  }, [location]);
+
+  // Lấy thông tin user khi load Dashboard (ví dụ sử dụng Bearer Token)
+  useEffect(() => {
+    const fetchUserInfo = async () => {
+      try {
+        await axiosInstance.get("/user/profile"); // endpoint ví dụ
+        // Xử lý dữ liệu user nếu cần
+      } catch (error) {
+        console.error("Fail to get user info:", error);
+      }
+    };
+    fetchUserInfo();
+  }, []);
 
   // User dropdown menu items
 
@@ -81,8 +113,7 @@ const Dashboard = () => {
           top: 0,
           bottom: 0,
           zIndex: 1000,
-        }}
-      >
+        }}>
         <div
           style={{
             height: 64,
@@ -90,22 +121,25 @@ const Dashboard = () => {
             display: "flex",
             alignItems: "center",
             justifyContent: collapsed ? "center" : "flex-start",
-          }}
-        >
+          }}>
           <img
             src="/images/logo.png"
             alt="Genetix Logo"
             style={{ height: 32, marginRight: collapsed ? 0 : 8 }}
             onError={(e) => {
-              e.target.style.display = "none"
+              e.target.style.display = "none";
             }}
           />
           {!collapsed && (
             <div>
-              <Title level={4} style={{ margin: 0, color: "#fff", lineHeight: 1.2 }}>
+              <Title
+                level={4}
+                style={{ margin: 0, color: "#fff", lineHeight: 1.2 }}>
                 Genetix System
               </Title>
-              <Text style={{ color: "#8c8c8c", fontSize: "12px" }}>DNA Testing</Text>
+              <Text style={{ color: "#8c8c8c", fontSize: "12px" }}>
+                DNA Testing
+              </Text>
             </div>
           )}
         </div>
@@ -119,7 +153,8 @@ const Dashboard = () => {
         />
       </Sider>
 
-      <Layout style={{ marginLeft: collapsed ? 80 : 260, transition: "all 0.2s" }}>
+      <Layout
+        style={{ marginLeft: collapsed ? 80 : 260, transition: "all 0.2s" }}>
         <Header
           style={{
             padding: "0 24px",
@@ -132,8 +167,7 @@ const Dashboard = () => {
             top: 0,
             zIndex: 999,
             height: 64,
-          }}
-        >
+          }}>
           <div style={{ display: "flex", alignItems: "center" }}>
             <Button
               type="text"
@@ -154,9 +188,11 @@ const Dashboard = () => {
                 gap: 8,
                 height: 40,
                 padding: "0 12px",
-              }}
-            >
-              <Avatar style={{ backgroundColor: "#1890ff" }} icon={<UserOutlined />} />
+              }}>
+              <Avatar
+                style={{ backgroundColor: "#1890ff" }}
+                icon={<UserOutlined />}
+              />
               <span>My Profile</span>
             </Button>
 
@@ -167,11 +203,10 @@ const Dashboard = () => {
               icon={<LogoutOutlined />}
               onClick={() => {
                 if (typeof LogOut.performLogout === "function") {
-                  LogOut.performLogout()
+                  LogOut.performLogout();
                 }
               }}
-              style={{ height: 40 }}
-            >
+              style={{ height: 40 }}>
               Logout
             </Button>
           </div>
@@ -195,8 +230,7 @@ const Dashboard = () => {
               background: colorBgContainer,
               borderRadius: borderRadiusLG,
               minHeight: "calc(100vh - 184px)",
-            }}
-          >
+            }}>
             <Outlet />
           </div>
         </Content>
@@ -211,23 +245,23 @@ const Dashboard = () => {
         trigger="function"
         showConfirmation={true}
         onLogoutSuccess={() => {
-          console.log("Logout successful")
+          console.log("Logout successful");
         }}
         onLogoutError={(error) => {
-          console.error("Logout error:", error)
+          console.error("Logout error:", error);
         }}
       />
 
       {/* Enhanced CSS for search dropdown and interactions */}
       <style jsx global>{`
-  @media (max-width: 768px) {
-    .hide-on-small {
-      display: none;
-    }
-  }
-`}</style>
+        @media (max-width: 768px) {
+          .hide-on-small {
+            display: none;
+          }
+        }
+      `}</style>
     </Layout>
-  )
-}
+  );
+};
 
-export default Dashboard
+export default Dashboard;

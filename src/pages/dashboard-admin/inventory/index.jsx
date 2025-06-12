@@ -1,6 +1,6 @@
 // Description: Inventory Management Dashboard for Admins
-import React from "react"
-import { useState, useEffect } from "react"
+import React from "react";
+import { useState, useEffect } from "react";
 import {
   Tabs,
   Table,
@@ -25,7 +25,7 @@ import {
   Descriptions,
   Divider,
   message,
-} from "antd"
+} from "antd";
 import {
   InboxOutlined,
   PlusOutlined,
@@ -46,103 +46,109 @@ import {
   ArrowUpOutlined,
   ArrowDownOutlined,
   SwapOutlined,
-} from "@ant-design/icons"
-import api from "../../../configs/axios"
+} from "@ant-design/icons";
+import api from "../../../configs/axios";
 
-const { Title, Text } = Typography
-const { Option } = Select
-const { RangePicker } = DatePicker
-const { TextArea } = Input
-const { Dragger } = Upload
-const { TabPane } = Tabs
+const { Title, Text } = Typography;
+const { Option } = Select;
+const { RangePicker } = DatePicker;
+const { TextArea } = Input;
+const { Dragger } = Upload;
+const { TabPane } = Tabs;
 
 const Inventory = () => {
-  const [loading, setLoading] = useState(true)
-  const [activeTab, setActiveTab] = useState("overview")
+  const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState("overview");
 
   // Inventory data
-  const [inventory, setInventory] = useState([])
-  const [transactions, setTransactions] = useState([])
+  const [inventory, setInventory] = useState([]);
+  const [transactions, setTransactions] = useState([]);
   const [inventoryStats, setInventoryStats] = useState({
     totalKits: 0,
     availableKits: 0,
     lowStockKits: 0,
     outOfStockKits: 0,
-    totalValue: 0,
-  })
+  });
 
   // Search and filter states
-  const [searchText, setSearchText] = useState("")
-  const [statusFilter, setStatusFilter] = useState("")
-  const [typeFilter, setTypeFilter] = useState("")
-  const [dateRange, setDateRange] = useState(null)
+  const [searchText, setSearchText] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
+  const [typeFilter, setTypeFilter] = useState("");
+  const [dateRange, setDateRange] = useState(null);
 
   // Modal states
-  const [isAddStockModalVisible, setIsAddStockModalVisible] = useState(false)
-  const [isDetailModalVisible, setIsDetailModalVisible] = useState(false)
-  const [isTransactionDetailModalVisible, setIsTransactionDetailModalVisible] = useState(false)
-  const [selectedKit, setSelectedKit] = useState(null)
-  const [selectedTransaction, setSelectedTransaction] = useState(null)
+  const [isAddStockModalVisible, setIsAddStockModalVisible] = useState(false);
+  const [isDetailModalVisible, setIsDetailModalVisible] = useState(false);
+  const [isTransactionDetailModalVisible, setIsTransactionDetailModalVisible] =
+    useState(false);
+  const [selectedKit, setSelectedKit] = useState(null);
+  const [selectedTransaction, setSelectedTransaction] = useState(null);
 
   // Form states
-  const [form] = Form.useForm()
-  const [addInventoryForm] = Form.useForm()
-  const [batchItems, setBatchItems] = useState([])
-  const [addMode, setAddMode] = useState("single")
+  const [form] = Form.useForm();
 
   // Fetch inventory data
   const fetchInventory = async () => {
     try {
-      setLoading(true)
-      const response = await api.get("/admin/inventory")
-      console.log("Inventory response:", response)
+      setLoading(true);
+      // Sử dụng API mới lấy tất cả kit
+      const response = await api.get("/admin/kitInventory/all");
+      const inventoryData = response.data?.data || response.data || [];
+      setInventory(inventoryData);
 
-      const inventoryData = response.data?.data || response.data || []
-      setInventory(inventoryData)
-
-      // Calculate stats
-      const totalKits = inventoryData.reduce((sum, kit) => sum + (kit.quantity || 0), 0)
-      const availableKits = inventoryData.filter((kit) => (kit.quantity || 0) > 0).length
+      // Tính toán lại stats dựa trên các trường mới
+      const totalKits = inventoryData.reduce(
+        (sum, kit) => sum + (kit.quantity || 0),
+        0
+      );
+      const availableKits = inventoryData.filter(
+        (kit) => kit.isAvailable === 1
+      ).length;
       const lowStockKits = inventoryData.filter(
-        (kit) => (kit.quantity || 0) > 0 && (kit.quantity || 0) <= (kit.threshold || 0),
-      ).length
-      const outOfStockKits = inventoryData.filter((kit) => (kit.quantity || 0) === 0).length
-      const totalValue = inventoryData.reduce((sum, kit) => sum + (kit.quantity || 0) * (kit.unitPrice || 0), 0)
+        (kit) => kit.isAvailable === 1 && (kit.quantity || 0) <= 10
+      ).length;
+      const outOfStockKits = inventoryData.filter(
+        (kit) => kit.isAvailable === 0 || (kit.quantity || 0) === 0
+      ).length;
 
       setInventoryStats({
         totalKits,
         availableKits,
         lowStockKits,
         outOfStockKits,
-        totalValue,
-      })
+      });
     } catch (error) {
-      console.error("Error fetching inventory:", error)
-      message.error("Failed to fetch inventory: " + (error.response?.data?.message || error.message))
+      message.error(
+        "Failed to fetch inventory: " +
+          (error.response?.data?.message || error.message)
+      );
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   // Fetch transactions data
   const fetchTransactions = async () => {
     try {
-      const response = await api.get("/admin/inventory/transactions")
-      console.log("Transactions response:", response)
+      const response = await api.get("/admin/inventory/transactions");
+      console.log("Transactions response:", response);
 
-      const transactionsData = response.data?.data || response.data || []
-      setTransactions(transactionsData)
+      const transactionsData = response.data?.data || response.data || [];
+      setTransactions(transactionsData);
     } catch (error) {
-      console.error("Error fetching transactions:", error)
-      message.error("Failed to fetch transactions: " + (error.response?.data?.message || error.message))
+      console.error("Error fetching transactions:", error);
+      message.error(
+        "Failed to fetch transactions: " +
+          (error.response?.data?.message || error.message)
+      );
     }
-  }
+  };
 
   // Fetch data
   useEffect(() => {
-    fetchInventory()
-    fetchTransactions()
-  }, [])
+    fetchInventory();
+    fetchTransactions();
+  }, []);
 
   // Handle add stock
   const handleAddStock = async (values) => {
@@ -150,106 +156,54 @@ const Inventory = () => {
       await api.post(`/admin/inventory/${selectedKit.id}/add-stock`, {
         quantity: values.quantity,
         notes: values.notes,
-      })
+      });
 
-      message.success(`Added ${values.quantity} units to ${selectedKit.name}`)
-      setIsAddStockModalVisible(false)
-      form.resetFields()
-      setSelectedKit(null)
-      fetchInventory() // Refresh the list
-      fetchTransactions() // Refresh transactions
+      message.success(`Added ${values.quantity} units to ${selectedKit.name}`);
+      setIsAddStockModalVisible(false);
+      form.resetFields();
+      setSelectedKit(null);
+      fetchInventory(); // Refresh the list
+      fetchTransactions(); // Refresh transactions
     } catch (error) {
-      console.error("Error adding stock:", error)
-      message.error("Failed to add stock: " + (error.response?.data?.message || error.message))
+      console.error("Error adding stock:", error);
+      message.error(
+        "Failed to add stock: " +
+          (error.response?.data?.message || error.message)
+      );
     }
-  }
+  };
 
   // Handle single item form submission
   const handleSingleSubmit = async (values) => {
     try {
-      setLoading(true)
+      setLoading(true);
       const kitData = {
-        code: values.kitCode,
-        name: values.kitName,
+        name: values.name,
+        isAvailable: values.isAvailable,
         quantity: values.quantity,
-        threshold: values.threshold,
         unitPrice: values.unitPrice,
         location: values.location,
         supplier: values.supplier,
         expiryDate: values.expiryDate?.format("YYYY-MM-DD") || null,
         batchNumber: values.batchNumber,
         notes: values.notes,
-      }
+      };
 
-      await api.post("/admin/inventory", kitData)
-      message.success("Inventory item added successfully!")
-      addInventoryForm.resetFields()
-      fetchInventory() // Refresh the list
-      fetchTransactions() // Refresh transactions
+      await api.post("/admin/inventory", kitData);
+      message.success("Inventory item added successfully!");
+      form.resetFields();
+      fetchInventory(); // Refresh the list
+      fetchTransactions(); // Refresh transactions
     } catch (error) {
-      console.error("Error adding inventory item:", error)
-      message.error("Failed to add inventory item: " + (error.response?.data?.message || error.message))
+      console.error("Error adding inventory item:", error);
+      message.error(
+        "Failed to add inventory item: " +
+          (error.response?.data?.message || error.message)
+      );
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
-
-  // Add item to batch
-  const addToBatch = () => {
-    addInventoryForm
-      .validateFields()
-      .then((values) => {
-        const newItem = {
-          id: Date.now(),
-          ...values,
-          totalValue: values.quantity * values.unitPrice,
-        }
-        setBatchItems([...batchItems, newItem])
-        addInventoryForm.resetFields()
-        message.success("Item added to batch")
-      })
-      .catch((error) => {
-        console.log("Validation failed:", error)
-      })
-  }
-
-  // Remove item from batch
-  const removeFromBatch = (id) => {
-    setBatchItems(batchItems.filter((item) => item.id !== id))
-    message.success("Item removed from batch")
-  }
-
-  // Submit batch
-  const submitBatch = async () => {
-    if (batchItems.length === 0) {
-      message.warning("No items in batch to submit")
-      return
-    }
-
-    try {
-      setLoading(true)
-      const batchData = batchItems.map((item) => ({
-        code: item.kitCode,
-        name: item.kitName,
-        quantity: item.quantity,
-        threshold: item.threshold || 10,
-        unitPrice: item.unitPrice,
-        location: item.location,
-        supplier: item.supplier || "Unknown",
-      }))
-
-      await api.post("/admin/inventory/batch", { items: batchData })
-      message.success(`Successfully added ${batchItems.length} inventory items!`)
-      setBatchItems([])
-      fetchInventory() // Refresh the list
-      fetchTransactions() // Refresh transactions
-    } catch (error) {
-      console.error("Error submitting batch:", error)
-      message.error("Failed to submit batch: " + (error.response?.data?.message || error.message))
-    } finally {
-      setLoading(false)
-    }
-  }
+  };
 
   // Filter functions
   const filteredInventory = inventory.filter((kit) => {
@@ -257,51 +211,61 @@ const Inventory = () => {
       kit.name?.toLowerCase().includes(searchText.toLowerCase()) ||
       kit.code?.toLowerCase().includes(searchText.toLowerCase()) ||
       kit.id?.toString().toLowerCase().includes(searchText.toLowerCase()) ||
-      kit.supplier?.toLowerCase().includes(searchText.toLowerCase())
+      kit.supplier?.toLowerCase().includes(searchText.toLowerCase());
 
-    const matchesStatus = statusFilter === "" || kit.status === statusFilter
+    const matchesStatus = statusFilter === "" || kit.status === statusFilter;
 
-    return matchesSearch && matchesStatus
-  })
+    return matchesSearch && matchesStatus;
+  });
 
   const filteredTransactions = transactions.filter((transaction) => {
     const matchesSearch =
       transaction.kitCode?.toLowerCase().includes(searchText.toLowerCase()) ||
       transaction.kitName?.toLowerCase().includes(searchText.toLowerCase()) ||
       transaction.id?.toLowerCase().includes(searchText.toLowerCase()) ||
-      transaction.performedBy?.toLowerCase().includes(searchText.toLowerCase())
+      transaction.performedBy?.toLowerCase().includes(searchText.toLowerCase());
 
-    const matchesType = typeFilter === "" || transaction.type === typeFilter
+    const matchesType = typeFilter === "" || transaction.type === typeFilter;
 
     const matchesDateRange =
       !dateRange ||
       !dateRange[0] ||
       !dateRange[1] ||
       (new Date(transaction.date) >= dateRange[0].startOf("day").toDate() &&
-        new Date(transaction.date) <= dateRange[1].endOf("day").toDate())
+        new Date(transaction.date) <= dateRange[1].endOf("day").toDate());
 
-    return matchesSearch && matchesType && matchesDateRange
-  })
+    return matchesSearch && matchesType && matchesDateRange;
+  });
 
   // Table columns
   const inventoryColumns = [
     {
       title: "Kit ID",
-      dataIndex: "id",
-      key: "id",
-      sorter: (a, b) => (a.id || "").toString().localeCompare((b.id || "").toString()),
-    },
-    {
-      title: "Code",
-      dataIndex: "code",
-      key: "code",
-      sorter: (a, b) => (a.code || "").localeCompare(b.code || ""),
+      dataIndex: "kitID",
+      key: "kitID",
+      sorter: (a, b) =>
+        (a.kitID || "").toString().localeCompare((b.kitID || "").toString()),
     },
     {
       title: "Name",
       dataIndex: "name",
       key: "name",
       sorter: (a, b) => (a.name || "").localeCompare(b.name || ""),
+    },
+    {
+      title: "Available",
+      dataIndex: "isAvailable",
+      key: "isAvailable",
+      render: (isAvailable) => (
+        <Tag color={isAvailable === 1 ? "green" : "red"}>
+          {isAvailable === 1 ? "Available" : "Unavailable"}
+        </Tag>
+      ),
+      filters: [
+        { text: "Available", value: 1 },
+        { text: "Unavailable", value: 0 },
+      ],
+      onFilter: (value, record) => record.isAvailable === value,
     },
     {
       title: "Quantity",
@@ -311,212 +275,62 @@ const Inventory = () => {
       sorter: (a, b) => (a.quantity || 0) - (b.quantity || 0),
     },
     {
-      title: "Status",
-      dataIndex: "status",
-      key: "status",
-      render: (status, record) => {
-        let color = "green"
-        let icon = <CheckCircleOutlined />
-        let displayStatus = status
-
-        if (!status) {
-          // Calculate status based on quantity and threshold
-          if ((record.quantity || 0) === 0) {
-            displayStatus = "Out of Stock"
-            color = "red"
-            icon = <ExclamationCircleOutlined />
-          } else if ((record.quantity || 0) <= (record.threshold || 0)) {
-            displayStatus = "Low Stock"
-            color = "orange"
-            icon = <WarningOutlined />
-          } else {
-            displayStatus = "In Stock"
-            color = "green"
-            icon = <CheckCircleOutlined />
-          }
-        } else {
-          if (status === "Low Stock") {
-            color = "orange"
-            icon = <WarningOutlined />
-          } else if (status === "Out of Stock") {
-            color = "red"
-            icon = <ExclamationCircleOutlined />
-          }
-        }
-
-        return (
-          <Tag color={color} icon={icon}>
-            {displayStatus}
-          </Tag>
-        )
-      },
-      filters: [
-        { text: "In Stock", value: "In Stock" },
-        { text: "Low Stock", value: "Low Stock" },
-        { text: "Out of Stock", value: "Out of Stock" },
-      ],
-      onFilter: (value, record) => {
-        const status =
-          record.status ||
-          ((record.quantity || 0) === 0
-            ? "Out of Stock"
-            : (record.quantity || 0) <= (record.threshold || 0)
-              ? "Low Stock"
-              : "In Stock")
-        return status === value
-      },
-    },
-    {
-      title: "Stock Level",
-      key: "stockLevel",
-      render: (_, record) => {
-        let color = "#52c41a"
-        const quantity = record.quantity || 0
-        const threshold = record.threshold || 0
-
-        if (quantity === 0) {
-          color = "#ff4d4f"
-        } else if (quantity <= threshold) {
-          color = "#faad14"
-        }
-
-        const percent = threshold > 0 ? Math.min(100, Math.round((quantity / threshold) * 100)) : 100
-
-        return <Progress percent={percent} strokeColor={color} format={() => `${quantity}/${threshold}`} />
-      },
-    },
-    {
-      title: "Value",
-      key: "value",
-      render: (_, record) => `$${((record.quantity || 0) * (record.unitPrice || 0)).toFixed(2)}`,
-      sorter: (a, b) => (a.quantity || 0) * (a.unitPrice || 0) - (b.quantity || 0) * (b.unitPrice || 0),
-    },
-    {
       title: "Actions",
       key: "actions",
       render: (_, record) => (
         <Space>
-          <Tooltip title="Add Stock">
-            <Button
-              type="primary"
-              icon={<PlusOutlined />}
-              size="small"
-              onClick={() => {
-                setSelectedKit(record)
-                setIsAddStockModalVisible(true)
-              }}
-            />
-          </Tooltip>
           <Tooltip title="View Details">
             <Button
               type="default"
               icon={<EyeOutlined />}
               size="small"
               onClick={() => {
-                setSelectedKit(record)
-                setIsDetailModalVisible(true)
+                setSelectedKit(record);
+                setIsDetailModalVisible(true);
               }}
             />
           </Tooltip>
         </Space>
       ),
     },
-  ]
+  ];
 
+  // Kit Transactions columns (đã chỉnh sửa cho hợp lý)
   const transactionColumns = [
     {
       title: "Transaction ID",
-      dataIndex: "id",
-      key: "id",
-      sorter: (a, b) => (a.id || "").localeCompare(b.id || ""),
+      dataIndex: "transactionID",
+      key: "transactionID",
+      sorter: (a, b) =>
+        (a.transactionID || "").localeCompare(b.transactionID || ""),
     },
     {
-      title: "Date & Time",
-      dataIndex: "date",
-      key: "date",
-      render: (date) => (date ? new Date(date).toLocaleString() : "N/A"),
-      sorter: (a, b) => new Date(a.date || 0) - new Date(b.date || 0),
+      title: "Booking ID",
+      dataIndex: "bookingID",
+      key: "bookingID",
+      sorter: (a, b) => (a.bookingID || "").localeCompare(b.bookingID || ""),
     },
     {
-      title: "Type",
-      dataIndex: "type",
-      key: "type",
-      render: (type) => {
-        let color = "blue"
-        let icon = <SwapOutlined />
-
-        if (type === "Stock In") {
-          color = "green"
-          icon = <ArrowUpOutlined />
-        } else if (type === "Stock Out") {
-          color = "red"
-          icon = <ArrowDownOutlined />
-        } else if (type === "Transfer") {
-          color = "purple"
-          icon = <SwapOutlined />
-        } else if (type === "Adjustment") {
-          color = "orange"
-          icon = <HistoryOutlined />
-        }
-
-        return (
-          <Tag color={color} icon={icon}>
-            {type}
-          </Tag>
-        )
-      },
+      title: "Kit ID",
+      dataIndex: "kitID",
+      key: "kitID",
+      sorter: (a, b) =>
+        (a.kitID || "").toString().localeCompare((b.kitID || "").toString()),
+    },
+    {
+      title: "Kit Sold",
+      dataIndex: "isSelled",
+      key: "isSelled",
+      render: (isSelled) => (
+        <Tag color={isSelled === 1 ? "green" : "red"}>
+          {isSelled === 1 ? "Sold" : "Not Sold"}
+        </Tag>
+      ),
       filters: [
-        { text: "Stock In", value: "Stock In" },
-        { text: "Stock Out", value: "Stock Out" },
-        { text: "Transfer", value: "Transfer" },
-        { text: "Adjustment", value: "Adjustment" },
+        { text: "Sold", value: 1 },
+        { text: "Not Sold", value: 0 },
       ],
-      onFilter: (value, record) => record.type === value,
-    },
-    {
-      title: "Kit Code",
-      dataIndex: "kitCode",
-      key: "kitCode",
-    },
-    {
-      title: "Kit Name",
-      dataIndex: "kitName",
-      key: "kitName",
-    },
-    {
-      title: "Quantity",
-      dataIndex: "quantity",
-      key: "quantity",
-      render: (quantity) => (
-        <Text style={{ color: (quantity || 0) > 0 ? "#52c41a" : "#ff4d4f" }}>
-          {(quantity || 0) > 0 ? "+" : ""}
-          {quantity || 0}
-        </Text>
-      ),
-      sorter: (a, b) => (a.quantity || 0) - (b.quantity || 0),
-    },
-    {
-      title: "Total Value",
-      dataIndex: "totalValue",
-      key: "totalValue",
-      render: (value) => (
-        <Text style={{ color: (value || 0) > 0 ? "#52c41a" : "#ff4d4f" }}>${Math.abs(value || 0).toFixed(2)}</Text>
-      ),
-      sorter: (a, b) => (a.totalValue || 0) - (b.totalValue || 0),
-    },
-    {
-      title: "Performed By",
-      dataIndex: "performedBy",
-      key: "performedBy",
-    },
-    {
-      title: "Status",
-      dataIndex: "status",
-      key: "status",
-      render: (status) => {
-        const color = status === "Completed" ? "green" : "orange"
-        return <Tag color={color}>{status || "Completed"}</Tag>
-      },
+      onFilter: (value, record) => record.isSelled === value,
     },
     {
       title: "Actions",
@@ -528,76 +342,14 @@ const Inventory = () => {
             icon={<EyeOutlined />}
             size="small"
             onClick={() => {
-              setSelectedTransaction(record)
-              setIsTransactionDetailModalVisible(true)
+              setSelectedTransaction(record);
+              setIsTransactionDetailModalVisible(true);
             }}
           />
         </Tooltip>
       ),
     },
-  ]
-
-  const batchColumns = [
-    {
-      title: "Kit Code",
-      dataIndex: "kitCode",
-      key: "kitCode",
-    },
-    {
-      title: "Kit Name",
-      dataIndex: "kitName",
-      key: "kitName",
-    },
-    {
-      title: "Quantity",
-      dataIndex: "quantity",
-      key: "quantity",
-    },
-    {
-      title: "Unit Price",
-      dataIndex: "unitPrice",
-      key: "unitPrice",
-      render: (price) => `$${(price || 0).toFixed(2)}`,
-    },
-    {
-      title: "Total Value",
-      dataIndex: "totalValue",
-      key: "totalValue",
-      render: (value) => `$${(value || 0).toFixed(2)}`,
-    },
-    {
-      title: "Location",
-      dataIndex: "location",
-      key: "location",
-    },
-    {
-      title: "Actions",
-      key: "actions",
-      render: (_, record) => (
-        <Button type="link" danger icon={<DeleteOutlined />} onClick={() => removeFromBatch(record.id)}>
-          Remove
-        </Button>
-      ),
-    },
-  ]
-
-  // Handle batch upload
-  const handleBatchUpload = {
-    name: "file",
-    multiple: false,
-    accept: ".csv,.xlsx,.xls",
-    beforeUpload: (file) => {
-      const isValidType = file.type === "text/csv" || file.type.includes("sheet")
-      if (!isValidType) {
-        message.error("Please upload a CSV or Excel file!")
-        return false
-      }
-      return false
-    },
-    onChange: (info) => {
-      console.log("File info:", info)
-    },
-  }
+  ];
 
   // Calculate transaction stats
   const transactionStats = {
@@ -606,12 +358,21 @@ const Inventory = () => {
     stockOut: transactions.filter((t) => t.type === "Stock Out").length,
     transfers: transactions.filter((t) => t.type === "Transfer").length,
     adjustments: transactions.filter((t) => t.type === "Adjustment").length,
-    totalValue: transactions.reduce((sum, t) => sum + Math.abs(t.totalValue || 0), 0),
-  }
+    totalValue: transactions.reduce(
+      (sum, t) => sum + Math.abs(t.totalValue || 0),
+      0
+    ),
+  };
 
   return (
     <div>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginBottom: 24,
+        }}>
         <Title level={2}>Test Kit Inventory Management</Title>
         <Space>
           <Button icon={<FileExcelOutlined />}>Export</Button>
@@ -620,11 +381,10 @@ const Inventory = () => {
             type="primary"
             icon={<ReloadOutlined />}
             onClick={() => {
-              fetchInventory()
-              fetchTransactions()
+              fetchInventory();
+              fetchTransactions();
             }}
-            loading={loading}
-          >
+            loading={loading}>
             Refresh
           </Button>
         </Space>
@@ -670,8 +430,7 @@ const Inventory = () => {
               Stock Overview
             </span>
           }
-          key="overview"
-        >
+          key="overview">
           {/* Stats Cards */}
           <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
             <Col xs={24} sm={12} lg={6}>
@@ -687,7 +446,7 @@ const Inventory = () => {
             <Col xs={24} sm={12} lg={6}>
               <Card>
                 <Statistic
-                  title="Kit Types"
+                  title="Kit Sold"
                   value={inventory.length}
                   prefix={<BarChartOutlined />}
                   valueStyle={{ color: "#722ed1" }}
@@ -735,8 +494,7 @@ const Inventory = () => {
                   value={statusFilter}
                   onChange={setStatusFilter}
                   style={{ width: "100%" }}
-                  allowClear
-                >
+                  allowClear>
                   <Option value="In Stock">In Stock</Option>
                   <Option value="Low Stock">Low Stock</Option>
                   <Option value="Out of Stock">Out of Stock</Option>
@@ -756,14 +514,16 @@ const Inventory = () => {
                 pageSize: 10,
                 showSizeChanger: true,
                 showQuickJumper: true,
-                showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} items`,
+                showTotal: (total, range) =>
+                  `${range[0]}-${range[1]} of ${total} items`,
               }}
               expandable={{
                 expandedRowRender: (record) => (
                   <div>
                     <Row gutter={[16, 16]}>
                       <Col span={8}>
-                        <Text strong>Unit Price:</Text> ${(record.unitPrice || 0).toFixed(2)}
+                        <Text strong>Unit Price:</Text> $
+                        {(record.unitPrice || 0).toFixed(2)}
                       </Col>
                       <Col span={8}>
                         <Text strong>Location:</Text> {record.location || "N/A"}
@@ -774,13 +534,16 @@ const Inventory = () => {
                     </Row>
                     <Row gutter={[16, 16]} style={{ marginTop: 8 }}>
                       <Col span={8}>
-                        <Text strong>Last Restocked:</Text> {record.lastRestocked || "N/A"}
+                        <Text strong>Last Restocked:</Text>{" "}
+                        {record.lastRestocked || "N/A"}
                       </Col>
                       <Col span={8}>
-                        <Text strong>Expiry Date:</Text> {record.expiryDate || "N/A"}
+                        <Text strong>Expiry Date:</Text>{" "}
+                        {record.expiryDate || "N/A"}
                       </Col>
                       <Col span={8}>
-                        <Text strong>Batch Number:</Text> {record.batchNumber || "N/A"}
+                        <Text strong>Batch Number:</Text>{" "}
+                        {record.batchNumber || "N/A"}
                       </Col>
                     </Row>
                   </div>
@@ -798,248 +561,58 @@ const Inventory = () => {
               Add Inventory
             </span>
           }
-          key="add"
-        >
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
+          key="add">
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              marginBottom: 24,
+            }}>
             <Title level={3}>Add Inventory</Title>
-            <Space>
-              <Button type={addMode === "single" ? "primary" : "default"} onClick={() => setAddMode("single")}>
-                Single Item
-              </Button>
-              <Button type={addMode === "batch" ? "primary" : "default"} onClick={() => setAddMode("batch")}>
-                Batch Add
-              </Button>
-            </Space>
           </div>
 
-          {addMode === "single" ? (
-            // Single Item Form
-            <Card title="Add Single Inventory Item">
-              <Form
-                form={addInventoryForm}
-                layout="vertical"
-                onFinish={handleSingleSubmit}
-                initialValues={{
-                  threshold: 10,
-                  location: "Warehouse A",
-                }}
-              >
-                <Row gutter={[16, 16]}>
-                  <Col xs={24} sm={12} lg={8}>
-                    <Form.Item
-                      name="kitCode"
-                      label="Kit Code"
-                      rules={[{ required: true, message: "Please enter kit code" }]}
-                    >
-                      <Input placeholder="e.g., DNA-PAT-001" />
-                    </Form.Item>
-                  </Col>
-                  <Col xs={24} sm={12} lg={16}>
-                    <Form.Item
-                      name="kitName"
-                      label="Kit Name"
-                      rules={[{ required: true, message: "Please enter kit name" }]}
-                    >
-                      <Input placeholder="e.g., Paternity Test Kit" />
-                    </Form.Item>
-                  </Col>
-                </Row>
-
-                <Row gutter={[16, 16]}>
-                  <Col xs={24} sm={8}>
-                    <Form.Item
-                      name="quantity"
-                      label="Quantity"
-                      rules={[{ required: true, message: "Please enter quantity" }]}
-                    >
-                      <InputNumber min={1} style={{ width: "100%" }} placeholder="Enter quantity" />
-                    </Form.Item>
-                  </Col>
-                  <Col xs={24} sm={8}>
-                    <Form.Item
-                      name="unitPrice"
-                      label="Unit Price ($)"
-                      rules={[{ required: true, message: "Please enter unit price" }]}
-                    >
-                      <InputNumber min={0} step={0.01} precision={2} style={{ width: "100%" }} placeholder="0.00" />
-                    </Form.Item>
-                  </Col>
-                  <Col xs={24} sm={8}>
-                    <Form.Item
-                      name="threshold"
-                      label="Low Stock Threshold"
-                      rules={[{ required: true, message: "Please enter threshold" }]}
-                    >
-                      <InputNumber min={1} style={{ width: "100%" }} placeholder="Enter threshold" />
-                    </Form.Item>
-                  </Col>
-                </Row>
-
-                <Row gutter={[16, 16]}>
-                  <Col xs={24} sm={12}>
-                    <Form.Item
-                      name="location"
-                      label="Storage Location"
-                      rules={[{ required: true, message: "Please select location" }]}
-                    >
-                      <Select placeholder="Select storage location">
-                        <Option value="Warehouse A">Warehouse A</Option>
-                        <Option value="Warehouse B">Warehouse B</Option>
-                        <Option value="Warehouse C">Warehouse C</Option>
-                        <Option value="Cold Storage">Cold Storage</Option>
-                      </Select>
-                    </Form.Item>
-                  </Col>
-                  <Col xs={24} sm={12}>
-                    <Form.Item
-                      name="supplier"
-                      label="Supplier"
-                      rules={[{ required: true, message: "Please enter supplier" }]}
-                    >
-                      <Input placeholder="Enter supplier name" />
-                    </Form.Item>
-                  </Col>
-                </Row>
-
-                <Row gutter={[16, 16]}>
-                  <Col xs={24} sm={12}>
-                    <Form.Item name="expiryDate" label="Expiry Date">
-                      <DatePicker style={{ width: "100%" }} placeholder="Select expiry date" />
-                    </Form.Item>
-                  </Col>
-                  <Col xs={24} sm={12}>
-                    <Form.Item name="batchNumber" label="Batch Number">
-                      <Input placeholder="Enter batch number" />
-                    </Form.Item>
-                  </Col>
-                </Row>
-
-                <Form.Item name="notes" label="Notes">
-                  <TextArea rows={3} placeholder="Additional notes about this inventory item" />
-                </Form.Item>
-
-                <Form.Item>
-                  <Space>
-                    <Button type="primary" htmlType="submit" loading={loading} icon={<SaveOutlined />}>
-                      Add Inventory Item
-                    </Button>
-                    <Button icon={<ReloadOutlined />} onClick={() => addInventoryForm.resetFields()}>
-                      Reset Form
-                    </Button>
-                  </Space>
-                </Form.Item>
-              </Form>
-            </Card>
-          ) : (
-            // Batch Add Mode
-            <div>
-              <Row gutter={[16, 16]}>
-                <Col xs={24} lg={12}>
-                  <Card title="Add Items to Batch" style={{ height: "100%" }}>
-                    <Form
-                      form={addInventoryForm}
-                      layout="vertical"
-                      initialValues={{
-                        threshold: 10,
-                        location: "Warehouse A",
-                      }}
-                    >
-                      <Form.Item
-                        name="kitCode"
-                        label="Kit Code"
-                        rules={[{ required: true, message: "Please enter kit code" }]}
-                      >
-                        <Input placeholder="e.g., DNA-PAT-001" />
-                      </Form.Item>
-
-                      <Form.Item
-                        name="kitName"
-                        label="Kit Name"
-                        rules={[{ required: true, message: "Please enter kit name" }]}
-                      >
-                        <Input placeholder="e.g., Paternity Test Kit" />
-                      </Form.Item>
-
-                      <Row gutter={16}>
-                        <Col span={12}>
-                          <Form.Item
-                            name="quantity"
-                            label="Quantity"
-                            rules={[{ required: true, message: "Please enter quantity" }]}
-                          >
-                            <InputNumber min={1} style={{ width: "100%" }} />
-                          </Form.Item>
-                        </Col>
-                        <Col span={12}>
-                          <Form.Item
-                            name="unitPrice"
-                            label="Unit Price ($)"
-                            rules={[{ required: true, message: "Please enter unit price" }]}
-                          >
-                            <InputNumber min={0} step={0.01} precision={2} style={{ width: "100%" }} />
-                          </Form.Item>
-                        </Col>
-                      </Row>
-
-                      <Form.Item
-                        name="location"
-                        label="Location"
-                        rules={[{ required: true, message: "Please select location" }]}
-                      >
-                        <Select placeholder="Select location">
-                          <Option value="Warehouse A">Warehouse A</Option>
-                          <Option value="Warehouse B">Warehouse B</Option>
-                          <Option value="Warehouse C">Warehouse C</Option>
-                        </Select>
-                      </Form.Item>
-
-                      <Button type="primary" onClick={addToBatch} icon={<PlusOutlined />} block>
-                        Add to Batch
-                      </Button>
-                    </Form>
-                  </Card>
-                </Col>
-
-                <Col xs={24} lg={12}>
-                  <Card title="Upload from File" style={{ height: "100%" }}>
-                    <Dragger {...handleBatchUpload}>
-                      <p className="ant-upload-drag-icon">
-                        <InboxOutlined />
-                      </p>
-                      <p className="ant-upload-text">Click or drag file to this area to upload</p>
-                      <p className="ant-upload-hint">
-                        Support for CSV and Excel files. Upload a file with columns: Kit Code, Kit Name, Quantity, Unit
-                        Price, Location, Supplier, etc.
-                      </p>
-                    </Dragger>
-
-                    <Divider />
-
-                    <Button type="link" icon={<UploadOutlined />}>
-                      Download Template File
-                    </Button>
-                  </Card>
-                </Col>
-              </Row>
-
-              {batchItems.length > 0 && (
-                <Card
-                  title={`Batch Items (${batchItems.length})`}
-                  style={{ marginTop: 16 }}
-                  extra={
-                    <Space>
-                      <Text>Total Value: ${batchItems.reduce((sum, item) => sum + item.totalValue, 0).toFixed(2)}</Text>
-                      <Button type="primary" onClick={submitBatch} loading={loading} icon={<SaveOutlined />}>
-                        Submit Batch
-                      </Button>
-                    </Space>
-                  }
-                >
-                  <Table columns={batchColumns} dataSource={batchItems} rowKey="id" pagination={false} size="small" />
-                </Card>
-              )}
-            </div>
-          )}
+          {/* Single Item Form */}
+          <Card title="Add Single Inventory Item">
+            <Form
+              form={form}
+              layout="vertical"
+              onFinish={handleSingleSubmit}
+              initialValues={{ quantity: 1, isAvailable: 1 }}>
+              <Form.Item
+                name="name"
+                label="Kit Name"
+                rules={[{ required: true, message: "Please enter kit name" }]}>
+                <Input placeholder="e.g., Paternity Test Kit" />
+              </Form.Item>
+              <Form.Item
+                name="isAvailable"
+                label="Available"
+                rules={[
+                  { required: true, message: "Please select availability" },
+                ]}>
+                <Select>
+                  <Option value={1}>Available</Option>
+                  <Option value={0}>Unavailable</Option>
+                </Select>
+              </Form.Item>
+              <Form.Item
+                name="quantity"
+                label="Quantity"
+                rules={[{ required: true, message: "Please enter quantity" }]}>
+                <InputNumber min={0} style={{ width: "100%" }} />
+              </Form.Item>
+              <Form.Item>
+                <Button
+                  type="primary"
+                  htmlType="submit"
+                  loading={loading}
+                  icon={<SaveOutlined />}>
+                  Add Inventory Item
+                </Button>
+              </Form.Item>
+            </Form>
+          </Card>
         </TabPane>
 
         {/* Kit Transactions Tab */}
@@ -1050,13 +623,22 @@ const Inventory = () => {
               Kit Transactions
             </span>
           }
-          key="transactions"
-        >
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
+          key="transactions">
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              marginBottom: 24,
+            }}>
             <Title level={3}>Kit Transactions</Title>
             <Space>
               <Button icon={<DownloadOutlined />}>Export</Button>
-              <Button type="primary" icon={<ReloadOutlined />} onClick={fetchTransactions} loading={loading}>
+              <Button
+                type="primary"
+                icon={<ReloadOutlined />}
+                onClick={fetchTransactions}
+                loading={loading}>
                 Refresh
               </Button>
             </Space>
@@ -1124,8 +706,7 @@ const Inventory = () => {
                   value={typeFilter}
                   onChange={setTypeFilter}
                   style={{ width: "100%" }}
-                  allowClear
-                >
+                  allowClear>
                   <Option value="Stock In">Stock In</Option>
                   <Option value="Stock Out">Stock Out</Option>
                   <Option value="Transfer">Transfer</Option>
@@ -1153,7 +734,8 @@ const Inventory = () => {
                 pageSize: 10,
                 showSizeChanger: true,
                 showQuickJumper: true,
-                showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} transactions`,
+                showTotal: (total, range) =>
+                  `${range[0]}-${range[1]} of ${total} transactions`,
               }}
             />
           </Card>
@@ -1165,12 +747,11 @@ const Inventory = () => {
         title="Add Stock"
         open={isAddStockModalVisible}
         onCancel={() => {
-          setIsAddStockModalVisible(false)
-          form.resetFields()
-          setSelectedKit(null)
+          setIsAddStockModalVisible(false);
+          form.resetFields();
+          setSelectedKit(null);
         }}
-        footer={null}
-      >
+        footer={null}>
         {selectedKit && (
           <Form form={form} layout="vertical" onFinish={handleAddStock}>
             <Form.Item label="Kit Information">
@@ -1186,7 +767,8 @@ const Inventory = () => {
                     <Text strong>Name:</Text> {selectedKit.name}
                   </Col>
                   <Col span={12}>
-                    <Text strong>Current Stock:</Text> {selectedKit.quantity || 0}
+                    <Text strong>Current Stock:</Text>{" "}
+                    {selectedKit.quantity || 0}
                   </Col>
                   <Col span={12}>
                     <Text strong>Threshold:</Text> {selectedKit.threshold || 0}
@@ -1200,14 +782,20 @@ const Inventory = () => {
               label="Quantity to Add"
               rules={[
                 { required: true, message: "Please enter quantity" },
-                { type: "number", min: 1, message: "Quantity must be at least 1" },
-              ]}
-            >
+                {
+                  type: "number",
+                  min: 1,
+                  message: "Quantity must be at least 1",
+                },
+              ]}>
               <InputNumber min={1} style={{ width: "100%" }} />
             </Form.Item>
 
             <Form.Item name="notes" label="Notes">
-              <TextArea rows={3} placeholder="Optional notes about this stock addition" />
+              <TextArea
+                rows={3}
+                placeholder="Optional notes about this stock addition"
+              />
             </Form.Item>
 
             <Form.Item>
@@ -1217,11 +805,10 @@ const Inventory = () => {
                 </Button>
                 <Button
                   onClick={() => {
-                    setIsAddStockModalVisible(false)
-                    form.resetFields()
-                    setSelectedKit(null)
-                  }}
-                >
+                    setIsAddStockModalVisible(false);
+                    form.resetFields();
+                    setSelectedKit(null);
+                  }}>
                   Cancel
                 </Button>
               </Space>
@@ -1235,58 +822,82 @@ const Inventory = () => {
         title="Kit Details"
         open={isDetailModalVisible}
         onCancel={() => {
-          setIsDetailModalVisible(false)
-          setSelectedKit(null)
+          setIsDetailModalVisible(false);
+          setSelectedKit(null);
         }}
         footer={[
           <Button
             key="close"
             onClick={() => {
-              setIsDetailModalVisible(false)
-              setSelectedKit(null)
-            }}
-          >
+              setIsDetailModalVisible(false);
+              setSelectedKit(null);
+            }}>
             Close
           </Button>,
         ]}
-        width={700}
-      >
+        width={700}>
         {selectedKit && (
           <Descriptions title="Kit Information" bordered column={2}>
-            <Descriptions.Item label="Kit ID">{selectedKit.id}</Descriptions.Item>
-            <Descriptions.Item label="Kit Code">{selectedKit.code}</Descriptions.Item>
+            <Descriptions.Item label="Kit ID">
+              {selectedKit.id}
+            </Descriptions.Item>
+            <Descriptions.Item label="Kit Code">
+              {selectedKit.code}
+            </Descriptions.Item>
             <Descriptions.Item label="Kit Name" span={2}>
               {selectedKit.name}
             </Descriptions.Item>
-            <Descriptions.Item label="Current Quantity">{selectedKit.quantity || 0}</Descriptions.Item>
-            <Descriptions.Item label="Threshold">{selectedKit.threshold || 0}</Descriptions.Item>
+            <Descriptions.Item label="Current Quantity">
+              {selectedKit.quantity || 0}
+            </Descriptions.Item>
+            <Descriptions.Item label="Threshold">
+              {selectedKit.threshold || 0}
+            </Descriptions.Item>
             <Descriptions.Item label="Status">
               <Tag
                 color={
-                  selectedKit.status === "In Stock" || (selectedKit.quantity || 0) > (selectedKit.threshold || 0)
+                  selectedKit.status === "In Stock" ||
+                  (selectedKit.quantity || 0) > (selectedKit.threshold || 0)
                     ? "green"
-                    : selectedKit.status === "Low Stock" || (selectedKit.quantity || 0) <= (selectedKit.threshold || 0)
-                      ? "orange"
-                      : "red"
-                }
-              >
+                    : selectedKit.status === "Low Stock" ||
+                      (selectedKit.quantity || 0) <=
+                        (selectedKit.threshold || 0)
+                    ? "orange"
+                    : "red"
+                }>
                 {selectedKit.status ||
                   ((selectedKit.quantity || 0) === 0
                     ? "Out of Stock"
-                    : (selectedKit.quantity || 0) <= (selectedKit.threshold || 0)
-                      ? "Low Stock"
-                      : "In Stock")}
+                    : (selectedKit.quantity || 0) <=
+                      (selectedKit.threshold || 0)
+                    ? "Low Stock"
+                    : "In Stock")}
               </Tag>
             </Descriptions.Item>
-            <Descriptions.Item label="Unit Price">${(selectedKit.unitPrice || 0).toFixed(2)}</Descriptions.Item>
-            <Descriptions.Item label="Total Value">
-              ${((selectedKit.quantity || 0) * (selectedKit.unitPrice || 0)).toFixed(2)}
+            <Descriptions.Item label="Unit Price">
+              ${(selectedKit.unitPrice || 0).toFixed(2)}
             </Descriptions.Item>
-            <Descriptions.Item label="Location">{selectedKit.location || "N/A"}</Descriptions.Item>
-            <Descriptions.Item label="Supplier">{selectedKit.supplier || "N/A"}</Descriptions.Item>
-            <Descriptions.Item label="Batch Number">{selectedKit.batchNumber || "N/A"}</Descriptions.Item>
-            <Descriptions.Item label="Last Restocked">{selectedKit.lastRestocked || "N/A"}</Descriptions.Item>
-            <Descriptions.Item label="Expiry Date">{selectedKit.expiryDate || "N/A"}</Descriptions.Item>
+            <Descriptions.Item label="Total Value">
+              $
+              {(
+                (selectedKit.quantity || 0) * (selectedKit.unitPrice || 0)
+              ).toFixed(2)}
+            </Descriptions.Item>
+            <Descriptions.Item label="Location">
+              {selectedKit.location || "N/A"}
+            </Descriptions.Item>
+            <Descriptions.Item label="Supplier">
+              {selectedKit.supplier || "N/A"}
+            </Descriptions.Item>
+            <Descriptions.Item label="Batch Number">
+              {selectedKit.batchNumber || "N/A"}
+            </Descriptions.Item>
+            <Descriptions.Item label="Last Restocked">
+              {selectedKit.lastRestocked || "N/A"}
+            </Descriptions.Item>
+            <Descriptions.Item label="Expiry Date">
+              {selectedKit.expiryDate || "N/A"}
+            </Descriptions.Item>
           </Descriptions>
         )}
       </Modal>
@@ -1296,27 +907,29 @@ const Inventory = () => {
         title="Transaction Details"
         open={isTransactionDetailModalVisible}
         onCancel={() => {
-          setIsTransactionDetailModalVisible(false)
-          setSelectedTransaction(null)
+          setIsTransactionDetailModalVisible(false);
+          setSelectedTransaction(null);
         }}
         footer={[
           <Button
             key="close"
             onClick={() => {
-              setIsTransactionDetailModalVisible(false)
-              setSelectedTransaction(null)
-            }}
-          >
+              setIsTransactionDetailModalVisible(false);
+              setSelectedTransaction(null);
+            }}>
             Close
           </Button>,
         ]}
-        width={700}
-      >
+        width={700}>
         {selectedTransaction && (
           <Descriptions title="Transaction Information" bordered column={2}>
-            <Descriptions.Item label="Transaction ID">{selectedTransaction.id}</Descriptions.Item>
+            <Descriptions.Item label="Transaction ID">
+              {selectedTransaction.id}
+            </Descriptions.Item>
             <Descriptions.Item label="Date & Time">
-              {selectedTransaction.date ? new Date(selectedTransaction.date).toLocaleString() : "N/A"}
+              {selectedTransaction.date
+                ? new Date(selectedTransaction.date).toLocaleString()
+                : "N/A"}
             </Descriptions.Item>
             <Descriptions.Item label="Type">
               <Tag
@@ -1324,52 +937,82 @@ const Inventory = () => {
                   selectedTransaction.type === "Stock In"
                     ? "green"
                     : selectedTransaction.type === "Stock Out"
-                      ? "red"
-                      : selectedTransaction.type === "Transfer"
-                        ? "purple"
-                        : "orange"
-                }
-              >
+                    ? "red"
+                    : selectedTransaction.type === "Transfer"
+                    ? "purple"
+                    : "orange"
+                }>
                 {selectedTransaction.type}
               </Tag>
             </Descriptions.Item>
             <Descriptions.Item label="Status">
-              <Tag color={selectedTransaction.status === "Completed" ? "green" : "orange"}>
+              <Tag
+                color={
+                  selectedTransaction.status === "Completed"
+                    ? "green"
+                    : "orange"
+                }>
                 {selectedTransaction.status || "Completed"}
               </Tag>
             </Descriptions.Item>
-            <Descriptions.Item label="Kit Code">{selectedTransaction.kitCode}</Descriptions.Item>
-            <Descriptions.Item label="Kit Name">{selectedTransaction.kitName}</Descriptions.Item>
-            <Descriptions.Item label="Quantity">{selectedTransaction.quantity || 0}</Descriptions.Item>
-            <Descriptions.Item label="Unit Price">${(selectedTransaction.unitPrice || 0).toFixed(2)}</Descriptions.Item>
+            <Descriptions.Item label="Kit Code">
+              {selectedTransaction.kitCode}
+            </Descriptions.Item>
+            <Descriptions.Item label="Kit Name">
+              {selectedTransaction.kitName}
+            </Descriptions.Item>
+            <Descriptions.Item label="Quantity">
+              {selectedTransaction.quantity || 0}
+            </Descriptions.Item>
+            <Descriptions.Item label="Unit Price">
+              ${(selectedTransaction.unitPrice || 0).toFixed(2)}
+            </Descriptions.Item>
             <Descriptions.Item label="Total Value">
               ${(selectedTransaction.totalValue || 0).toFixed(2)}
             </Descriptions.Item>
-            <Descriptions.Item label="Performed By">{selectedTransaction.performedBy || "N/A"}</Descriptions.Item>
+            <Descriptions.Item label="Performed By">
+              {selectedTransaction.performedBy || "N/A"}
+            </Descriptions.Item>
 
             {selectedTransaction.location && (
-              <Descriptions.Item label="Location">{selectedTransaction.location}</Descriptions.Item>
+              <Descriptions.Item label="Location">
+                {selectedTransaction.location}
+              </Descriptions.Item>
             )}
             {selectedTransaction.fromLocation && (
-              <Descriptions.Item label="From Location">{selectedTransaction.fromLocation}</Descriptions.Item>
+              <Descriptions.Item label="From Location">
+                {selectedTransaction.fromLocation}
+              </Descriptions.Item>
             )}
             {selectedTransaction.toLocation && (
-              <Descriptions.Item label="To Location">{selectedTransaction.toLocation}</Descriptions.Item>
+              <Descriptions.Item label="To Location">
+                {selectedTransaction.toLocation}
+              </Descriptions.Item>
             )}
             {selectedTransaction.supplier && (
-              <Descriptions.Item label="Supplier">{selectedTransaction.supplier}</Descriptions.Item>
+              <Descriptions.Item label="Supplier">
+                {selectedTransaction.supplier}
+              </Descriptions.Item>
             )}
             {selectedTransaction.batchNumber && (
-              <Descriptions.Item label="Batch Number">{selectedTransaction.batchNumber}</Descriptions.Item>
+              <Descriptions.Item label="Batch Number">
+                {selectedTransaction.batchNumber}
+              </Descriptions.Item>
             )}
             {selectedTransaction.orderNumber && (
-              <Descriptions.Item label="Order Number">{selectedTransaction.orderNumber}</Descriptions.Item>
+              <Descriptions.Item label="Order Number">
+                {selectedTransaction.orderNumber}
+              </Descriptions.Item>
             )}
             {selectedTransaction.customerName && (
-              <Descriptions.Item label="Customer">{selectedTransaction.customerName}</Descriptions.Item>
+              <Descriptions.Item label="Customer">
+                {selectedTransaction.customerName}
+              </Descriptions.Item>
             )}
             {selectedTransaction.reason && (
-              <Descriptions.Item label="Reason">{selectedTransaction.reason}</Descriptions.Item>
+              <Descriptions.Item label="Reason">
+                {selectedTransaction.reason}
+              </Descriptions.Item>
             )}
             {selectedTransaction.notes && (
               <Descriptions.Item label="Notes" span={2}>
@@ -1380,7 +1023,7 @@ const Inventory = () => {
         )}
       </Modal>
     </div>
-  )
-}
+  );
+};
 
-export default Inventory
+export default Inventory;
