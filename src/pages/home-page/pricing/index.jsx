@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { 
   FaDna, 
   FaPhone, 
@@ -14,15 +14,21 @@ import {
   FaBaby,
   FaUserCheck,
   FaSearch,
-  FaBalanceScale
+  FaBalanceScale,
+  FaChevronLeft,
+  FaChevronRight
 } from "react-icons/fa";
 import { MdScience, MdVerified, MdPregnantWoman } from "react-icons/md";
 import { BiDna } from "react-icons/bi";
+import { Card, Button, Modal, Typography, Tag } from "antd";
+
+const { Title, Text } = Typography;
 
 const Pricing = () => {
   const [selectedService, setSelectedService] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState("all");
+  const scrollContainerRef = useRef(null);
 
   // Helper function to format price to VND
   const formatToVND = (price) => {
@@ -144,19 +150,19 @@ const Pricing = () => {
     {
       name: "Home Collection",
       price: 300000,
-      icon: <FaHome className="text-xl" />,
+      icon: <FaHome className="text-xl text-blue-600" />,
       description: "Professional sample collection at your home"
     },
     {
       name: "At Facility",
       price: 0,
-      icon: <FaBuilding className="text-xl" />,
+      icon: <FaBuilding className="text-xl text-blue-600" />,
       description: "Visit our facility for sample collection"
     },
     {
       name: "Postal Delivery",
       price: 50000,
-      icon: <FaMailBulk className="text-xl" />,
+      icon: <FaMailBulk className="text-xl text-blue-600" />,
       description: "Self-collection kit delivered by post"
     }
   ];
@@ -172,6 +178,25 @@ const Pricing = () => {
     return allServices;
   };
 
+  // Scroll functions
+  const scrollLeft = () => {
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollBy({
+        left: -400,
+        behavior: 'smooth'
+      });
+    }
+  };
+
+  const scrollRight = () => {
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollBy({
+        left: 400,
+        behavior: 'smooth'
+      });
+    }
+  };
+
   // Open modal with service details
   const openModal = (service) => {
     setSelectedService(service);
@@ -185,9 +210,9 @@ const Pricing = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-cyan-50 to-sky-50">
       {/* Hero Section */}
-      <div className="relative text-white py-20" style={{ background: 'linear-gradient(135deg, #003469 0%, #1e40af 100%)' }}>
+      <div className="relative text-white py-20" style={{ background: 'linear-gradient(135deg, #0369a1 0%, #0284c7 50%, #0ea5e9 100%)' }}>
         <div className="absolute inset-0 bg-black opacity-10"></div>
         <div className="relative max-w-7xl mx-auto px-6 text-center">
           <div className="flex items-center justify-center mb-6">
@@ -215,14 +240,14 @@ const Pricing = () => {
       {/* Category Filter */}
       <div className="max-w-7xl mx-auto px-6 py-8">
         <div className="flex justify-center mb-8">
-          <div className="bg-white rounded-full p-2 shadow-lg">
+          <div className="bg-white rounded-full p-2 shadow-lg border border-blue-100">
             <div className="flex gap-2">
               <button
                 onClick={() => setSelectedCategory("all")}
                 className={`px-6 py-3 rounded-full font-semibold transition-all duration-200 ${
                   selectedCategory === "all"
-                    ? "bg-blue-600 text-white shadow-md"
-                    : "text-gray-600 hover:bg-gray-100"
+                    ? "bg-gradient-to-r from-blue-600 to-cyan-600 text-white shadow-md"
+                    : "text-blue-600 hover:bg-blue-50"
                 }`}
               >
                 All Services
@@ -231,8 +256,8 @@ const Pricing = () => {
                 onClick={() => setSelectedCategory("non-legal")}
                 className={`px-6 py-3 rounded-full font-semibold transition-all duration-200 ${
                   selectedCategory === "non-legal"
-                    ? "bg-green-600 text-white shadow-md"
-                    : "text-gray-600 hover:bg-gray-100"
+                    ? "bg-gradient-to-r from-teal-600 to-cyan-600 text-white shadow-md"
+                    : "text-blue-600 hover:bg-blue-50"
                 }`}
               >
                 Non-Legal Testing
@@ -241,8 +266,8 @@ const Pricing = () => {
                 onClick={() => setSelectedCategory("legal")}
                 className={`px-6 py-3 rounded-full font-semibold transition-all duration-200 ${
                   selectedCategory === "legal"
-                    ? "bg-red-600 text-white shadow-md"
-                    : "text-gray-600 hover:bg-gray-100"
+                    ? "bg-gradient-to-r from-sky-600 to-blue-600 text-white shadow-md"
+                    : "text-blue-600 hover:bg-blue-50"
                 }`}
               >
                 Legal Testing
@@ -251,112 +276,156 @@ const Pricing = () => {
           </div>
         </div>
 
-        {/* Services Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
-          {getFilteredServices().map((service) => (
-            <div
-              key={service.id}
-              className="bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 border border-gray-100 overflow-hidden"
-            >
-              {/* Service Header */}
-              <div className={`p-6 ${service.type === "Legal" ? "bg-gradient-to-r from-red-500 to-red-600" : "bg-gradient-to-r from-green-500 to-green-600"} text-white`}>
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-3">
-                    {service.icon}
-                    <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                      service.type === "Legal" ? "bg-red-200 text-red-800" : "bg-green-200 text-green-800"
-                    }`}>
-                      {service.type}
-                    </span>
-                  </div>
-                </div>
-                <h3 className="text-xl font-bold mb-2">{service.name}</h3>
-                <p className="text-sm opacity-90">{service.description}</p>
-              </div>
+        {/* Horizontal Scrolling Services */}
+        <div className="relative mb-16">
+          <div className="flex items-center justify-between mb-6">
+            <Title level={2} className="text-blue-900 mb-0">
+              Our DNA Testing Services
+            </Title>
+            <div className="flex gap-2">
+              <Button
+                type="primary"
+                shape="circle"
+                icon={<FaChevronLeft />}
+                onClick={scrollLeft}
+                className="bg-blue-600 border-blue-600 hover:bg-blue-700"
+              />
+              <Button
+                type="primary"
+                shape="circle"
+                icon={<FaChevronRight />}
+                onClick={scrollRight}
+                className="bg-blue-600 border-blue-600 hover:bg-blue-700"
+              />
+            </div>
+          </div>
 
-              {/* Service Body */}
-              <div className="p-6">
-                <div className="mb-6">
-                  <div className="flex items-center gap-2 mb-3">
-                    <FaClock className="text-gray-500" />
-                    <span className="text-gray-600">Processing Time: {service.processingTime}</span>
+          <div 
+            ref={scrollContainerRef}
+            className="flex gap-6 overflow-x-auto scrollbar-hide pb-4"
+            style={{ 
+              scrollbarWidth: 'none',
+              msOverflowStyle: 'none',
+              WebkitScrollbar: { display: 'none' }
+            }}
+          >
+            {getFilteredServices().map((service) => (
+              <div
+                key={service.id}
+                className="flex-none w-80 bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 border border-blue-100 overflow-hidden"
+              >
+                {/* Service Header */}
+                <div className={`p-6 ${
+                  service.type === "Legal" 
+                    ? "bg-gradient-to-r from-sky-600 to-blue-700" 
+                    : "bg-gradient-to-r from-teal-500 to-cyan-600"
+                } text-white`}>
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                      {service.icon}
+                      <Tag 
+                        color={service.type === "Legal" ? "blue" : "cyan"}
+                        className="border-0 text-xs font-semibold"
+                      >
+                        {service.type}
+                      </Tag>
+                    </div>
                   </div>
-                  
-                  <div className="space-y-3">
-                    <div className="flex justify-between items-center">
-                      <span className="font-medium">Standard Price:</span>
-                      <span className="text-2xl font-bold text-gray-900">
-                        {formatToVND(service.basePrice)}
-                      </span>
+                  <h3 className="text-xl font-bold mb-2">{service.name}</h3>
+                  <p className="text-sm opacity-90">{service.description}</p>
+                </div>
+
+                {/* Service Body */}
+                <div className="p-6">
+                  <div className="mb-6">
+                    <div className="flex items-center gap-2 mb-3">
+                      <FaClock className="text-blue-500" />
+                      <span className="text-gray-600">Processing Time: {service.processingTime}</span>
                     </div>
                     
-                    <div className="flex justify-between items-center p-3 bg-orange-50 rounded-lg border border-orange-200">
-                      <div className="flex items-center gap-2">
-                        <FaBolt className="text-orange-500" />
-                        <span className="font-medium text-orange-700">Express Service:</span>
+                    <div className="space-y-3">
+                      <div className="flex justify-between items-center">
+                        <span className="font-medium">Standard Price:</span>
+                        <span className="text-2xl font-bold text-blue-900">
+                          {formatToVND(service.basePrice)}
+                        </span>
                       </div>
-                      <span className="text-lg font-bold text-orange-700">
-                        +{formatToVND(service.expressPrice)}
-                      </span>
+                      
+                      <div className="flex justify-between items-center p-3 bg-orange-50 rounded-lg border border-orange-200">
+                        <div className="flex items-center gap-2">
+                          <FaBolt className="text-orange-500" />
+                          <span className="font-medium text-orange-700">Express Service:</span>
+                        </div>
+                        <span className="text-lg font-bold text-orange-700">
+                          +{formatToVND(service.expressPrice)}
+                        </span>
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                {/* Features */}
-                <div className="mb-6">
-                  <h4 className="font-semibold text-gray-900 mb-3">Key Features:</h4>
-                  <ul className="space-y-2">
-                    {service.features.map((feature, index) => (
-                      <li key={index} className="flex items-center gap-2">
-                        <FaCheck className="text-green-500 text-sm" />
-                        <span className="text-sm text-gray-600">{feature}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-
-                {/* Action Button */}
-                <button
-                  onClick={() => openModal(service)}
-                  className={`w-full py-3 px-6 rounded-xl font-semibold transition-all duration-200 transform hover:scale-105 ${
-                    service.type === "Legal"
-                      ? "bg-red-600 hover:bg-red-700 text-white"
-                      : "bg-green-600 hover:bg-green-700 text-white"
-                  }`}
-                >
-                  View Details & Order
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* Collection Methods Section */}
-        <div className="bg-white rounded-2xl shadow-lg p-8 mb-16">
-          <h2 className="text-3xl font-bold text-center text-gray-900 mb-8">
-            Sample Collection Methods
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {mediationMethods.map((method, index) => (
-              <div key={index} className="text-center p-6 rounded-xl border-2 border-gray-100 hover:border-blue-300 transition-all duration-200">
-                <div className="flex justify-center mb-4">
-                  <div className="p-4 bg-blue-100 rounded-full">
-                    {method.icon}
+                  {/* Features */}
+                  <div className="mb-6">
+                    <h4 className="font-semibold text-gray-900 mb-3">Key Features:</h4>
+                    <ul className="space-y-2">
+                      {service.features.map((feature, index) => (
+                        <li key={index} className="flex items-center gap-2">
+                          <FaCheck className="text-teal-500 text-sm" />
+                          <span className="text-sm text-gray-600">{feature}</span>
+                        </li>
+                      ))}
+                    </ul>
                   </div>
-                </div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">{method.name}</h3>
-                <p className="text-gray-600 mb-4">{method.description}</p>
-                <div className="text-2xl font-bold text-blue-600">
-                  {method.price === 0 ? "FREE" : formatToVND(method.price)}
+
+                  {/* Action Button */}
+                  <Button
+                    type="primary"
+                    block
+                    size="large"
+                    onClick={() => openModal(service)}
+                    className={`font-semibold transition-all duration-200 ${
+                      service.type === "Legal"
+                        ? "bg-gradient-to-r from-sky-600 to-blue-700 border-0 hover:from-sky-700 hover:to-blue-800"
+                        : "bg-gradient-to-r from-teal-500 to-cyan-600 border-0 hover:from-teal-600 hover:to-cyan-700"
+                    }`}
+                  >
+                    View Details & Order
+                  </Button>
                 </div>
               </div>
             ))}
           </div>
         </div>
 
+        {/* Collection Methods Section */}
+        <div className="bg-white rounded-2xl shadow-lg p-8 mb-16 border border-blue-100">
+          <Title level={2} className="text-center text-blue-900 mb-8">
+            Sample Collection Methods
+          </Title>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {mediationMethods.map((method, index) => (
+              <Card
+                key={index}
+                className="text-center border-2 border-blue-100 hover:border-blue-300 transition-all duration-200 hover:shadow-lg"
+                bodyStyle={{ padding: '24px' }}
+              >
+                <div className="flex justify-center mb-4">
+                  <div className="p-4 bg-blue-50 rounded-full">
+                    {method.icon}
+                  </div>
+                </div>
+                <Title level={4} className="text-blue-900 mb-2">{method.name}</Title>
+                <Text className="text-gray-600 block mb-4">{method.description}</Text>
+                <div className="text-2xl font-bold text-blue-600">
+                  {method.price === 0 ? "FREE" : formatToVND(method.price)}
+                </div>
+              </Card>
+            ))}
+          </div>
+        </div>
+
         {/* Contact Section */}
-        <div className="bg-gradient-to-r from-blue-600 to-blue-700 rounded-2xl shadow-lg p-8 text-white text-center">
-          <h2 className="text-3xl font-bold mb-6">Need Help Choosing?</h2>
+        <div className="bg-gradient-to-r from-blue-600 via-cyan-600 to-sky-600 rounded-2xl shadow-lg p-8 text-white text-center">
+          <Title level={2} className="text-white mb-6">Need Help Choosing?</Title>
           <p className="text-xl mb-8 opacity-90">
             Our experts are here to help you select the right DNA testing service for your needs.
           </p>
@@ -372,7 +441,12 @@ const Pricing = () => {
               <FaEnvelope className="text-2xl" />
               <div>
                 <div className="font-semibold">Email Support</div>
-                <div className="text-lg">genetixcontactsp@gmail.com</div>
+                <a 
+                  href="mailto:genetixcontactsp@gmail.com"
+                  className="text-lg text-white hover:text-blue-200 transition-colors"
+                >
+                  genetixcontactsp@gmail.com
+                </a>
               </div>
             </div>
           </div>
@@ -380,38 +454,40 @@ const Pricing = () => {
       </div>
 
       {/* Service Detail Modal */}
-      {modalVisible && selectedService && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+      <Modal
+        open={modalVisible}
+        onCancel={closeModal}
+        footer={null}
+        width={800}
+        className="pricing-modal"
+      >
+        {selectedService && (
+          <div>
             {/* Modal Header */}
-            <div className={`p-6 ${selectedService.type === "Legal" ? "bg-gradient-to-r from-red-500 to-red-600" : "bg-gradient-to-r from-green-500 to-green-600"} text-white`}>
-              <div className="flex justify-between items-start">
-                <div>
-                  <h3 className="text-2xl font-bold mb-2">{selectedService.name}</h3>
-                  <span className={`px-3 py-1 rounded-full text-sm font-semibold ${
-                    selectedService.type === "Legal" ? "bg-red-200 text-red-800" : "bg-green-200 text-green-800"
-                  }`}>
-                    {selectedService.type}
-                  </span>
-                </div>
-                <button
-                  onClick={closeModal}
-                  className="text-white hover:bg-white/20 rounded-full p-2 transition-colors"
-                >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
+            <div className={`p-6 -m-6 mb-6 ${
+              selectedService.type === "Legal" 
+                ? "bg-gradient-to-r from-sky-600 to-blue-700" 
+                : "bg-gradient-to-r from-teal-500 to-cyan-600"
+            } text-white rounded-t-lg`}>
+              <div className="flex items-center gap-3 mb-2">
+                {selectedService.icon}
+                <Title level={3} className="text-white mb-0">{selectedService.name}</Title>
               </div>
+              <Tag 
+                color={selectedService.type === "Legal" ? "blue" : "cyan"}
+                className="border-0"
+              >
+                {selectedService.type}
+              </Tag>
             </div>
 
             {/* Modal Body */}
-            <div className="p-6">
-              <p className="text-gray-700 mb-6">{selectedService.description}</p>
+            <div>
+              <Text className="text-gray-700 text-base block mb-6">{selectedService.description}</Text>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                 <div>
-                  <h4 className="font-semibold text-gray-900 mb-3">Processing Time</h4>
+                  <Title level={5} className="text-gray-900 mb-3">Processing Time</Title>
                   <div className="flex items-center gap-2">
                     <FaClock className="text-blue-500" />
                     <span>{selectedService.processingTime}</span>
@@ -419,7 +495,7 @@ const Pricing = () => {
                 </div>
                 
                 <div>
-                  <h4 className="font-semibold text-gray-900 mb-3">Service Type</h4>
+                  <Title level={5} className="text-gray-900 mb-3">Service Type</Title>
                   <div className="flex items-center gap-2">
                     <MdVerified className="text-blue-500" />
                     <span>{selectedService.type}</span>
@@ -427,21 +503,21 @@ const Pricing = () => {
                 </div>
               </div>
 
-              <div className="bg-gray-50 rounded-xl p-6 mb-6">
-                <h4 className="font-semibold text-gray-900 mb-4">Pricing Details</h4>
+              <div className="bg-blue-50 rounded-xl p-6 mb-6 border border-blue-100">
+                <Title level={5} className="text-gray-900 mb-4">Pricing Details</Title>
                 <div className="space-y-3">
                   <div className="flex justify-between items-center">
                     <span>Standard Processing:</span>
-                    <span className="text-xl font-bold">{formatToVND(selectedService.basePrice)}</span>
+                    <span className="text-xl font-bold text-blue-600">{formatToVND(selectedService.basePrice)}</span>
                   </div>
-                  <div className="flex justify-between items-center p-3 bg-orange-100 rounded-lg">
+                  <div className="flex justify-between items-center p-3 bg-orange-100 rounded-lg border border-orange-200">
                     <div className="flex items-center gap-2">
                       <FaBolt className="text-orange-500" />
                       <span>Express Service (additional):</span>
                     </div>
                     <span className="text-lg font-bold text-orange-700">+{formatToVND(selectedService.expressPrice)}</span>
                   </div>
-                  <div className="border-t pt-3">
+                  <div className="border-t border-blue-200 pt-3">
                     <div className="flex justify-between items-center">
                       <span className="font-semibold">Express Total:</span>
                       <span className="text-xl font-bold text-blue-600">
@@ -453,11 +529,11 @@ const Pricing = () => {
               </div>
 
               <div className="mb-6">
-                <h4 className="font-semibold text-gray-900 mb-3">Key Features</h4>
+                <Title level={5} className="text-gray-900 mb-3">Key Features</Title>
                 <ul className="space-y-2">
                   {selectedService.features.map((feature, index) => (
                     <li key={index} className="flex items-center gap-2">
-                      <FaCheck className="text-green-500" />
+                      <FaCheck className="text-teal-500" />
                       <span>{feature}</span>
                     </li>
                   ))}
@@ -465,25 +541,39 @@ const Pricing = () => {
               </div>
 
               <div className="flex gap-4">
-                <button
-                  className={`flex-1 py-3 px-6 rounded-xl font-semibold transition-all duration-200 ${
+                <Button
+                  type="primary"
+                  size="large"
+                  className={`flex-1 font-semibold ${
                     selectedService.type === "Legal"
-                      ? "bg-red-600 hover:bg-red-700 text-white"
-                      : "bg-green-600 hover:bg-green-700 text-white"
+                      ? "bg-gradient-to-r from-sky-600 to-blue-700 border-0"
+                      : "bg-gradient-to-r from-teal-500 to-cyan-600 border-0"
                   }`}
                 >
                   Order Standard Service
-                </button>
-                <button
-                  className="flex-1 py-3 px-6 rounded-xl font-semibold bg-orange-600 hover:bg-orange-700 text-white transition-all duration-200"
+                </Button>
+                <Button
+                  type="primary"
+                  size="large"
+                  className="flex-1 font-semibold bg-gradient-to-r from-orange-500 to-orange-600 border-0"
                 >
                   Order Express Service
-                </button>
+                </Button>
               </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
+      </Modal>
+
+      <style jsx>{`
+        .scrollbar-hide {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
+        .scrollbar-hide::-webkit-scrollbar {
+          display: none;
+        }
+      `}</style>
     </div>
   );
 };
