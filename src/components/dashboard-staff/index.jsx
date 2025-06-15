@@ -62,7 +62,9 @@ const StaffDashboard = () => {
     const breadcrumbItems = pathSnippets.map((snippet, index) => {
       const url = `/${pathSnippets.slice(0, index + 1).join("/")}`;
       return {
-        title: snippet.charAt(0).toUpperCase() + snippet.slice(1),
+        title: snippet
+          .replace(/-/g, " ")
+          .replace(/\b\w/g, (c) => c.toUpperCase()),
         path: url,
       };
     });
