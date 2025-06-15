@@ -469,18 +469,21 @@ const Pricing = () => {
         </div>
 
         {/* Contact Section */}
-        <div
+        <div 
           className="rounded-2xl shadow-lg p-8 text-white text-center"
           style={{
-            background:
-              "linear-gradient(135deg, #002F5E 0%, #004494 50%, #1677FF 100%)",
-          }}>
-          <Title level={2} style={{ color: "#fff" }} className="mb-6">
+            background: "linear-gradient(135deg, #002F5E 0%, #004494 50%, #1677FF 100%)"
+          }}
+        >
+          <Title 
+            level={2} 
+            className="text-white mb-6"
+            style={{ color: '#ffffff' }}
+          >
             Need Help Choosing?
           </Title>
           <p className="text-xl mb-8 opacity-90">
-            Our experts are here to help you select the right DNA testing
-            service for your needs.
+            Our experts are here to help you select the right DNA testing service for your needs.
           </p>
           <div className="flex flex-col md:flex-row justify-center items-center gap-16 mt-8">
             <div className="flex flex-col items-center">
