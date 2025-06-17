@@ -406,7 +406,7 @@ const Pricing = () => {
               <Card
                 key={index}
                 className="text-center border-2 border-blue-100 hover:border-blue-300 transition-all duration-200 hover:shadow-lg"
-                bodyStyle={{ padding: '24px' }}
+                 styles={{ body: { padding: '24px' } }}
               >
                 <div className="flex justify-center mb-4">
                   <div className="p-4 bg-blue-50 rounded-full">
@@ -565,7 +565,7 @@ const Pricing = () => {
         )}
       </Modal>
 
-      <style jsx>{`
+      <style>{`
         .scrollbar-hide {
           -ms-overflow-style: none;
           scrollbar-width: none;

@@ -1,5 +1,5 @@
 import React from "react";
-import { RouterProvider, createBrowserRouter } from "react-router-dom";
+import { RouterProvider, createBrowserRouter, Outlet } from "react-router-dom";
 import HomePage from "./pages/home-page";
 import LoginPage from "./pages/login";
 import RegisterPage from "./pages/register";
@@ -23,95 +23,125 @@ import Inventory from "./pages/dashboard-admin/inventory";
 import SystemLogs from "./pages/dashboard-admin/system-logs";
 import Booking from "./pages/dashboard-admin/services/Booking";
 import ServiceManagementPage from "./pages/dashboard-admin/services/ServiceManagement";
+import Contact from "./pages/home-page/contact";
+import ScrollToTopButton from "./components/hooks/useScrollToTop"; // Sửa import thành component chính xác
+
+// ScrollToTop component cho router
+const ScrollToTop = () => {
+  // Thêm hook để scroll to top khi chuyển trang
+  React.useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+  return null;
+};
+
+// Root Layout component
+const RootLayout = () => {
+  return (
+    <>
+      <ScrollToTop />
+      <ScrollToTopButton /> {/* Thêm nút ScrollToTop vào đây */}
+      <Outlet />
+    </>
+  );
+};
 
 function App() {
   const router = createBrowserRouter([
     {
       path: "/",
-      element: <HomePage />, // Layout với Header, Outlet, Footer
+      element: <RootLayout />,
       children: [
         {
-          index: true, // Route mặc định cho "/"
-          element: <HomeContent />,
-        },
-        {
-          path: "services",
-          element: <ServicesOverview />,
-        },
-        {
-          path: "services/legal",
-          element: <LegalServices />,
-        },
-        {
-          path: "services/non-legal",
-          element: <NonLegalServices />,
-        },
-        {
-          path: "guide",
-          element: <Guide />,
-        },
-        {
-          path: "pricing",
-          element: <Pricing />,
-        },
-        {
-          path: "blog",
-          element: <Blog />,
-        },
-      ],
-    },
-    // Các route độc lập không cần Header/Footer
-    {
-      path: "/login",
-      element: <LoginPage />,
-    },
-    {
-      path: "/register",
-      element: <RegisterPage />,
-    },
-    {
-      path: "/dashboard",
-      element: <Dashboard />,
-      children: [
-        {
-          path: "overview",
-          element: <OverviewPage />,
-        },
-        {
-          path: "services",
+          path: "/",
+          element: <HomePage />,
           children: [
-            { path: "booking", element: <Booking /> },
-            { path: "service-management", element: <ServiceManagementPage /> },
-            { index: true, element: <ServiceManagementPage /> },
+            {
+              index: true,
+              element: <HomeContent />,
+            },
+            {
+              path: "services",
+              element: <ServicesOverview />,
+            },
+            {
+              path: "services/legal",
+              element: <LegalServices />,
+            },
+            {
+              path: "services/non-legal",
+              element: <NonLegalServices />,
+            },
+            {
+              path: "guide",
+              element: <Guide />,
+            },
+            {
+              path: "pricing",
+              element: <Pricing />,
+            },
+            {
+              path: "blog",
+              element: <Blog />,
+            },
+            {
+              path: "contact",
+              element: <Contact />,
+            },
           ],
         },
         {
-          path: "accounts",
-          element: <AccountManagement />,
+          path: "/login",
+          element: <LoginPage />,
         },
         {
-          path: "blog", // Blog Post Management
-          element: <ContentManagement />,
+          path: "/register",
+          element: <RegisterPage />,
         },
         {
-          path: "inventory", // Test Kit Inventory
-          element: <Inventory />,
+          path: "/dashboard",
+          element: <Dashboard />,
+          children: [
+            {
+              path: "overview",
+              element: <OverviewPage />,
+            },
+            {
+              path: "services",
+              children: [
+                { path: "booking", element: <Booking /> },
+                { path: "service-management", element: <ServiceManagementPage /> },
+                { index: true, element: <ServiceManagementPage /> },
+              ],
+            },
+            {
+              path: "accounts",
+              element: <AccountManagement />,
+            },
+            {
+              path: "blog",
+              element: <ContentManagement />,
+            },
+            {
+              path: "inventory",
+              element: <Inventory />,
+            },
+            {
+              path: "logs",
+              element: <SystemLogs />,
+            },
+          ],
         },
         {
-          path: "logs", // System Logs
-          element: <SystemLogs />,
+          path: "/verify",
+          element: <VerifyPage />,
         },
       ],
-    },
-    {
-      path: "/verify",
-      element: <VerifyPage />,
     },
   ]);
 
   return (
     <Provider store={store}>
-      {/* Wrap the RouterProvider with Provider to make the store available to all components */}
       <PersistGate loading={null} persistor={persistor}>
         <RouterProvider router={router} />
       </PersistGate>
