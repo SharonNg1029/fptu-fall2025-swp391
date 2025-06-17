@@ -254,7 +254,7 @@ const AdminDashboard = () => {
       />
 
       {/* Enhanced CSS for search dropdown and interactions */}
-      <style jsx global>{`
+      <style global>{`
         @media (max-width: 768px) {
           .hide-on-small {
             display: none;

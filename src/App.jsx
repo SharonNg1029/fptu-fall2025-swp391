@@ -35,7 +35,7 @@ function App() {
   const router = createBrowserRouter([
     {
       path: "/",
-      element: <HomePage />, // Layout với Header, Outlet, Footer
+      element: <HomePage />,
       children: [
         {
           index: true, // Route mặc định cho "/"
@@ -98,11 +98,15 @@ function App() {
           element: <AccountManagement />,
         },
         {
-          path: "blog", // Blog Post Management
+          path: "blog",
           element: <ContentManagement />,
         },
         {
-          path: "logs", // System Logs
+          path: "inventory",
+          element: <Inventory />,
+        },
+        {
+          path: "logs",
           element: <SystemLogs />,
         },
       ],
@@ -144,7 +148,6 @@ function App() {
 
   return (
     <Provider store={store}>
-      {/* Wrap the RouterProvider with Provider to make the store available to all components */}
       <PersistGate loading={null} persistor={persistor}>
         <RouterProvider router={router} />
       </PersistGate>
