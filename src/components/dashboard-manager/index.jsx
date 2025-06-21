@@ -23,6 +23,8 @@ import {
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import LogOut from "../authen-form/LogOut";
 import axiosInstance from "../../configs/axios";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const { Header, Content, Footer, Sider } = Layout;
 const { Title, Text } = Typography;
@@ -49,11 +51,6 @@ const items = [
   ),
   getItem("Customer Feedback", "customer-feedback", <MessageOutlined />),
   getItem("Test Kit Inventory", "inventory", <InboxOutlined />),
-  getItem(
-    "Staff Reports Approval",
-    "staff-reports-approval",
-    <FileDoneOutlined />
-  ),
 ];
 
 const ManagerDashboard = () => {
@@ -195,18 +192,21 @@ const ManagerDashboard = () => {
             </Button>
 
             {/* Logout Button */}
-            <Button
-              type="text"
-              danger
-              icon={<LogoutOutlined />}
-              onClick={() => {
-                if (typeof LogOut.performLogout === "function") {
-                  LogOut.performLogout();
-                }
+            <LogOut
+              buttonType="default"
+              buttonText="Logout"
+              showIcon={true}
+              showConfirmation={true}
+              style={{ height: 40 }}
+              onLogoutSuccess={() => {
+                // Callback khi logout thành công (tùy chọn)
+                console.log("Logout completed successfully");
               }}
-              style={{ height: 40 }}>
-              Logout
-            </Button>
+              onLogoutError={(error) => {
+                // Callback khi logout lỗi (tùy chọn)
+                console.log("Logout error:", error);
+              }}
+            />
           </div>
         </Header>
 
@@ -237,18 +237,6 @@ const ManagerDashboard = () => {
           DNA Testing Service Management System ©{new Date().getFullYear()}
         </Footer>
       </Layout>
-
-      {/* Hidden LogOut component for confirmation modal */}
-      <LogOut
-        trigger="function"
-        showConfirmation={true}
-        onLogoutSuccess={() => {
-          console.log("Logout successful");
-        }}
-        onLogoutError={(error) => {
-          console.error("Logout error:", error);
-        }}
-      />
 
       {/* Enhanced CSS for search dropdown and interactions */}
       <style jsx global>{`
