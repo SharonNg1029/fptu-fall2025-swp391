@@ -193,7 +193,7 @@ const ManagerDashboard = () => {
 
             {/* Logout Button */}
             <LogOut
-              buttonType="text"
+              buttonType="default"
               buttonText="Logout"
               showIcon={true}
               showConfirmation={true}
