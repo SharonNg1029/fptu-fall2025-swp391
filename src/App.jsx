@@ -159,6 +159,7 @@ function App() {
   return (
     <Provider store={store}>
       <PersistGate loading={null} persistor={persistor}>
+        <ScrollToTopButton />
         <RouterProvider router={router} />
         <Toaster position="top-right" reverseOrder={false} />
       </PersistGate>
