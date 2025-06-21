@@ -33,26 +33,9 @@ import "react-toastify/dist/ReactToastify.css";
 import ScrollToTopButton from "./components/hooks/useScrollToTop"; // Sửa import thành component chính xác
 import React from "react";
 import { Toaster } from "react-hot-toast";
+import Contact from "./pages/home-page/contact";
 
-// ScrollToTop component cho router
-const ScrollToTop = () => {
-  // Thêm hook để scroll to top khi chuyển trang
-  React.useEffect(() => {
-    window.scrollTo(0, 0);
-  }, []);
-  return null;
-};
 
-// Root Layout component
-const RootLayout = () => {
-  return (
-    <>
-      <ScrollToTop />
-      <ScrollToTopButton /> {/* Thêm nút ScrollToTop vào đây */}
-      <Outlet />
-    </>
-  );
-};
 function App() {
   const router = createBrowserRouter([
     {
@@ -86,6 +69,10 @@ function App() {
         {
           path: "blog",
           element: <Blog />,
+        },
+        {
+          path: "contact",
+          element: <Contact />,
         },
       ],
     },
