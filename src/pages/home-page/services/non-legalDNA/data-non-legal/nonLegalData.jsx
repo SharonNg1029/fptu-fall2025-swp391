@@ -70,8 +70,8 @@ The types of samples used for DNA testing in the Genetix process include:
     name: "Non-Invasive Relationship Testing (NIPT)",
     type: "Non-Legal",
     processingTime: "5-7 working days",
-    basePrice: 20000000,
-    expressPrice: 5000000,
+    basePrice: 10000000,
+    expressPrice: 3000000,
     icon: <FaBaby className="text-xl" />,
     backgroundImage: "https://www.choicedna.com/wp-content/uploads/2https897899516.onlinehome.usdna-testing-locationsdna-testing-labs-in-austin-tx.webp",
     description: `**About Non-Invasive Prenatal DNA Testing**
