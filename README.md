@@ -31,7 +31,7 @@ Genetix là nền tảng dịch vụ xét nghiệm DNA hiện đại, hỗ trợ
 ## 🛠️ Công nghệ sử dụng
 
 - **Frontend:** ReactJS, Redux Toolkit, Ant Design, Tailwind CSS, React Router, React Toastify, React Hot Toast, Lucide React, React Icons.
-- **Backend:** repository này chưa bao gồm source code Back-end.
+- **Backend:** Repository này chưa bao gồm source code Back-end.
 - **Authentication:** Google OAuth, xác thực JWT, xác minh OTP qua email.
 - **Quản lý state:** Redux + Redux Persist.
 - **Build Tool:** Vite.
@@ -40,7 +40,8 @@ Genetix là nền tảng dịch vụ xét nghiệm DNA hiện đại, hỗ trợ
 
 ## ⚡ Cài đặt & chạy thử nghiệm
 
-1. **Yêu cầu:**  
+1. **Yêu cầu:**
+   
    Node.js >= 18, npm >= 9
 
 2. **Clone dự án:**
@@ -55,6 +56,7 @@ Genetix là nền tảng dịch vụ xét nghiệm DNA hiện đại, hỗ trợ
    ```
 
 4. **Cấu hình endpoint API:**  
+ 
    Sửa địa chỉ của const api trong `src/configs/axios.js` nếu muốn trỏ sang api khác.
 
 5. **Chạy ứng dụng:**
