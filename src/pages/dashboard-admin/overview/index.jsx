@@ -59,12 +59,6 @@ const Overview = () => {
     weeklyTrends: [],
   });
 
-  // Helper function to get date params
-  const getDateParams = () => ({
-    startDate: dateRange[0]?.format("YYYY-MM-DD"),
-    endDate: dateRange[1]?.format("YYYY-MM-DD"),
-  });
-
   // Generate chart data based on current stats and bookings
   const generateChartData = useCallback(() => {
     // Monthly stats simulation based on current data
@@ -160,126 +154,127 @@ const Overview = () => {
     });
   }, [stats, recentBookings]);
 
-  // Fetch total customers count
-  const fetchTotalCustomers = async () => {
-    try {
-      const response = await api.get("/admin/dashboard/customers", {
-        params: getDateParams(),
-      });
-      console.log("Total customers response:", response);
-
-      const customerData = response.data || {};
-      setStats((prev) => ({
-        ...prev,
-        totalCustomer: customerData.totalCustomer || 0,
-      }));
-    } catch (error) {
-      console.error("Error fetching total customers:", error);
-      let errorMessage = "Error fetching total customers";
-      if (error.response?.data?.data) {
-        errorMessage = error.response.data.data;
-      } else if (error.response?.data?.message) {
-        errorMessage = error.response.data.message;
-      } else if (error.message) {
-        errorMessage = error.message;
-      }
-      toast.error(errorMessage);
-      throw error;
-    }
-  };
-
-  // Fetch completed tests count
-  const fetchCompletedTests = async () => {
-    try {
-      const response = await api.get("/booking/bookings", {
-        params: getDateParams(),
-      });
-      console.log("Completed tests response:", response);
-
-      const bookings = response.data?.data || response.data || [];
-      const completedCount = Array.isArray(bookings)
-        ? bookings.filter((b) => b.status === "Completed").length
-        : 0;
-      setStats((prev) => ({
-        ...prev,
-        completedTests: completedCount,
-      }));
-    } catch (error) {
-      console.error("Error fetching completed tests:", error);
-      let errorMessage = "Error fetching completed tests";
-      if (error.response?.data?.data) {
-        errorMessage = error.response.data.data;
-      } else if (error.response?.data?.message) {
-        errorMessage = error.response.data.message;
-      } else if (error.message) {
-        errorMessage = error.message;
-      }
-      toast.error(errorMessage);
-      throw error;
-    }
-  };
-
-  // Fetch kits sold count
-  const fetchKitsSold = async () => {
-    try {
-      const response = await api.get("/admin/kitInventory/available", {
-        params: getDateParams(),
-      });
-      console.log("Kits sold response:", response);
-
-      const kitsData = response.data?.data || response.data || [];
-      const totalKitSold = Array.isArray(kitsData)
-        ? kitsData.reduce((sum, kit) => sum + (kit.isSelled || 0), 0)
-        : 0;
-      setStats((prev) => ({
-        ...prev,
-        kitsSold: totalKitSold,
-      }));
-    } catch (error) {
-      console.error("Error fetching kits sold:", error);
-      let errorMessage = "Error fetching kits sold";
-      if (error.response?.data?.data) {
-        errorMessage = error.response.data.data;
-      } else if (error.response?.data?.message) {
-        errorMessage = error.response.data.message;
-      } else if (error.message) {
-        errorMessage = error.message;
-      }
-      toast.error(errorMessage);
-      throw error;
-    }
-  };
-
-  // Fetch recent bookings
-  const fetchRecentBookings = async () => {
-    try {
-      const response = await api.get("/booking/bookings", {
-        params: { limit: 5 },
-      });
-      console.log("Recent bookings response:", response);
-
-      const bookingsData = response.data?.data || response.data || [];
-      setRecentBookings(bookingsData);
-    } catch (error) {
-      console.error("Error fetching recent bookings:", error);
-      let errorMessage = "Error fetching recent bookings";
-      if (error.response?.data?.data) {
-        errorMessage = error.response.data.data;
-      } else if (error.response?.data?.message) {
-        errorMessage = error.response.data.message;
-      } else if (error.message) {
-        errorMessage = error.message;
-      }
-      toast.error(errorMessage);
-      throw error;
-    }
-  };
-
   // Main function to fetch all dashboard data
   const fetchDashboardData = useCallback(async () => {
+    // Move getDateParams and fetchRecentBookings inside useCallback to avoid dependency warning
+    const getDateParams = () => ({
+      startDate: dateRange[0]?.format("YYYY-MM-DD"),
+      endDate: dateRange[1]?.format("YYYY-MM-DD"),
+    });
+
+    const fetchRecentBookings = async () => {
+      try {
+        const response = await api.get("/booking/bookings", {
+          params: { limit: 5 },
+        });
+        console.log("Recent bookings response:", response);
+
+        const bookingsData = response.data?.data || response.data || [];
+        setRecentBookings(bookingsData);
+      } catch (error) {
+        console.error("Error fetching recent bookings:", error);
+        let errorMessage = "Error fetching recent bookings";
+        if (error.response?.data?.data) {
+          errorMessage = error.response.data.data;
+        } else if (error.response?.data?.message) {
+          errorMessage = error.response.data.message;
+        } else if (error.message) {
+          errorMessage = error.message;
+        }
+        toast.error(errorMessage);
+        throw error;
+      }
+    };
+
+    const fetchTotalCustomers = async () => {
+      try {
+        const response = await api.get("/admin/dashboard/customers", {
+          params: getDateParams(),
+        });
+        console.log("Total customers response:", response);
+
+        const customerData = response.data || {};
+        setStats((prev) => ({
+          ...prev,
+          totalCustomer: customerData.totalCustomer || 0,
+        }));
+      } catch (error) {
+        console.error("Error fetching total customers:", error);
+        let errorMessage = "Error fetching total customers";
+        if (error.response?.data?.data) {
+          errorMessage = error.response.data.data;
+        } else if (error.response?.data?.message) {
+          errorMessage = error.response.data.message;
+        } else if (error.message) {
+          errorMessage = error.message;
+        }
+        toast.error(errorMessage);
+        throw error;
+      }
+    };
+
+    const fetchCompletedTests = async () => {
+      try {
+        const response = await api.get("/booking/bookings", {
+          params: getDateParams(),
+        });
+        console.log("Completed tests response:", response);
+
+        const bookings = response.data?.data || response.data || [];
+        const completedCount = Array.isArray(bookings)
+          ? bookings.filter((b) => b.status === "Completed").length
+          : 0;
+        setStats((prev) => ({
+          ...prev,
+          completedTests: completedCount,
+        }));
+      } catch (error) {
+        console.error("Error fetching completed tests:", error);
+        let errorMessage = "Error fetching completed tests";
+        if (error.response?.data?.data) {
+          errorMessage = error.response.data.data;
+        } else if (error.response?.data?.message) {
+          errorMessage = error.response.data.message;
+        } else if (error.message) {
+          errorMessage = error.message;
+        }
+        toast.error(errorMessage);
+        throw error;
+      }
+    };
+
+    const fetchKitsSold = async () => {
+      try {
+        const response = await api.get("/admin/kitInventory/available", {
+          params: getDateParams(),
+        });
+        console.log("Kits sold response:", response);
+
+        const kitsData = response.data?.data || response.data || [];
+        const totalKitSold = Array.isArray(kitsData)
+          ? kitsData.reduce((sum, kit) => sum + (kit.isSelled || 0), 0)
+          : 0;
+        setStats((prev) => ({
+          ...prev,
+          kitsSold: totalKitSold,
+        }));
+      } catch (error) {
+        console.error("Error fetching kits sold:", error);
+        let errorMessage = "Error fetching kits sold";
+        if (error.response?.data?.data) {
+          errorMessage = error.response.data.data;
+        } else if (error.response?.data?.message) {
+          errorMessage = error.response.data.message;
+        } else if (error.message) {
+          errorMessage = error.message;
+        }
+        toast.error(errorMessage);
+        throw error;
+      }
+    };
+
     try {
       setLoading(true);
-
       await Promise.all([
         fetchTotalCustomers(),
         fetchCompletedTests(),
@@ -300,7 +295,7 @@ const Overview = () => {
     } finally {
       setLoading(false);
     }
-  }, [fetchTotalCustomers, fetchCompletedTests, fetchKitsSold]);
+  }, [dateRange]);
 
   // Generate chart data when stats or bookings change
   useEffect(() => {
