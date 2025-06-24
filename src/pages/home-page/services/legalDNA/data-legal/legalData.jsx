@@ -71,30 +71,22 @@ However, for DNA testing for birth registration, which falls under the category 
     icon: <FaPassport className="text-xl" />,
     backgroundImage:
       "https://www.cis.vn/wp-content/uploads/2021/11/huong-dan-thu-tuc-xin-song-tich-cho-viet-kieu1.jpg",
-    description: `**DNA Testing for Immigration and Citizenship**
+    description: `**Why is DNA Testing Required for Sponsorship, Immigration, and Naturalization?**
 
-Legal DNA testing specifically designed for immigration, family sponsorship, and citizenship applications.
+In the process of applying for a visa, exit procedures, immigration, or permanent residency, providing legal documentation to prove a biological relationship between the sponsor and the sponsored individual is a prerequisite.
 
-This service is accepted by:
-• Immigration authorities worldwide
-• Embassies and consulates
-• Citizenship application processes
-• Family reunification programs
-• Visa application procedures
+According to regulations of embassies and consulates of various countries, initial documents such as birth certificates, marriage certificates, and other supporting evidence like diplomas, photographs, or confirmation letters are often deemed insufficient or invalid. Therefore, a DNA test result verifying a biological relationship is considered the most accurate and reliable documented evidence.
 
-**Documentation Provided:**
-• Embassy-accepted test results
-• Official certification letters
-• Chain of custody documentation
-• International compliance certificates
-• Notarized reports
+As per the United States Citizenship and Immigration Services (USCIS), based on the most precise scientific evidence to confirm biological relationships, sponsors for immigration are required to undergo DNA testing and submit the test results to complete their application process.
 
-**Process Requirements:**
-• Professional sample collection with witness verification
-• Photographic identification of all participants
-• Strict chain of custody protocols
-• Compliance with international testing standards
-• Multiple language support for documentation
+**The types of DNA tests commonly required for immigration purposes include:**
+
+• Paternity DNA testing (father-child)
+• Maternity DNA testing (mother-child)
+• Sibling DNA testing (between siblings)
+• Grandparent DNA testing (grandparent-grandchild)
+
+If the DNA test results conclude that there is NO biological relationship between the individuals involved, the embassy or consulate has grounds to reject the application. Conversely, if the DNA test results confirm a biological relationship between the tested individuals (the sponsor and the sponsored person), this serves as a basis for further review and processing of the application.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ***Internationally recognized results accepted by immigration authorities with >99.999999% accuracy***`,
@@ -109,33 +101,9 @@ This service is accepted by:
     icon: <FaMoneyBillWave className="text-xl" />,
     backgroundImage:
       "https://images2.thanhnien.vn/528068263637045248/2023/6/15/thua-ke-16868272484361420781118.jpg",
-    description: `**DNA Testing for Inheritance and Asset Division**
+    description: `**DNA Testing for Inheritance or Asset Division**
 
-Court-admissible DNA testing for inheritance claims and asset division proceedings.
-
-This service supports:
-• Inheritance dispute resolution
-• Estate planning verification
-• Asset division proceedings
-• Legal heir identification
-• Will contest cases
-• Probate court requirements
-
-**Legal Applications:**
-• Probate court proceedings
-• Will contest cases
-• Estate distribution
-• Inheritance rights establishment
-• Trust fund verification
-• Family lineage confirmation
-
-**Professional Standards:**
-• Full chain of custody documentation
-• Court-admissible results
-• Legal expert testimony available
-• Compliance with judicial requirements
-• Detailed forensic reporting
-• Multi-generational testing capability
+DNA testing is used in cases where it has not yet been verified whether an individual has a biological relationship with the person whose estate is to be inherited. For example: an illegitimate child or a child born out of wedlock claiming inheritance from their biological father; a long-lost relative who has been located, etc.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ***Court-approved testing for legal inheritance proceedings with >99.999999% accuracy***`,
