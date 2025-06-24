@@ -300,7 +300,7 @@ const Overview = () => {
     } finally {
       setLoading(false);
     }
-  }, [dateRange]);
+  }, [dateRange, fetchTotalCustomers, fetchCompletedTests, fetchKitsSold]);
 
   // Generate chart data when stats or bookings change
   useEffect(() => {
