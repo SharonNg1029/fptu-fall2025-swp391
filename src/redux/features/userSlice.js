@@ -8,6 +8,7 @@ const initialState = {
   isAuthenticated: false,
   userRole: null,
   loginTime: null,
+  customerID: null, // Thêm customerID vào state
 }
 
 export const userSlice = createSlice({
@@ -21,6 +22,7 @@ export const userSlice = createSlice({
       state.isAuthenticated = true
       state.userRole = userData?.role || null
       state.loginTime = new Date().toISOString()
+      state.customerID = userData?.customerID || null // Lưu customerID nếu có
     },
     logout: (state) => {
       // Xoá thông tin đăng nhập của user khỏi state
@@ -28,11 +30,15 @@ export const userSlice = createSlice({
       state.isAuthenticated = false
       state.userRole = null
       state.loginTime = null
+      state.customerID = null // Reset customerID
     },
     updateUser: (state, action) => {
       // Cập nhật thông tin user
       if (state.currentUser) {
         state.currentUser = { ...state.currentUser, ...action.payload }
+        if (action.payload.customerID !== undefined) {
+          state.customerID = action.payload.customerID
+        }
       }
     },
     setUserRole: (state, action) => {
@@ -47,6 +53,7 @@ export const userSlice = createSlice({
       state.isAuthenticated = false
       state.userRole = null
       state.loginTime = null
+      state.customerID = null // Reset customerID
     })
   },
 })
@@ -59,6 +66,7 @@ export const selectCurrentUser = (state) => state.user?.currentUser
 export const selectIsAuthenticated = (state) => state.user?.isAuthenticated || false
 export const selectUserRole = (state) => state.user?.userRole
 export const selectLoginTime = (state) => state.user?.loginTime
+export const selectCustomerID = (state) => state.user?.customerID // Selector lấy customerID
 
 // ✅ THÊM MỚI: Selector cho fullName
 export const selectUserFullName = (state) => {
