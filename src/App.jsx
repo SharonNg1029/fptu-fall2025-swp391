@@ -14,7 +14,6 @@ import ServicesOverview from "./pages/home-page/services";
 import LegalServices from "./pages/home-page/services/legalDNA/LegalDNA";
 import HomeContent from "./components/home-content/HomeContent";
 import Guide from "./pages/home-page/guide";
-import Pricing from "./pages/home-page/pricing";
 import Blog from "./pages/home-page/blog";
 import VerifyPage from "./components/verify-otp/VerifyPage";
 import AccountManagement from "./pages/dashboard-admin/account-management";
@@ -35,6 +34,7 @@ import React from "react";
 import { Toaster } from "react-hot-toast";
 import Contact from "./pages/home-page/contact";
 import ProfilePage from "./pages/profile";
+import Pricing from "./pages/home-page/pricing";
 
 function App() {
   const router = createBrowserRouter([
