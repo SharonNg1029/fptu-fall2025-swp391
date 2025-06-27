@@ -5,71 +5,77 @@ const Guide = () => {
   const guideSteps = [
     {
       id: 1,
-      title: "For Guests (Unregistered Users)",
+      title: "Guests (Unregistered Users)",
       icon: "👥",
       items: [
-        "Explore our homepage: Learn about our medical facility and DNA testing services.",
-        "View service details: Understand the differences between Civil and Administrative DNA Testing, including procedures, timelines, and pricing.",
-        "Read blog articles: Gain knowledge and insights about DNA, sample collection, and legal procedures.",
-        "View customer reviews: See feedback from other clients.",
-        "Register/Login: Create an account to access full features and book services.",
+        "Explore our homepage to learn about our facility and DNA testing services.",
+        "Understand the difference between Non-Legal and Legal DNA testing: procedures, timelines, pricing.",
+        "Read blog articles for insights into DNA testing and legal procedures.",
+        "Browse customer reviews for feedback from real clients.",
+        "Create an account or log in to book services and access all features.",
       ],
     },
     {
       id: 2,
-      title: "For Customers (Registered Users)",
+      title: "Registered Users (Customers)",
       icon: "👤",
       items: [
         "Browse homepage, promotions, and service pricing.",
-        "Read, like, and comment on blog posts.",
-        "View and manage your profile: Update personal information, view test history, and manage account settings.",
-        "Book DNA testing services: Choose between self-collection at home or sample collection by medical staff.",
-        "Track your testing process: Monitor order status and receive notifications.",
-        "Provide feedback: Rate services and contact support if needed.",
+        "Read, like, and comment on blog content.",
+        "Manage your profile: update personal info, view test history, and adjust settings.",
+        "Book DNA tests: choose between home or facility sample collection.",
+        "Track test status and receive real-time updates.",
+        "Leave ratings and feedback; contact support as needed.",
       ],
     },
     {
       id: 3,
-      title: "Book DNA Testing Services",
+      title: "How to Book a DNA Test",
       icon: "📋",
       items: [
-        "Choose between self-collection at home or sample collection by medical staff.",
-        "Confirm your address and service details.",
-        "Complete payment based on your chosen collection method.",
-        "Receive confirmation email and order updates.",
+        "Select a service: Legal or Non-Legal DNA Testing.",
+        "Choose a collection method: Home or Facility.",
+        "Depending on the method, choose delivery type: Postal, Staff Visit, or Walk-in.",
+        "Postal delivery is only for Non-Legal tests.",
+        "For Staff Visit or Walk-in, pick a date and time.",
+        "For Postal, choose a delivery date and return the kit within 3 days.",
+        "Express service available for Staff Visit and Walk-in only.",
+        "Make payment based on your selections.",
+        "Receive a confirmation email and order status updates.",
       ],
     },
     {
       id: 4,
-      title: "Track Your Testing Process",
+      title: "Monitoring the Process",
       icon: "🔬",
       items: [
-        "Monitor order status through our comprehensive tracking system.",
-        "Receive sample collection kit (if applicable).",
-        "Submit samples to our laboratory.",
-        "Get notified when results are ready.",
+        "Track your order status in real time.",
+        "If using Postal or Staff Collection, expect kit/staff on scheduled date.",
+        "Send the sample to our lab (or return kit within 3 days).",
+        "Postal bookings not returned in time will be canceled.",
+        "Get notified once results are ready.",
       ],
     },
     {
       id: 5,
-      title: "View & Manage Results",
+      title: "Viewing Your Results",
       icon: "📊",
       items: [
-        "Access your test report online securely.",
-        "Download results in PDF format.",
-        "View test history and invoices.",
-        "Update personal and test-related information.",
+        "Securely view your test report online.",
+        "Download results as PDF.",
+        "Access history of past tests and invoices.",
+        "Update personal and test-related information as needed.",
       ],
     },
     {
       id: 6,
-      title: "Support & Feedback",
+      title: "Customer Support & Feedback",
       icon: "💬",
       items: [
-        "Rate services (1–5 stars) and leave comments.",
-        "Contact support via ticket or live chat.",
-        "Browse FAQs and user guides.",
-        "Edit or delete feedback within a limited time.",
+        "Rate services and leave feedback.",
+        "Reach out via ticket system or live chat.",
+        "Explore our FAQ and Help Guides.",
+        "Edit or delete feedback within a limited time window.",
       ],
     },
   ];
@@ -79,19 +85,19 @@ const Guide = () => {
       name: "QR Pay",
       icon: "📱",
       color: "from-blue-500 to-indigo-500",
-      description: "For home collection or staff visit",
+      description: "For Home Collection (Staff Collection or Postal Delivery)",
       features: [
-        "Self-collection at home",
-        "Medical staff home visit",
+        "Self-collection at home (Postal Delivery)",
+        "Medical staff home visit (Staff Collection)",
         "15-minute payment window",
         "Instant confirmation",
       ],
     },
     {
-      name: "Money",
+      name: "Cash/Card",
       icon: "💰",
       color: "from-green-500 to-emerald-500",
-      description: "Direct payment at medical facility",
+      description: "Direct payment at medical facility (Walk-in Service)",
       features: [
         "Pay at medical facility",
         "Cash or card accepted",
@@ -103,43 +109,47 @@ const Guide = () => {
 
   const collectionMethods = [
     {
-      title: "Self-Collection at Home",
-      description: "Collect samples yourself using our provided kit",
-      paymentMethod: "QR Pay",
+      title: "At Facility (Walk-in Service)",
+      description: "Come to our facility for professional sample collection",
+      paymentMethod: "Cash/Card",
+      serviceTypes: ["Legal", "Non-Legal"],
       steps: [
-        "Choose service and confirm address",
-        "Pay via QR Pay within 15 minutes",
-        "Receive sample collection kit",
-        "Follow instructions to collect sample",
-        "Send sample to our facility",
+        "Book appointment at facility.",
+        "Visit our medical center on the scheduled date and time.",
+        "Pay directly at facility.",
+        "Professional sample collection.",
+        "Immediate lab processing.",
       ],
-      icon: "🏠",
+      icon: "🏥",
     },
     {
-      title: "Medical Staff Home Visit",
-      description: "Our medical staff visits your home for collection",
+      title: "At Home (Staff Collection)",
+      description: "Our medical staff visits your home for sample collection",
       paymentMethod: "QR Pay",
+      serviceTypes: ["Legal", "Non-Legal"],
       steps: [
-        "Book appointment for home visit",
-        "Pay via QR Pay to confirm booking",
-        "Medical staff visits your location",
-        "Professional sample collection",
-        "Immediate lab processing",
+        "Book appointment for home visit.",
+        "Pay via QR Pay to confirm booking.",
+        "Medical staff visits your location on the scheduled date and time.",
+        "Professional sample collection.",
+        "Immediate lab processing.",
       ],
       icon: "👨‍⚕️",
     },
     {
-      title: "Visit Medical Facility",
-      description: "Come to our facility for professional collection",
-      paymentMethod: "Money",
+      title: "At Home (Postal Delivery)",
+      description:
+        "Collect samples yourself using our kit, delivered via postal service (only for Non-Legal cases)",
+      paymentMethod: "QR Pay",
+      serviceTypes: ["Non-Legal"], // Only for Non-Legal as per rule
       steps: [
-        "Book appointment at facility",
-        "Visit our medical center",
-        "Pay directly at facility",
-        "Professional sample collection",
-        "Immediate lab processing",
+        "Choose Non-Legal service and confirm your address for kit delivery.",
+        "Pay via QR Pay to confirm booking.",
+        "Receive sample collection kit by postal delivery on the selected date.",
+        "Follow instructions to collect sample.",
+        "Return the sample to our facility within 3 days. Booking will be cancelled if not returned.",
       ],
-      icon: "🏥",
+      icon: "🏠",
     },
   ];
 
@@ -151,12 +161,13 @@ const Guide = () => {
     },
     {
       status: "Booking Confirmed",
-      description: "Appointment confirmed and scheduled",
+      description: "Appointment or kit delivery confirmed and scheduled",
       icon: "✅",
     },
     {
       status: "Awaiting Sample",
-      description: "Sample kit sent or appointment scheduled",
+      description:
+        "Sample kit sent (for Postal Delivery) or appointment scheduled (for Walk-in/Staff Collection)",
       icon: "📦",
     },
     {
@@ -173,6 +184,11 @@ const Guide = () => {
       status: "Completed",
       description: "Results ready and delivered to your account",
       icon: "📊",
+    },
+    {
+      status: "Cancelled",
+      description: "Booking cancelled (e.g., kit not returned on time)",
+      icon: "❌",
     },
   ];
 
@@ -443,7 +459,7 @@ const Guide = () => {
                 }}></div>
 
               {/* Timeline Items */}
-              <div className="grid grid-cols-1 md:grid-cols-6 gap-8 md:gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-8 gap-8 md:gap-4">
                 {orderTimeline.map((stage, index) => (
                   <div key={index} className="relative text-center">
                     <div
