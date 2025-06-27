@@ -152,12 +152,10 @@ const Pricing = () => {
   );
 
   return (
-    <div
-      className="min-h-screen bg-gradient-to-br from-gray-50 to-white"
-      style={{ paddingTop: "65px" }}>
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white">
       {/* Hero Section */}
       <div
-        className="relative text-white h-[500px] flex items-center justify-center"
+        className="relative text-white h-[600px] mt-10 flex items-center justify-center"
         style={{
           backgroundImage:
             "url('https://images.pexels.com/photos/3825527/pexels-photo-3825527.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1')",
