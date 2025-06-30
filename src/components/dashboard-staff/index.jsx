@@ -23,7 +23,6 @@ import {
 } from "antd";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import LogOut from "../authen-form/LogOut";
-import axiosInstance from "../../configs/axios";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
@@ -77,18 +76,7 @@ const StaffDashboard = () => {
     setBreadcrumbs(breadcrumbItems);
   }, [location]);
 
-  // Lấy thông tin user khi load Dashboard (ví dụ sử dụng Bearer Token)
-  useEffect(() => {
-    const fetchUserInfo = async () => {
-      try {
-        await axiosInstance.get("/user/profile"); // endpoint ví dụ
-        // Xử lý dữ liệu user nếu cần
-      } catch (error) {
-        console.error("Fail to get user info:", error);
-      }
-    };
-    fetchUserInfo();
-  }, []);
+  // ...existing code...
 
   return (
     <Layout style={{ minHeight: "100vh" }}>
