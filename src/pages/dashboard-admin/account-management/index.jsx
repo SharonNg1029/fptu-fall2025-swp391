@@ -167,6 +167,7 @@ const AccountManagement = () => {
         (acc) => ({
           id: acc.accountID,
           username: acc.username,
+          fullName: acc.fullname, // Thêm fullName từ API
           email: acc.email,
           phone: acc.phone,
           // Lấy role từ authorities nếu có, fallback về acc.role nếu không có
@@ -597,6 +598,13 @@ const AccountManagement = () => {
       dataIndex: "username",
       key: "username",
       sorter: (a, b) => a.username.localeCompare(b.username),
+    },
+    {
+      title: "Full Name",
+      dataIndex: "fullName",
+      key: "fullName",
+      sorter: (a, b) => (a.fullName || "").localeCompare(b.fullName || ""),
+      render: (text) => text || "-",
     },
     {
       title: "Email",
