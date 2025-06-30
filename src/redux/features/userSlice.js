@@ -9,6 +9,7 @@ const initialState = {
   userRole: null,
   loginTime: null,
   customerID: null, // Thêm customerID vào state
+  token: null, // Thêm token vào state
 }
 
 export const userSlice = createSlice({
@@ -19,10 +20,15 @@ export const userSlice = createSlice({
       // Lưu thông tin đăng nhập của user vào state
       const userData = action.payload
       state.currentUser = userData
+      state.fullName = userData?.fullName || userData?.username || "User" // Lưu fullName nếu có
       state.isAuthenticated = true
       state.userRole = userData?.role || null
       state.loginTime = new Date().toISOString()
       state.customerID = userData?.customerID || null // Lưu customerID nếu có
+      state.adminID = userData?.adminID || null // Lưu adminID nếu có
+      state.staffID = userData?.staffID || null // Lưu staffID nếu có
+      state.managerID = userData?.managerID || null // Lưu managerID nếu có
+      state.token = userData?.token || null // Lưu token nếu có
     },
     logout: (state) => {
       // Xoá thông tin đăng nhập của user khỏi state
@@ -31,6 +37,7 @@ export const userSlice = createSlice({
       state.userRole = null
       state.loginTime = null
       state.customerID = null // Reset customerID
+      state.token = null // Reset token
     },
     updateUser: (state, action) => {
       // Cập nhật thông tin user
@@ -54,6 +61,7 @@ export const userSlice = createSlice({
       state.userRole = null
       state.loginTime = null
       state.customerID = null // Reset customerID
+      state.token = null // Reset token
     })
   },
 })
@@ -67,13 +75,10 @@ export const selectIsAuthenticated = (state) => state.user?.isAuthenticated || f
 export const selectUserRole = (state) => state.user?.userRole
 export const selectLoginTime = (state) => state.user?.loginTime
 export const selectCustomerID = (state) => state.user?.customerID // Selector lấy customerID
-
-// ✅ THÊM MỚI: Selector cho fullName
-export const selectUserFullName = (state) => {
-  const user = state.user?.currentUser;
-  if (!user) return "User";
-  
-  return user.fullName || user.username || "loclnx";
-}
+export const selectAdminID = (state) => state.user?.adminID // Selector lấy adminID
+export const selectStaffID = (state) => state.user?.staffID // Selector lấy staffID
+export const selectManagerID = (state) => state.user?.managerID // Selector lấy manager
+export const selectFullName = (state) => state.user?.fullName // Selector lấy fullName
+export const selectToken = (state) => state.user?.token // Selector lấy token
 
 export default userSlice.reducer
