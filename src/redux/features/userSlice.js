@@ -22,7 +22,7 @@ export const userSlice = createSlice({
       state.currentUser = userData
       state.fullName = userData?.fullName || userData?.username || "User" // Lưu fullName nếu có
       state.isAuthenticated = true
-      state.userRole = userData?.role || null
+      state.userRole = userData?.role ? String(userData.role).toLowerCase() : null
       state.loginTime = new Date().toISOString()
       state.customerID = userData?.customerID || null // Lưu customerID nếu có
       state.adminID = userData?.adminID || null // Lưu adminID nếu có
@@ -72,7 +72,7 @@ export const { login, logout, updateUser, setUserRole } = userSlice.actions
 // Selectors để lấy data từ state
 export const selectCurrentUser = (state) => state.user?.currentUser
 export const selectIsAuthenticated = (state) => state.user?.isAuthenticated || false
-export const selectUserRole = (state) => state.user?.userRole
+export const selectUserRole = (state) => state.user?.userRole ? String(state.user.userRole).toLowerCase() : null
 export const selectLoginTime = (state) => state.user?.loginTime
 export const selectCustomerID = (state) => state.user?.customerID // Selector lấy customerID
 export const selectAdminID = (state) => state.user?.adminID // Selector lấy adminID
