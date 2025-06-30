@@ -827,7 +827,10 @@ const Overview = () => {
               boxShadow: "0 4px 20px rgba(0, 0, 0, 0.08)",
             }}>
             <Table
-              dataSource={recentBookings}
+              dataSource={recentBookings.map((item, idx) => ({
+                ...item,
+                key: item.bookingId || idx,
+              }))}
               columns={columns}
               pagination={false}
               size="middle"
