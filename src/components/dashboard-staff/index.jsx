@@ -196,16 +196,24 @@ const StaffDashboard = () => {
         </Header>
 
         <Content style={{ margin: "16px 16px 0", overflow: "initial" }}>
-          <Breadcrumb style={{ marginBottom: 16 }}>
-            <Breadcrumb.Item>
-              <Link to="/staff-dashboard">Dashboard</Link>
-            </Breadcrumb.Item>
-            {breadcrumbs.slice(1).map((breadcrumb, index) => (
-              <Breadcrumb.Item key={index}>
-                <Link to={breadcrumb.path}>{breadcrumb.title}</Link>
-              </Breadcrumb.Item>
-            ))}
-          </Breadcrumb>
+          <Breadcrumb
+            style={{ marginBottom: 16 }}
+            items={[
+              {
+                title: <Link to="/staff-dashboard">Dashboard</Link>,
+              },
+              ...breadcrumbs.slice(1).map((breadcrumb, idx, arr) => {
+                const isLast = idx === arr.length - 1;
+                return {
+                  title: isLast ? (
+                    breadcrumb.title
+                  ) : (
+                    <Link to={breadcrumb.path}>{breadcrumb.title}</Link>
+                  ),
+                };
+              }),
+            ]}
+          />
 
           <div
             style={{
@@ -224,7 +232,7 @@ const StaffDashboard = () => {
       </Layout>
 
       {/* Enhanced CSS for search dropdown and interactions */}
-      <style jsx global>{`
+      <style>{`
         @media (max-width: 768px) {
           .hide-on-small {
             display: none;

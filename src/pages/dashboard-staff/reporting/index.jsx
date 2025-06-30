@@ -320,25 +320,18 @@ const StaffReporting = () => {
     },
   ];
 
-  return (
-    <div style={{ padding: "0 24px" }}>
-      <Title level={2} style={{ margin: 0, marginBottom: 24 }}>
-        My Work & Reporting
-      </Title>
-      <Tabs
-        activeKey={activeTab}
-        onChange={setActiveTab}
-        type="card"
-        style={{ marginBottom: 24 }}
-        tabBarStyle={{ marginBottom: 32 }}>
-        <Tabs.TabPane
-          key="today"
-          tab={
-            <span>
-              <HistoryOutlined style={{ marginRight: 8 }} />
-              Today's Reports
-            </span>
-          }>
+  // Tabs items array for new antd Tabs API
+  const tabItems = [
+    {
+      key: "today",
+      label: (
+        <span>
+          <HistoryOutlined style={{ marginRight: 8 }} />
+          Today's Reports
+        </span>
+      ),
+      children: (
+        <>
           <div
             style={{
               display: "flex",
@@ -395,15 +388,19 @@ const StaffReporting = () => {
               Submit Reports for Today
             </Button>
           </div>
-        </Tabs.TabPane>
-        <Tabs.TabPane
-          key="sent"
-          tab={
-            <span>
-              <HistoryOutlined style={{ marginRight: 8 }} />
-              Sent Reports
-            </span>
-          }>
+        </>
+      ),
+    },
+    {
+      key: "sent",
+      label: (
+        <span>
+          <HistoryOutlined style={{ marginRight: 8 }} />
+          Sent Reports
+        </span>
+      ),
+      children: (
+        <>
           <div
             style={{
               display: "flex",
@@ -458,8 +455,24 @@ const StaffReporting = () => {
               scroll={{ x: 1200 }}
             />
           </Card>
-        </Tabs.TabPane>
-      </Tabs>
+        </>
+      ),
+    },
+  ];
+
+  return (
+    <div style={{ padding: "0 24px" }}>
+      <Title level={2} style={{ margin: 0, marginBottom: 24 }}>
+        My Work & Reporting
+      </Title>
+      <Tabs
+        activeKey={activeTab}
+        onChange={setActiveTab}
+        type="card"
+        style={{ marginBottom: 24 }}
+        tabBarStyle={{ marginBottom: 32 }}
+        items={tabItems}
+      />
       <ToastContainer />
     </div>
   );
