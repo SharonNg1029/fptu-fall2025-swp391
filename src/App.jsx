@@ -73,9 +73,6 @@ function App() {
           path: "blog",
           element: <Blog />,
         },
-        { path: "blog/:slug", 
-          element: <BlogDetail /> 
-        },
         {
           path: "contact",
           element: <Contact />,
