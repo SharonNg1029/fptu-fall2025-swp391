@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
   Button,
   Checkbox,
@@ -15,18 +15,188 @@ import { Link, useNavigate } from "react-router-dom";
 import enUS from "antd/locale/en_US";
 import api, { saveAuthData } from "../../configs/axios";
 import { GoogleOAuthProvider, GoogleLogin } from "@react-oauth/google";
-import { useDispatch } from "react-redux";
 import { login } from "../../redux/features/userSlice";
+import { useDispatch } from "react-redux";
 
-// Nếu bạn có component OTPVerification thì giữ nguyên, không cần sửa trong ví dụ này.
+// Custom OTP Verification Component - UPDATED
+const OTPVerification = ({ email, onVerify, onClose }) => {
+  const [otp, setOtp] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [resendLoading, setResendLoading] = useState(false);
+  const [timeLeft, setTimeLeft] = useState(300); // 5 phút = 300 giây
+  const [canResend, setCanResend] = useState(false);
+
+  // Đếm ngược thời gian
+  useEffect(() => {
+    if (timeLeft > 0) {
+      const timer = setTimeout(() => {
+        setTimeLeft(timeLeft - 1);
+      }, 1000);
+      return () => clearTimeout(timer);
+    } else {
+      setCanResend(true);
+    }
+  }, [timeLeft]);
+
+  // Format thời gian hiển thị (MM:SS)
+  const formatTime = (seconds) => {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`;
+  };
+
+  const handleVerify = async () => {
+    if (!otp || otp.length !== 6) {
+      toast.error("Please enter a valid 6-digit OTP code");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      // Tự động gán email vào request
+      await api.post("auth/verify-otp", { email, otp });
+      toast.success("Account registration successful!");
+      onVerify();
+      onClose();
+    } catch (error) {
+      console.error(error);
+      if (error.response?.status === 400) {
+        toast.error("OTP code has expired. Please request a new one.");
+        setCanResend(true);
+        setTimeLeft(0);
+      } else {
+        toast.error("Invalid OTP code. Please try again.");
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResend = async () => {
+    setResendLoading(true);
+    try {
+      // Tự động gán email vào request resend
+      await api.post("auth/resend-otp", { email });
+      toast.success("New OTP code has been sent to your email");
+      setOtp("");
+      setTimeLeft(300); // Reset về 5 phút
+      setCanResend(false);
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to resend OTP. Please try again.");
+    } finally {
+      setResendLoading(false);
+    }
+  };
+
+  const handleKeyPress = (e) => {
+    if (e.key === "Enter") {
+      handleVerify();
+    }
+  };
+
+  return (
+    <div className="otp-verification-container">
+      <div className="otp-verification-title">Email Verification</div>
+
+      <div className="otp-verification-subtitle">
+        We've sent a 6-digit verification code to your email.
+        <br />
+{/* ẨN EMAIL - chỉ hiển thị thông báo chung */}
+        <span style={{ color: "#1890ff", fontWeight: "bold" }}>
+          Please check your inbox and enter the code below.
+        </span>
+      </div>
+
+      {/* HIỂN THỊ THỜI GIAN CÒN LẠI */}
+      <div
+        className="otp-timer"
+        style={{
+          textAlign: "center",
+          marginBottom: "15px",
+          padding: "8px",
+          backgroundColor: timeLeft > 60 ? "#f6ffed" : "#fff1f0",
+          border: `1px solid ${timeLeft > 60 ? "#b7eb8f" : "#ffccc7"}`,
+          borderRadius: "6px",
+          fontSize: "14px",
+        }}
+      >
+        {timeLeft > 0 ? (
+          <>
+            <span style={{ color: timeLeft > 60 ? "#52c41a" : "#ff4d4f" }}>
+              Code expires in: <strong>{formatTime(timeLeft)}</strong>
+            </span>
+          </>
+        ) : (
+          <span style={{ color: "#ff4d4f" }}>
+            ⚠️ OTP code has expired. Please request a new one.
+          </span>
+        )}
+      </div>
+
+      <input
+        className="otp-input"
+        placeholder="Enter 6-digit OTP"
+        value={otp}
+        onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
+        onKeyPress={handleKeyPress}
+        maxLength={6}
+        disabled={timeLeft === 0} // Disable khi hết thời gian
+      />
+
+      <div>
+        <button
+          className="otp-verify-button"
+          onClick={handleVerify}
+          disabled={!otp || otp.length !== 6 || loading || timeLeft === 0}
+        >
+          {loading && <span className="otp-button-loading"></span>}
+          {timeLeft === 0 ? "Code Expired" : "Verify OTP"}
+        </button>
+      </div>
+
+      <div className="otp-actions">
+        <button
+          className="otp-resend-button"
+          onClick={handleResend}
+          disabled={resendLoading || (!canResend && timeLeft > 0)}
+        >
+          {resendLoading && <span className="otp-button-loading"></span>}
+          {timeLeft > 0 && !canResend
+            ? `Resend in ${formatTime(timeLeft)}`
+            : "Resend OTP"}
+        </button>
+
+        <button className="otp-cancel-button" onClick={onClose}>
+          Cancel
+        </button>
+      </div>
+
+      {/* THÔNG BÁO THÊM */}
+      <div
+        style={{
+          marginTop: "15px",
+          fontSize: "12px",
+          color: "#8c8c8c",
+          textAlign: "center",
+          lineHeight: "1.4",
+        }}
+      >
+        💡 Didn't receive the code? Check your spam folder or click "Resend OTP"
+      </div>
+    </div>
+  );
+};
 
 function RegisterForm() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
+  // State cho OTP
+  const [currentToastId, setCurrentToastId] = useState(null);
+
   // Google Client ID
-  const GOOGLE_CLIENT_ID =
-    "26142191146-7u8f63rgtupdv8v6kv8ug307j55hjfob.apps.googleusercontent.com";
+  const GOOGLE_CLIENT_ID = "26142191146-7u8f63rgtupdv8v6kv8ug307j55hjfob.apps.googleusercontent.com";
 
   // Google Success Handler (đồng bộ với LoginForm)
   const handleGoogleSuccess = async (credentialResponse) => {
@@ -80,65 +250,103 @@ function RegisterForm() {
     }
   };
 
-  // Google Error Handler giữ nguyên
-  const handleGoogleError = (error) => {
-    console.error("Google registration error:", error);
-    let errorMessage = "Google registration failed! Please try again.";
-    if (error) {
-      switch (error.error) {
-        case "popup_closed_by_user":
-          errorMessage = "Registration popup was closed. Please try again.";
-          break;
-        case "access_denied":
-          errorMessage = "Access denied. Please grant permission to continue.";
-          break;
-        case "immediate_failed":
-          errorMessage = "Automatic registration failed. Please sign in manually.";
-          break;
-        case "popup_blocked_by_browser":
-          errorMessage =
-            "Popup blocked by browser. Please allow popups and try again.";
-          break;
-        default:
-          errorMessage =
-            error.details ||
-            error.error ||
-            "Google registration failed! Please try again.";
-      }
-    }
-    toast.error(errorMessage);
+  // Google Error Handler
+  const handleGoogleError = () => {
+    toast.error("Google registration failed! Please try again.");
   };
 
-  // Form đăng ký bình thường (giữ nguyên logic cũ của bạn)
+  // Function hiển thị OTP Verification
+  const showOTPVerification = (email) => {
+    if (currentToastId) {
+      toast.dismiss(currentToastId);
+    }
+
+    const toastId = toast(
+      <OTPVerification
+        email={email} // TỰ ĐỘNG TRUYỀN EMAIL TỪ FORM ĐĂNG KÝ
+        onVerify={() => {
+          setTimeout(() => {
+            navigate("/login");
+          }, 2000);
+        }}
+        onResend={() => {
+          // OTP resend is handled within the component
+        }}
+        onClose={() => {
+          toast.dismiss(toastId);
+          setCurrentToastId(null);
+        }}
+      />,
+      {
+        position: "top-center",
+        autoClose: false,
+        hideProgressBar: true,
+        closeOnClick: false,
+        pauseOnHover: true,
+        draggable: false,
+        closeButton: false,
+        className: "Toastify__toast--otp",
+      }
+    );
+
+    setCurrentToastId(toastId);
+  };
+
   const onFinish = async (values) => {
     if (values.dob && values.dob.format) {
-      values.dob = values.dob.format("YYYY-MM-DD");
-    }
+    values.dob = values.dob.format("YYYY-MM-DD");
+  }
+    console.log("Success:", values);
     try {
       await api.post("auth/register", values);
       toast.success(
         "Registration successful! Please check your email for OTP verification."
       );
-      // Tùy bạn muốn làm gì tiếp (show OTP, về trang login, ...)
+
+      setTimeout(() => {
+        showOTPVerification(values.email);
+      }, 1500);
     } catch (e) {
+      console.log(e);
+
       const errorMessage =
         e.response?.data?.message ||
         e.response?.data ||
         "Registration failed. Please try again.";
       const statusCode = e.response?.status;
+
+      // Kiểm tra nếu là case OTP đã gửi thành công
+      if (
+        errorMessage.includes("OTP has been sent") ||
+        errorMessage.includes("confirm to active")
+      ) {
+        toast.success(
+          "Registration successful! OTP has been sent to your email."
+        );
+
+        setTimeout(() => {
+          showOTPVerification(values.email);
+        }, 1500);
+        return;
+      }
+
+      // Xử lý lỗi khác...
       const finalErrorMessage =
         statusCode === 409 || statusCode === 400
           ? errorMessage.toLowerCase().includes("email")
             ? "This email is already registered. Please use a different email address."
             : errorMessage.toLowerCase().includes("username")
             ? "This username is already taken. Please choose a different username."
-            : errorMessage
+: errorMessage
           : errorMessage;
+
       toast.error(finalErrorMessage);
     }
   };
 
   const onFinishFailed = (errorInfo) => {
+    console.log("Failed:", errorInfo);
+
     const termsError = errorInfo.errorFields.find((field) =>
       field.name.includes("agreement")
     );
@@ -225,7 +433,7 @@ function RegisterForm() {
                   label="Phone"
                   name="phone"
                   className="form-field"
-                  rules={[{ required: true, message: "Required" }]}
+rules={[{ required: true, message: "Required" }]}
                 >
                   <Input placeholder="Enter your phone number" />
                 </Form.Item>
@@ -293,7 +501,7 @@ function RegisterForm() {
             </Form.Item>
           </Form>
 
-          {/* ===== GOOGLE SIGN UP ===== */}
+          {/* ===== THÊM GOOGLE SIGN UP ===== */}
           <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
             <div className="google-login-section">
               <p className="google-login-label">Or sign up with Google</p>
@@ -304,7 +512,7 @@ function RegisterForm() {
               />
             </div>
           </GoogleOAuthProvider>
-          {/* ===== END GOOGLE SIGN UP ===== */}
+          {/* ===== KẾT THÚC GOOGLE SIGN UP ===== */}
 
           <p className="helper-text">
             Already have an account? <Link to="/login">Login here</Link>
@@ -314,5 +522,4 @@ function RegisterForm() {
     </ConfigProvider>
   );
 }
-
 export default RegisterForm;

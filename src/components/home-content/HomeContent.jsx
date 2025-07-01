@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { nonLegalServicesData } from "../../pages/home-page/services/non-legalDNA/data-non-legal/nonLegalData";
 import { legalServicesData } from "../../pages/home-page/services/legalDNA/data-legal/legalData";
 import { guideSteps } from "../../pages/home-page/guide/guideSteps";
+import { Link } from "react-router-dom";
 
 const HomeContent = () => {
   // State cho FAQ
@@ -315,12 +316,12 @@ const HomeContent = () => {
                   )}
                 </div>
               </div>
-              <a
-                href="/services/non-legal"
+              <Link
+                to="/services/non-legal"
                 className="mt-8 px-10 py-3 rounded-xl bg-gradient-to-br from-sky-500 via-blue-600 to-blue-700 hover:from-sky-600 hover:via-blue-700 hover:to-blue-800 text-white font-semibold transition-all shadow text-center text-lg"
               >
                 View More
-              </a>
+              </Link>
             </div>
             {/* Legal container */}
             <div className="flex-1 bg-white rounded-2xl shadow-lg p-8 flex flex-col border border-gray-200 min-w-[360px]">
@@ -337,12 +338,12 @@ const HomeContent = () => {
                   )}
                 </div>
               </div>
-              <a
-                href="/services/legal"
+              <Link
+                to="/services/legal"
                 className="mt-8 px-10 py-3 rounded-xl bg-gradient-to-br from-sky-500 via-blue-600 to-blue-700 hover:from-sky-600 hover:via-blue-700 hover:to-blue-800 text-white font-semibold transition-all shadow text-center text-lg"
               >
                 View More
-              </a>
+              </Link>
             </div>
           </div>
         </div>
@@ -473,12 +474,12 @@ const HomeContent = () => {
         <div className="max-w-[1300px] mx-auto flex flex-row gap-10 justify-center">
           {featuredGuideSteps.map((step) => renderGuideStepCard(step))}
         </div>
-        <a
-          href="/guide"
+        <Link
+          to="/guide"
           className="mt-8 block mx-auto w-fit px-10 py-3 rounded-xl bg-gradient-to-br from-sky-500 via-blue-600 to-blue-700 hover:from-sky-600 hover:via-blue-700 hover:to-blue-800 text-white font-semibold transition-all shadow text-center text-lg"
         >
           View Full Guide
-        </a>
+        </Link>
       </div>
 
       {/* ✅ FAQ SECTION - UPDATED */}
