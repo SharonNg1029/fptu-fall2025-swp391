@@ -9,7 +9,6 @@ import {
   Table,
   Tag,
   Button,
-  DatePicker,
   Divider,
 } from "antd";
 import {
@@ -41,11 +40,10 @@ import api from "../../../configs/axios";
 import { toast } from "react-toastify";
 
 const { Title, Text } = Typography;
-const { RangePicker } = DatePicker;
 
 const Overview = () => {
   const [loading, setLoading] = useState(true);
-  const [dateRange, setDateRange] = useState([null, null]);
+  // Removed dateRange state
   const [stats, setStats] = useState({
     totalCustomer: 0,
     completedTests: 0,
@@ -173,23 +171,24 @@ const Overview = () => {
 
   // Main function to fetch all dashboard data
   const fetchDashboardData = useCallback(async () => {
-    // Move getDateParams and fetchRecentBookings inside useCallback to avoid dependency warning
-    const getDateParams = () => ({
-      startDate: dateRange[0]?.format("YYYY-MM-DD"),
-      endDate: dateRange[1]?.format("YYYY-MM-DD"),
-    });
+    // No date range filtering anymore
+    const filterBookingsByDateRange = (bookings) => bookings;
+    // Removed getDateParams, no longer needed
 
     const fetchRecentBookings = async () => {
       try {
-        const response = await api.get("/booking/bookings", {
-          params: { limit: 5, sort: "desc", sortBy: "appointmentTime" },
-        });
+        const params = {
+          limit: 1000, // lấy nhiều để filter FE
+          sort: "desc",
+          sortBy: "appointmentTime",
+        };
+        console.log("fetchRecentBookings params:", params);
+        const response = await api.get("/booking/bookings", { params });
         let bookingsData = response.data?.data || response.data || [];
-        // Ensure only 5 most recent bookings are shown, sorted by appointmentTime descending
-        bookingsData = bookingsData
+        // FE filter nếu cần
+        bookingsData = filterBookingsByDateRange(bookingsData)
           .slice() // clone array
           .sort((a, b) => {
-            // appointmentTime: [year, month, day]
             if (
               !Array.isArray(a.appointmentTime) ||
               !Array.isArray(b.appointmentTime)
@@ -225,9 +224,7 @@ const Overview = () => {
 
     const fetchTotalCustomers = async () => {
       try {
-        const response = await api.get("/admin/dashboard/customers", {
-          params: getDateParams(),
-        });
+        const response = await api.get("/admin/dashboard/customers");
         console.log("Total customers response:", response);
 
         const customerData = response.data || {};
@@ -252,9 +249,7 @@ const Overview = () => {
 
     const fetchCompletedTests = async () => {
       try {
-        const response = await api.get("/booking/bookings", {
-          params: getDateParams(),
-        });
+        const response = await api.get("/booking/bookings");
         console.log("Completed tests response:", response);
 
         const bookings = response.data?.data || response.data || [];
@@ -282,9 +277,7 @@ const Overview = () => {
 
     const fetchKitsSold = async () => {
       try {
-        const response = await api.get("/admin/kitInventory/available", {
-          params: getDateParams(),
-        });
+        const response = await api.get("/admin/kitInventory/available");
         console.log("Kits sold response:", response);
 
         const kitsData = response.data?.data || response.data || [];
@@ -312,11 +305,11 @@ const Overview = () => {
 
     const fetchRevenue = async () => {
       try {
-        const response = await api.get("/booking/bookings", {
-          params: { limit: 10000 },
-        });
-        const bookings = response.data?.data || response.data || [];
-        // Tính tổng revenue từ totalCost của tất cả bookings
+        const params = { limit: 10000 };
+        console.log("fetchRevenue params:", params);
+        const response = await api.get("/booking/bookings", { params });
+        let bookings = response.data?.data || response.data || [];
+        bookings = filterBookingsByDateRange(bookings);
         const totalRevenue = Array.isArray(bookings)
           ? bookings.reduce((sum, b) => sum + Number(b.totalCost || 0), 0)
           : 0;
@@ -332,12 +325,13 @@ const Overview = () => {
 
     const fetchAllBookings = async () => {
       try {
-        const response = await api.get("/booking/bookings", {
-          params: { limit: 10000 }, // get all bookings (or as many as possible)
-        });
-        setAllBookings(response.data?.data || response.data || []);
-        // For backward compatibility with generateChartData
-        window.__ALL_BOOKINGS__ = response.data?.data || response.data || [];
+        const params = { limit: 10000 };
+        console.log("fetchAllBookings params:", params);
+        const response = await api.get("/booking/bookings", { params });
+        let bookings = response.data?.data || response.data || [];
+        bookings = filterBookingsByDateRange(bookings);
+        setAllBookings(bookings);
+        window.__ALL_BOOKINGS__ = bookings;
       } catch (error) {
         let errorMessage = "Error fetching all bookings";
         if (error.response?.data?.data) {
@@ -376,7 +370,7 @@ const Overview = () => {
     } finally {
       setLoading(false);
     }
-  }, [dateRange]);
+  }, []);
 
   // Fetch total customers from /admin/account
   const [totalCustomers, setTotalCustomers] = useState(0);
@@ -486,10 +480,6 @@ const Overview = () => {
         }}>
         <Title level={2}>Dashboard Overview</Title>
         <div style={{ display: "flex", gap: 16, alignItems: "center" }}>
-          <RangePicker
-            onChange={(dates) => setDateRange(dates)}
-            format="YYYY-MM-DD"
-          />
           <Button
             type="primary"
             icon={<ReloadOutlined />}
@@ -837,7 +827,10 @@ const Overview = () => {
               boxShadow: "0 4px 20px rgba(0, 0, 0, 0.08)",
             }}>
             <Table
-              dataSource={recentBookings}
+              dataSource={recentBookings.map((item, idx) => ({
+                ...item,
+                key: item.bookingId || idx,
+              }))}
               columns={columns}
               pagination={false}
               size="middle"

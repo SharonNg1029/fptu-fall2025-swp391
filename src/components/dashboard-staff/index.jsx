@@ -23,7 +23,6 @@ import {
 } from "antd";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import LogOut from "../authen-form/LogOut";
-import axiosInstance from "../../configs/axios";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
@@ -77,18 +76,7 @@ const StaffDashboard = () => {
     setBreadcrumbs(breadcrumbItems);
   }, [location]);
 
-  // Lấy thông tin user khi load Dashboard (ví dụ sử dụng Bearer Token)
-  useEffect(() => {
-    const fetchUserInfo = async () => {
-      try {
-        await axiosInstance.get("/user/profile"); // endpoint ví dụ
-        // Xử lý dữ liệu user nếu cần
-      } catch (error) {
-        console.error("Fail to get user info:", error);
-      }
-    };
-    fetchUserInfo();
-  }, []);
+  // ...existing code...
 
   return (
     <Layout style={{ minHeight: "100vh" }}>
@@ -208,16 +196,24 @@ const StaffDashboard = () => {
         </Header>
 
         <Content style={{ margin: "16px 16px 0", overflow: "initial" }}>
-          <Breadcrumb style={{ marginBottom: 16 }}>
-            <Breadcrumb.Item>
-              <Link to="/staff-dashboard">Dashboard</Link>
-            </Breadcrumb.Item>
-            {breadcrumbs.slice(1).map((breadcrumb, index) => (
-              <Breadcrumb.Item key={index}>
-                <Link to={breadcrumb.path}>{breadcrumb.title}</Link>
-              </Breadcrumb.Item>
-            ))}
-          </Breadcrumb>
+          <Breadcrumb
+            style={{ marginBottom: 16 }}
+            items={[
+              {
+                title: <Link to="/staff-dashboard">Dashboard</Link>,
+              },
+              ...breadcrumbs.slice(1).map((breadcrumb, idx, arr) => {
+                const isLast = idx === arr.length - 1;
+                return {
+                  title: isLast ? (
+                    breadcrumb.title
+                  ) : (
+                    <Link to={breadcrumb.path}>{breadcrumb.title}</Link>
+                  ),
+                };
+              }),
+            ]}
+          />
 
           <div
             style={{
@@ -236,7 +232,7 @@ const StaffDashboard = () => {
       </Layout>
 
       {/* Enhanced CSS for search dropdown and interactions */}
-      <style jsx global>{`
+      <style>{`
         @media (max-width: 768px) {
           .hide-on-small {
             display: none;

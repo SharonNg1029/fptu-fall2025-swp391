@@ -1,6 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import {
+  selectUserRole,
+  selectCustomerID,
+  selectStaffID,
+  selectManagerID,
+  selectAdminID,
+} from "../../redux/features/userSlice";
+import {
   User,
   Mail,
   Phone,
@@ -22,53 +29,31 @@ import toast from "react-hot-toast";
 const ProfilePage = () => {
   const dispatch = useDispatch();
   const currentUser = useSelector((state) => state.user?.currentUser);
+  // Sử dụng selector lấy role và ID từ userSlice
+  const userRole = useSelector(selectUserRole);
+  const customerID = useSelector(selectCustomerID);
+  const staffID = useSelector(selectStaffID);
+  const managerID = useSelector(selectManagerID);
+  const adminID = useSelector(selectAdminID);
 
-  // Logic để lấy userID và userRole không đổi
+  // Ưu tiên lấy đúng ID theo role
   let userID = null;
-  let userRole = null;
-  if (currentUser) {
-    userRole =
-      currentUser.role ||
-      currentUser?.customer?.role ||
-      currentUser?.staff?.role ||
-      currentUser?.manager?.role ||
-      currentUser?.admin?.role;
-    if (userRole === "customer") {
-      userID =
-        currentUser?.customer?.customerID ||
-        currentUser?.customerID ||
-        currentUser?.customer?.customerId ||
-        currentUser?.customerId;
-    } else if (userRole === "staff") {
-      userID =
-        currentUser?.staff?.staffID ||
-        currentUser?.staffID ||
-        currentUser?.staff?.staffId ||
-        currentUser?.staffId;
-    } else if (userRole === "manager") {
-      userID =
-        currentUser?.manager?.managerID ||
-        currentUser?.managerID ||
-        currentUser?.manager?.managerId ||
-        currentUser?.managerId;
-    } else if (userRole === "admin") {
-      userID =
-        currentUser?.admin?.adminID ||
-        currentUser?.adminID ||
-        currentUser?.admin?.adminId ||
-        currentUser?.adminId;
-    }
-    if (!userID) {
-      userID =
-        currentUser?.customerID ||
-        currentUser?.customerId ||
-        currentUser?.staffID ||
-        currentUser?.staffId ||
-        currentUser?.managerID ||
-        currentUser?.managerId ||
-        currentUser?.adminID ||
-        currentUser?.adminId;
-    }
+  if (userRole === "customer") userID = customerID;
+  else if (userRole === "staff") userID = staffID;
+  else if (userRole === "manager") userID = managerID;
+  else if (userRole === "admin") userID = adminID;
+
+  // Nếu vẫn không có userID, fallback lấy từ currentUser
+  if (!userID && currentUser) {
+    userID =
+      currentUser?.customerID ||
+      currentUser?.customerId ||
+      currentUser?.staffID ||
+      currentUser?.staffId ||
+      currentUser?.managerID ||
+      currentUser?.managerId ||
+      currentUser?.adminID ||
+      currentUser?.adminId;
   }
   if (!userID && currentUser) {
     setTimeout(() => {

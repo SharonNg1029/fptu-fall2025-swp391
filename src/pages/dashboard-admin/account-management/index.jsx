@@ -89,13 +89,26 @@ const AccountManagement = () => {
    * Check if a customer account has active orders
    * This prevents deletion of accounts with pending orders
    */
+  // Kiểm tra customer có booking nào chưa hoàn thành (status khác Completed/Cancel)
   const checkActiveOrders = async (accountId) => {
     try {
-      const response = await api.get(`/admin/orders/active/${accountId}`);
-      return response.data?.hasActiveOrders || false;
+      const response = await api.get("/booking/bookings", {
+        params: { customerID: accountId },
+      });
+      const bookings = response.data?.data || response.data || [];
+      // Đếm số booking có status khác Completed và Cancel (không phân biệt hoa thường)
+      const hasActive = bookings.some((b) => {
+        const status = String(b.status || "").toLowerCase();
+        return (
+          status !== "completed" &&
+          status !== "cancel" &&
+          status !== "cancelled"
+        );
+      });
+      return hasActive;
     } catch (error) {
       console.error("Error checking active orders:", error);
-      // If we can't check, assume no active orders to allow deletion
+      // Nếu lỗi, giả định không có active order để không chặn xóa
       return false;
     }
   };
@@ -167,6 +180,7 @@ const AccountManagement = () => {
         (acc) => ({
           id: acc.accountID,
           username: acc.username,
+          fullName: acc.fullname, // Thêm fullName từ API
           email: acc.email,
           phone: acc.phone,
           // Lấy role từ authorities nếu có, fallback về acc.role nếu không có
@@ -597,6 +611,13 @@ const AccountManagement = () => {
       dataIndex: "username",
       key: "username",
       sorter: (a, b) => a.username.localeCompare(b.username),
+    },
+    {
+      title: "Full Name",
+      dataIndex: "fullName",
+      key: "fullName",
+      sorter: (a, b) => (a.fullName || "").localeCompare(b.fullName || ""),
+      render: (text) => text || "-",
     },
     {
       title: "Email",
