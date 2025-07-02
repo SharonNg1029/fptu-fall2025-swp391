@@ -123,18 +123,24 @@ function Overview() {
       acc[status] = (acc[status] || 0) + 1;
       return acc;
     }, {});
+    // Màu status theo mẫu
+    const statusColors = [
+      "#52c41a",
+      "#faad14",
+      "#ff4d4f",
+      "#1890ff",
+      "#722ed1",
+      "#13c2c2",
+      "#eb2f96",
+      "#b37feb",
+      "#fa8c16",
+      "#a0d911",
+    ];
     const statusDistribution = Object.entries(statusCounts).map(
-      ([status, count]) => ({
+      ([status, count], idx) => ({
         name: status,
         value: count,
-        color:
-          status === "Completed"
-            ? "#52c41a"
-            : status === "Pending"
-            ? "#faad14"
-            : status === "Cancelled"
-            ? "#ff4d4f"
-            : "#1890ff",
+        color: statusColors[idx % statusColors.length],
       })
     );
 
