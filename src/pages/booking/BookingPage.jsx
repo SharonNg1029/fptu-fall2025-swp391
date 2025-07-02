@@ -328,6 +328,7 @@ const generatePDF = async () => {
 
     console.log('Bắt đầu tạo docDefinition...');
     
+<<<<<<< HEAD
     // Lấy thông tin chi phí từ bookingData
     const { service, isExpressService } = bookingData;
     const { serviceCost, collectionCost, mediationCost, expressCost } = getCostBreakdown();
@@ -385,6 +386,8 @@ const generatePDF = async () => {
       ]
     );
 
+=======
+>>>>>>> c33a5dd685c61803dcff57629b699d5d8cdbd351
     // ⭐ TẠO DOCDEFINITION GIỐNG HANDLEEXPORTPDF
     const docDefinition = {
       content: [
@@ -431,8 +434,26 @@ const generatePDF = async () => {
         },
         {
           text: [
+<<<<<<< HEAD
             "Số CCCD/CMND: ",
             { text: firstPerson?.personalId || "Chưa cung cấp", color: "#e91e63", bold: true },
+=======
+            "CMND/CCCD/Passport: ",
+            { text: firstPerson?.personalId || "", color: "#e91e63", bold: true },
+            "    ngày cấp: ",
+            { text: firstPerson?.issuedDate || "......", color: "#e91e63", bold: true },
+            "    nơi cấp: ",
+            { text: firstPerson?.issuedPlace || "......", color: "#e91e63", bold: true },
+            "\n"
+          ]
+        },
+        {
+          text: [
+            "Số điện thoại: ",
+            { text: firstPerson?.phoneNumber || "", color: "#e91e63", bold: true },
+            "    Email/zalo: ",
+            { text: firstPerson?.email || "", color: "#e91e63", bold: true },
+>>>>>>> c33a5dd685c61803dcff57629b699d5d8cdbd351
             "\n"
           ]
         },
@@ -494,7 +515,24 @@ const generatePDF = async () => {
         {
           table: {
             widths: ['*', 'auto'],
-            body: costTableBody
+            body: [
+              [
+                { text: 'Phí xét nghiệm mẫu 1', alignment: 'left' },
+                { text: `${Math.floor((totalCost || 0)/2).toLocaleString()} VND`, alignment: 'right' }
+              ],
+              [
+                { text: 'Phí xét nghiệm mẫu 2', alignment: 'left' },
+                { text: `${Math.floor((totalCost || 0)/2).toLocaleString()} VND`, alignment: 'right' }
+              ],
+              [
+                { text: 'Cộng', bold: true, alignment: 'left' },
+                { text: `${(totalCost || 0).toLocaleString()} VND`, bold: true, alignment: 'right' }
+              ],
+              [
+                { text: 'Tổng chi phí', bold: true, alignment: 'left' },
+                { text: `${(totalCost || 0).toLocaleString()} VND`, bold: true, alignment: 'right', color: '#e91e63' }
+              ]
+            ]
           },
           layout: {
             hLineWidth: function(i, node) {

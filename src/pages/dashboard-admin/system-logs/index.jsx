@@ -132,10 +132,10 @@ const SystemLogs = () => {
     try {
       const doc = new jsPDF();
       let title = "System Logs Report";
-      if (range === "today") title += " - Hôm nay";
-      else if (range === "week") title += " - Tuần này";
-      else if (range === "month") title += " - Tháng này";
-      else title += " - Tất cả";
+      if (range === "today") title += " - Today";
+      else if (range === "week") title += " - This Week";
+      else if (range === "month") title += " - This Month";
+      else title += " - All Logs";
       doc.text(title, 14, 16);
       const tableColumn = ["ID", "User", "Action", "IP Address", "Timestamp"];
       const logsToExport = getLogsByRange(range);
