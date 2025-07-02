@@ -1,9 +1,14 @@
+
+
+
 import React, { useState, useEffect, useRef } from 'react';
 import { useSelector } from 'react-redux';
 import { useSearchParams } from 'react-router-dom';
 import { Form, Input, Select, DatePicker, Radio, Button, message, Row, Col, Card, Typography, Space, Checkbox, Modal, Steps, Descriptions, Divider, Alert, Result } from 'antd';
-import { UserOutlined, CalendarOutlined, ClockCircleOutlined, PhoneOutlined, MailOutlined, IdcardOutlined, TeamOutlined, EnvironmentOutlined, CreditCardOutlined, QrcodeOutlined, CheckCircleOutlined } from '@ant-design/icons';
+import { UserOutlined, CalendarOutlined, ClockCircleOutlined, PhoneOutlined, MailOutlined, IdcardOutlined, TeamOutlined, EnvironmentOutlined, CreditCardOutlined, QrcodeOutlined, CheckCircleOutlined, DownloadOutlined, FileTextOutlined } from '@ant-design/icons';
 import moment from 'moment';
+import SignatureCanvas from 'react-signature-canvas';
+import jsPDF from 'jspdf';
 import { legalServicesData, legalCollectionMethodsData } from '../home-page/services/legalDNA/data-legal/legalData';
 import { nonLegalServicesData, nonLegalCollectionMethodsData } from '../home-page/services/non-legalDNA/data-non-legal/nonLegalData';
 import { FaCalendarAlt, FaClock, FaUser, FaPhone, FaEnvelope, FaIdCard, FaUsers, FaMapMarkerAlt, FaCreditCard, FaQrcode } from 'react-icons/fa';
@@ -17,6 +22,11 @@ const ConfirmBookingModal = ({ visible, onCancel, bookingData, onConfirm, paymen
   const [qrCodeData, setQrCodeData] = useState(null);
   const [paymentCode, setPaymentCode] = useState('');
   const [isPaymentConfirmed, setIsPaymentConfirmed] = useState(false);
+  const [showPDFOption, setShowPDFOption] = useState(false);
+  const [isPDFConfirmStep, setIsPDFConfirmStep] = useState(false); // Thêm state mới
+  const [finalBookingData, setFinalBookingData] = useState(null); // Lưu data tạm thời
+  const [isProcessingSignature, setIsProcessingSignature] = useState(false);
+  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
   const signatureRef = useRef();
 
   // Luôn gọi useEffect ở đầu component
@@ -80,16 +90,26 @@ const ConfirmBookingModal = ({ visible, onCancel, bookingData, onConfirm, paymen
     onCancel();
   };
   const handleConfirm = async () => {
-    const code = generatePaymentCode();
-    setPaymentCode(code);
-    if (paymentMethod === 'cash') {
-      // Cash flow: chuyển thẳng đến ký tên (step 2)
-      setCurrentStep(2);
-    } else {
-      // QR flow: hiển thị mã QR thanh toán (step 2)
-      setQrCodeData(`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=PAYMENT:${code}`);
-      setCurrentStep(2);
-    }
+    Modal.confirm({
+      title: 'Bạn có chắc những thông tin này là đúng không?',
+      okText: 'Có',
+      cancelText: 'Không',
+      centered: true, // Đưa modal ra giữa màn hình
+      width: 480, // Tăng kích thước modal lên cho dễ nhìn
+      style: { maxWidth: 600 }, // Giới hạn max width lớn hơn mặc định
+      onOk: () => {
+        const code = generatePaymentCode();
+        setPaymentCode(code);
+        if (paymentMethod === 'cash') {
+          // Cash flow: chuyển thẳng đến ký tên (step 2)
+          setCurrentStep(2);
+        } else {
+          // QR flow: hiển thị mã QR thanh toán (step 2)
+          setQrCodeData(`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=PAYMENT:${code}`);
+          setCurrentStep(2);
+        }
+      }
+    });
   };
 
   // Step 2: QR Payment
@@ -99,22 +119,478 @@ const ConfirmBookingModal = ({ visible, onCancel, bookingData, onConfirm, paymen
     setCurrentStep(3);
   };
 
+  // Hàm kiểm tra chất lượng chữ ký (ít strict hơn)
+  const validateSignatureQuality = (signatureData) => {
+    // Chỉ kiểm tra cơ bản - chữ ký có dữ liệu không
+    if (signatureData.length < 1000) {
+      return false;
+    }
+    
+    return true;
+  };
+
+  // Hàm lưu chữ ký lên server (tạm thời comment vì API chưa có)
+  /*
+  const saveSignatureToServer = async (signatureData, bookingCode) => {
+    try {
+      const response = await fetch('/api/signatures', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          signature: signatureData,
+          bookingCode: bookingCode,
+          timestamp: new Date().toISOString()
+        })
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to save signature');
+      }
+      
+      const result = await response.json();
+      return result.signatureId;
+    } catch (error) {
+      console.error('Error saving signature:', error);
+      throw error;
+    }
+  };
+  */
+
   // Step 3: Signature (cho cả cash và QR)
-  const handleSignatureComplete = () => {
-    if (signatureRef.current && signatureRef.current.isEmpty && signatureRef.current.isEmpty()) {
+  const handleSignatureComplete = async () => {
+    // Kiểm tra chữ ký có tồn tại và không trống
+    if (!signatureRef.current) {
+      message.error('Không tìm thấy vùng ký tên!');
       return;
     }
-    const signatureData = signatureRef.current?.toDataURL ? signatureRef.current.toDataURL() : '';
-    const finalBookingData = {
-      ...bookingData,
-      paymentMethod,
-      paymentCode,
-      signature: signatureData,
-      status: 'confirmed'
-    };
+    
+    if (signatureRef.current.isEmpty()) {
+      message.error('Vui lòng ký tên trước khi tiếp tục!');
+      return;
+    }
+    
+    setIsProcessingSignature(true);
+    
+    try {
+      const signatureData = signatureRef.current.toDataURL('image/png');
+      
+      // Kiểm tra chữ ký có dữ liệu hợp lệ
+      if (!signatureData || signatureData.length < 100) {
+        message.error('Chữ ký không hợp lệ. Vui lòng ký lại!');
+        return;
+      }
+      
+      // Kiểm tra chất lượng chữ ký (tùy chọn - có thể bỏ qua nếu quá strict)
+      if (!validateSignatureQuality(signatureData)) {
+        message.error('Chữ ký quá đơn giản hoặc không rõ ràng. Vui lòng ký lại!');
+        return;
+      }
+      
+      // Tạo signatureId local thay vì gọi server
+      const signatureId = `sig_${paymentCode}_${Date.now()}`;
+      
+      const bookingDataWithSignature = {
+        ...bookingData,
+        paymentMethod,
+        paymentCode,
+        signature: signatureData,
+        signatureId: signatureId, // ID local của chữ ký
+        status: 'confirmed',
+        signedAt: new Date().toISOString()
+      };
+      
+      // Lưu data tạm thời và chuyển đến bước xác nhận PDF
+      setFinalBookingData(bookingDataWithSignature);
+      setIsPDFConfirmStep(true);
+      setShowPDFOption(true);
+      
+      message.success('Ký tên thành công!');
+      
+    } catch (error) {
+      console.error('Error processing signature:', error);
+      message.error('Có lỗi xảy ra khi xử lý chữ ký. Vui lòng thử lại!');
+    } finally {
+      setIsProcessingSignature(false);
+    }
+  };
+
+  // Hàm xử lý khi người dùng chọn tải PDF
+  const handleDownloadPDF = async () => {
+    setIsGeneratingPDF(true);
+    
+    try {
+      // Kiểm tra chữ ký trước khi tạo PDF
+      if (!finalBookingData?.signature && (!signatureRef.current || signatureRef.current.isEmpty())) {
+        message.error('Không tìm thấy chữ ký. Vui lòng ký lại!');
+        setIsGeneratingPDF(false);
+        return;
+      }
+      
+      // Tạo PDF trực tiếp
+      await generatePDF();
+      
+      // Lưu đơn hàng với thông tin PDF đã tạo
+      const updatedBookingData = {
+        ...finalBookingData,
+        pdfGenerated: true,
+        pdfGeneratedAt: new Date().toISOString()
+      };
+      
+      // Lưu đơn hàng
+      onConfirm(updatedBookingData);
+      setCurrentStep(4);
+      setIsPDFConfirmStep(false);
+      
+    } catch (error) {
+      console.error('Error downloading PDF:', error);
+      message.error('Có lỗi khi tạo PDF. Vui lòng thử lại!');
+    } finally {
+      setIsGeneratingPDF(false);
+    }
+  };
+
+  // Hàm xử lý khi người dùng bỏ qua PDF
+  const handleSkipPDF = () => {
+    // Lưu đơn hàng mà không tải PDF
     onConfirm(finalBookingData);
     setCurrentStep(4);
+    setIsPDFConfirmStep(false);
+    setShowPDFOption(false);
   };
+
+/*
+// Tạo PDF dưới dạng Blob - Không cần thiết nữa, dùng generatePDF trực tiếp
+const generatePDFBlob = async () => {
+  // API chưa có, tạm thời comment
+};
+
+// Lưu PDF lên server - API chưa có
+const savePDFToServer = async (pdfBlob, bookingCode) => {
+  // API chưa có, tạm thời comment
+};
+
+// Tải file cho người dùng - Không cần thiết nữa
+const downloadPDFFile = (blob, filename) => {
+  // Không cần thiết nữa
+};
+*/
+
+// Generate PDF function với jsPDF (An toàn và đơn giản)
+const generatePDF = async () => {
+  let loadingMessage;
+  try {
+    console.log('=== BẮT ĐẦU TẠO PDF ===');
+    // Hiển thị loading
+    loadingMessage = message.loading('Đang tạo file PDF...', 0);
+    
+    // Kiểm tra dữ liệu cần thiết trước khi tạo PDF
+    if (!bookingData) {
+      throw new Error('Không có dữ liệu đặt lịch!');
+    }
+
+    const { firstPerson, secondPerson, appointmentDate, totalCost } = bookingData;
+
+    // Validation dữ liệu bắt buộc với thông báo cụ thể
+    if (!firstPerson?.fullName || !secondPerson?.fullName) {
+      throw new Error('Thiếu thông tin họ tên');
+    }
+
+    if (!appointmentDate) {
+      throw new Error('Thiếu thông tin ngày hẹn');
+    }
+
+    if (!totalCost || totalCost <= 0) {
+      throw new Error('Thông tin chi phí không hợp lệ');
+    }
+
+    // Kiểm tra chữ ký trước khi import thư viện
+    let signatureImg = "";
+    
+    // Ưu tiên lấy từ finalBookingData (đã lưu)
+    if (finalBookingData?.signature) {
+      signatureImg = finalBookingData.signature;
+      console.log('✓ Đã lấy chữ ký từ finalBookingData');
+    } 
+    // Fallback: lấy từ signatureRef hiện tại
+    else if (signatureRef.current && !signatureRef.current.isEmpty()) {
+      try {
+        signatureImg = signatureRef.current.toDataURL("image/png");
+        console.log('✓ Đã lấy chữ ký từ signatureRef');
+      } catch (sigError) {
+        console.error('Lỗi khi lấy chữ ký từ canvas:', sigError);
+        throw new Error('Không thể lấy chữ ký từ canvas');
+      }
+    }
+    
+    // Kiểm tra chữ ký có dữ liệu hợp lệ
+    if (!signatureImg || signatureImg.length < 100) {
+      console.error('Lỗi: Chữ ký không hợp lệ');
+      throw new Error('Chữ ký không hợp lệ hoặc quá ngắn');
+    }
+
+    console.log('Signature length:', signatureImg.length);
+
+    console.log('Bắt đầu tải thư viện pdfmake...');
+    
+    // ⭐ DYNAMIC IMPORT PDFMAKE GIỐNG HANDLEEXPORTPDF
+    const pdfMakeModule = await import("pdfmake/build/pdfmake");
+    const pdfFonts = await import("pdfmake/build/vfs_fonts");
+    const pdfMake = pdfMakeModule.default;
+    pdfMake.vfs = pdfFonts && pdfFonts.pdfMake ? pdfFonts.pdfMake.vfs : pdfFonts.vfs;
+    
+    console.log('Đã tải thành công thư viện pdfmake');
+
+    // Format ngày an toàn
+    const formatDate = (d) => {
+      try {
+        if (!d) return "";
+        if (typeof d === "string" && d.includes('/')) return d;
+        if (typeof d === "string") {
+          const parts = d.split('-');
+          if (parts.length === 3) {
+            return `${parts[2]}/${parts[1]}/${parts[0]}`;
+          }
+          return d;
+        }
+        if (d && typeof d.format === 'function') return d.format('DD/MM/YYYY');
+        if (d instanceof Date) return d.toLocaleDateString('vi-VN');
+        return String(d);
+      } catch (dateError) {
+        console.warn('Lỗi format ngày:', dateError);
+        return "";
+      }
+    };
+
+    console.log('Bắt đầu tạo docDefinition...');
+    
+    // Lấy thông tin chi phí từ bookingData
+    const { service, isExpressService } = bookingData;
+    const { serviceCost, mediationCost, expressCost } = getCostBreakdown();
+    
+    // Tạo bảng chi phí động dựa trên express service
+    const costTableBody = [
+      [
+        { text: 'Phí xét nghiệm mẫu 1', alignment: 'left' },
+        { text: `${Math.floor(serviceCost/2).toLocaleString()} VND`, alignment: 'right' }
+      ],
+      [
+        { text: 'Phí xét nghiệm mẫu 2', alignment: 'left' },
+        { text: `${Math.floor(serviceCost/2).toLocaleString()} VND`, alignment: 'right' }
+      ]
+    ];
+    
+    // Thêm phí mediation nếu có
+    if (mediationCost > 0) {
+      const mediationMethodName = bookingData.medicationMethod === 'staff-collection' ? 'Phí thu mẫu tại nhà' : 'Phí gửi bưu điện';
+      costTableBody.push([
+        { text: mediationMethodName, alignment: 'left' },
+        { text: `${mediationCost.toLocaleString()} VND`, alignment: 'right' }
+      ]);
+    }
+    
+    // Thêm express service nếu được chọn
+    if (isExpressService && expressCost > 0) {
+      costTableBody.push([
+        { text: '⚡ Express Service', alignment: 'left', color: '#fa8c16', bold: true },
+        { text: `${expressCost.toLocaleString()} VND`, alignment: 'right', color: '#fa8c16', bold: true }
+      ]);
+    } else if (isExpressService === false) {
+      // Hiển thị "Không" nếu không chọn express service
+      costTableBody.push([
+        { text: 'Express Service', alignment: 'left' },
+        { text: 'Không', alignment: 'right' }
+      ]);
+    }
+    
+    // Thêm dòng tổng cộng
+    costTableBody.push(
+      [
+        { text: 'Cộng', bold: true, alignment: 'left' },
+        { text: `${(totalCost || 0).toLocaleString()} VND`, bold: true, alignment: 'right' }
+      ],
+      [
+        { text: 'Tổng chi phí', bold: true, alignment: 'left' },
+        { text: `${(totalCost || 0).toLocaleString()} VND`, bold: true, alignment: 'right', color: '#e91e63' }
+      ]
+    );
+
+    // ⭐ TẠO DOCDEFINITION GIỐNG HANDLEEXPORTPDF
+    const docDefinition = {
+      content: [
+        {
+          text: [
+            { text: "Dịch vụ:\n", style: "header", alignment: "center" },
+            { text: "Đơn yêu cầu xét nghiệm ADN\n", style: "header", alignment: "center" },
+            { text: "Kính gửi: Cơ sở Y tế Genetix", alignment: "center" }
+          ]
+        },
+        {
+          columns: [
+            {
+              width: "*",
+              text: [
+                "Tôi tên là (viết hoa): ",
+                { text: (firstPerson?.fullName || "").toUpperCase(), color: "#e91e63", bold: true },
+                "    Giới tính: ",
+                { text: firstPerson?.gender === "male" ? "Nam" : firstPerson?.gender === "female" ? "Nữ" : firstPerson?.gender || "", bold: true }
+              ]
+            }
+          ]
+        },
+        {
+          text: [
+            "Địa chỉ: ",
+            { text: firstPerson?.address || bookingData?.homeAddress || "", color: "#e91e63", bold: true },
+            "\n"
+          ]
+        },
+        {
+          text: [
+            "Số điện thoại: ",
+            { text: firstPerson?.phoneNumber || "", color: "#e91e63", bold: true },
+            "    Email/zalo: ",
+            { text: firstPerson?.email || "", color: "#e91e63", bold: true },
+            "\n"
+          ]
+        },
+        {
+          text: "Đề nghị Genetix phân tích ADN và xác định mối quan hệ huyết thống cho những người cung cấp mẫu dưới đây:",
+          margin: [0, 8, 0, 8]
+        },
+        {
+          style: 'tableExample',
+          table: {
+            widths: [
+              "auto", "*", "auto", "auto", "auto", "auto", "auto"
+            ],
+            body: [
+              [
+                { text: "STT", style: "tableHeader" },
+                { text: "Họ và tên\n(kí hiệu mẫu)", style: "tableHeader" },
+                { text: "Ngày sinh", style: "tableHeader" },
+                { text: "Giới tính", style: "tableHeader" },
+                { text: "Mối quan hệ", style: "tableHeader" },
+                { text: "Loại mẫu", style: "tableHeader" },
+                { text: "Ngày thu mẫu", style: "tableHeader" }
+              ],
+              [
+                "1",
+                { text: (firstPerson?.fullName || "").toUpperCase(), color: "#e91e63", bold: true },
+                { text: formatDate(firstPerson?.dateOfBirth), color: "#e91e63", bold: true },
+                { text: firstPerson?.gender === "male" ? "Nam" : firstPerson?.gender === "female" ? "Nữ" : firstPerson?.gender || "", color: "#e91e63", bold: true },
+                { text: firstPerson?.relationship || "", color: "#e91e63", bold: true },
+                { text: firstPerson?.sampleType || "", color: "#e91e63", bold: true },
+                { text: formatDate(appointmentDate), color: "#2196f3", bold: true }
+              ],
+              [
+                "2",
+                { text: (secondPerson?.fullName || "").toUpperCase(), color: "#e91e63", bold: true },
+                { text: formatDate(secondPerson?.dateOfBirth), color: "#e91e63", bold: true },
+                { text: secondPerson?.gender === "male" ? "Nam" : secondPerson?.gender === "female" ? "Nữ" : secondPerson?.gender || "", color: "#e91e63", bold: true },
+                { text: secondPerson?.relationship || "", color: "#e91e63", bold: true },
+                { text: secondPerson?.sampleType || "", color: "#e91e63", bold: true },
+                { text: formatDate(appointmentDate), color: "#2196f3", bold: true }
+              ]
+            ]
+          },
+          layout: {
+            hLineWidth: function(i, node) { return 1; },
+            vLineWidth: function(i, node) { return 1; },
+            hLineColor: function(i, node) { return '#bdbdbd'; },
+            vLineColor: function(i, node) { return '#bdbdbd'; },
+            paddingLeft: function(i, node) { return 4; },
+            paddingRight: function(i, node) { return 4; },
+            paddingTop: function(i, node) { return 2; },
+            paddingBottom: function(i, node) { return 2; }
+          }
+        },
+        // ===== Bảng tổng chi phí =====
+        {
+          table: {
+            widths: ['*', 'auto'],
+            body: costTableBody
+          },
+          layout: {
+            hLineWidth: function(i, node) {
+              // Đường gạch đậm cho dòng "Cộng" và "Tổng chi phí"
+              return (i === node.table.body.length - 2 || i === node.table.body.length - 1) ? 1.5 : 1;
+            },
+            vLineWidth: function(i, node) { return 0; },
+            hLineColor: function(i, node) { return '#bdbdbd'; },
+            paddingLeft: function(i, node) { return 4; },
+            paddingRight: function(i, node) { return 4; },
+            paddingTop: function(i, node) { return 3; },
+            paddingBottom: function(i, node) { return 3; }
+          },
+          margin: [0, 10, 0, 0]
+        },
+        // ===== Phần ký tên, căn phải, có hình ảnh chữ ký =====
+        {
+          columns: [
+            { width: '*', text: '' },
+            {
+              width: 220,
+              stack: [
+                { text: `Ngày ${new Date().getDate()} tháng ${new Date().getMonth() + 1} năm ${new Date().getFullYear()}`, alignment: "center", italics: true, margin: [0, 0, 0, 20] },
+                { text: "Người làm đơn", alignment: "center", italics: true },
+                // Hình chữ ký (nếu có)
+                signatureImg
+                  ? { image: signatureImg, width: 120, alignment: "center", margin: [0, 10, 0, 0] }
+                  : { text: "(Chưa ký)", alignment: "center", margin: [0, 20, 0, 0] },
+                {
+                  text: "(Ký và ghi rõ họ tên)\nNgười yêu cầu phân tích",
+                  alignment: "center",
+                  margin: [0, 10, 0, 0]
+                }
+              ]
+            }
+          ],
+          margin: [0, 40, 0, 0]
+        }
+      ],
+      styles: {
+        header: { fontSize: 16, bold: true, margin: [0, 0, 0, 10] },
+        tableHeader: { fillColor: "#1976d2", color: "white", bold: true, alignment: "center" },
+        tableExample: { margin: [0, 5, 0, 15] }
+      },
+      defaultStyle: { font: "Roboto", fontSize: 11 }  // ⭐ GIỐNG HANDLEEXPORTPDF
+    };
+
+    console.log('Bắt đầu tạo PDF...');
+    
+    // ⭐ TẠO VÀ DOWNLOAD PDF GIỐNG HANDLEEXPORTPDF
+    pdfMake.createPdf(docDefinition).download(`DonYeuCauXetNghiemADN_${paymentCode || 'DNA'}.pdf`);
+    
+    if (loadingMessage) loadingMessage();
+    message.success('Tải file PDF thành công với chữ ký!');
+    console.log('✓ PDF đã được tạo và tải xuống thành công');
+    
+  } catch (error) {
+    console.error('=== LỖI TẠO PDF ===');
+    console.error('Error details:', error);
+    console.error('Error stack:', error.stack);
+    
+    // Đảm bảo đóng loading message
+    if (loadingMessage) loadingMessage();
+    
+    // Thông báo lỗi chi tiết hơn dựa trên loại lỗi
+    if (error.message?.includes('vfs') || error.message?.includes('fonts')) {
+      message.error('Lỗi tải fonts PDF. Đang thử lại với fonts mặc định...');
+    } else if (error.message?.includes('Timeout')) {
+      message.error('Quá thời gian tải thư viện PDF. Vui lòng kiểm tra kết nối mạng!');
+    } else if (error.message?.includes('import') || error.message?.includes('loading') || error.message?.includes('thư viện')) {
+      message.error('Lỗi tải thư viện PDF. Vui lòng refresh trang và thử lại!');
+    } else if (error.message?.includes('chữ ký') || error.message?.includes('signature') || error.message?.includes('canvas')) {
+      message.error('Lỗi xử lý chữ ký. Vui lòng ký lại!');
+    } else if (error.message?.includes('Thiếu thông tin')) {
+      message.error(`Thiếu thông tin cần thiết: ${error.message}`);
+    } else {
+      message.error(`Có lỗi xảy ra khi tạo file PDF: ${error.message}. Vui lòng thử lại!`);
+    }
+  }
+};
 
   // Step 4: Success
   const handleClose = () => {
@@ -123,6 +599,12 @@ const ConfirmBookingModal = ({ visible, onCancel, bookingData, onConfirm, paymen
     setQrCodeData(null);
     setPaymentCode('');
     setIsPaymentConfirmed(false);
+    setShowPDFOption(false);
+    // Reset các state mới
+    setIsPDFConfirmStep(false);
+    setFinalBookingData(null);
+    setIsProcessingSignature(false);
+    setIsGeneratingPDF(false);
     if (signatureRef.current && signatureRef.current.clear) signatureRef.current.clear();
     onCancel();
   };
@@ -136,109 +618,417 @@ const ConfirmBookingModal = ({ visible, onCancel, bookingData, onConfirm, paymen
   const renderSummary = () => {
     const { serviceType, service, collectionMethod, medicationMethod, appointmentDate, timeSlot, isExpressService, totalCost, firstPerson, secondPerson, homeAddress, selectedKitType, bookingTime } = bookingData;
     const { serviceCost, mediationCost, expressCost } = getCostBreakdown();
+    
     return (
-      <Card bordered style={{ background: '#f9fafb', borderRadius: 12, boxShadow: '0 2px 8px #f0f1f2' }}>
+      <div>
+        {/* Header Warning */}
         <Alert
-          message={<b>Thông tin không thể thay đổi sau khi đặt thành công, vui lòng kiểm tra toàn bộ thông tin dưới đây là chính xác.</b>}
+          message={<span style={{ fontWeight: 600 }}>⚠️ Thông tin không thể thay đổi sau khi đặt thành công, vui lòng kiểm tra kỹ!</span>}
           type="warning"
           showIcon
-          style={{ marginBottom: 24 }}
+          style={{ 
+            marginBottom: 24, 
+            borderRadius: 8,
+            border: '1px solid #faad14',
+            backgroundColor: '#fffbe6'
+          }}
         />
-        <Descriptions title="Thông tin dịch vụ" column={1} bordered size="middle">
-          <Descriptions.Item label="Loại dịch vụ">{serviceType === 'legal' ? 'Legal DNA Testing' : 'Non-Legal DNA Testing'}</Descriptions.Item>
-          <Descriptions.Item label="Tên dịch vụ">{service?.name}</Descriptions.Item>
-          <Descriptions.Item label="Phương thức thu thập mẫu">{collectionMethod?.name}</Descriptions.Item>
-          <Descriptions.Item label="Địa chỉ thu thập">{collectionMethod?.name === 'At Home' ? homeAddress || '—' : '7 D1 Street, Long Thanh My Ward, Thu Duc City, Ho Chi Minh City'}</Descriptions.Item>
-          <Descriptions.Item label="Phương thức vận chuyển">{getMediationLabel(medicationMethod)}</Descriptions.Item>
-          <Descriptions.Item label="Express Service">{isExpressService ? 'Có' : 'Không'}</Descriptions.Item>
-          <Descriptions.Item label="Kit">{selectedKitType ? (kitTypes.find(k => k.value === selectedKitType)?.label) : '—'}</Descriptions.Item>
-          <Descriptions.Item label="Lịch hẹn">
-            {appointmentDate ? (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', justifyContent: 'space-between' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <CalendarOutlined style={{ color: '#1890ff' }} />
-                  <span style={{ fontWeight: '500' }}>
-                    {moment(appointmentDate).format('DD/MM/YYYY (dddd)')}
-                  </span>
-                </div>
-                {timeSlot && (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <ClockCircleOutlined style={{ color: '#52c41a' }} />
-                    <span style={{
-                      fontWeight: '500',
-                      color: '#52c41a',
-                      backgroundColor: '#f6ffed',
-                      padding: '2px 8px',
-                      borderRadius: '4px',
-                      border: '1px solid #b7eb8f',
-                      minWidth: 110,
-                      textAlign: 'right',
-                      whiteSpace: 'nowrap',
-                      display: 'block'
-                    }}>
-                      {timeSlot}
-                    </span>
+
+        {/* Service Information Card */}
+        <Card 
+          title={
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <div style={{ 
+                width: 32, 
+                height: 32, 
+                borderRadius: '50%', 
+                backgroundColor: '#1890ff', 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'center' 
+              }}>
+                <UserOutlined style={{ color: 'white', fontSize: 16 }} />
+              </div>
+              <span style={{ fontSize: 18, fontWeight: 600, color: '#1890ff' }}>Thông tin dịch vụ</span>
+            </div>
+          }
+          style={{ 
+            marginBottom: 20, 
+            borderRadius: 12, 
+            boxShadow: '0 2px 12px rgba(0,0,0,0.08)',
+            border: '1px solid #e8f4fd'
+          }}
+          headStyle={{ 
+            backgroundColor: '#f8fcff', 
+            borderBottom: '1px solid #e8f4fd',
+            borderRadius: '12px 12px 0 0'
+          }}
+        >
+          <Row gutter={[16, 16]}>
+            <Col span={12}>
+              <div style={{ padding: '12px 16px', backgroundColor: '#fafafa', borderRadius: 8, border: '1px solid #f0f0f0' }}>
+                <Text type="secondary" style={{ fontSize: 12, display: 'block', marginBottom: 4 }}>LOẠI DỊCH VỤ</Text>
+                <Text strong style={{ fontSize: 14, color: '#1890ff' }}>
+                  {serviceType === 'legal' ? '🏛️ Legal DNA Testing' : '🧬 Non-Legal DNA Testing'}
+                </Text>
+              </div>
+            </Col>
+            <Col span={12}>
+              <div style={{ padding: '12px 16px', backgroundColor: '#fafafa', borderRadius: 8, border: '1px solid #f0f0f0' }}>
+                <Text type="secondary" style={{ fontSize: 12, display: 'block', marginBottom: 4 }}>TÊN DỊCH VỤ</Text>
+                <Text strong style={{ fontSize: 14 }}>{service?.name}</Text>
+              </div>
+            </Col>
+            <Col span={12}>
+              <div style={{ padding: '12px 16px', backgroundColor: '#fafafa', borderRadius: 8, border: '1px solid #f0f0f0' }}>
+                <Text type="secondary" style={{ fontSize: 12, display: 'block', marginBottom: 4 }}>PHƯƠNG THỨC THU THẬP</Text>
+                <Text strong style={{ fontSize: 14 }}>
+                  {collectionMethod?.name === 'At Home' ? '🏠 ' : '🏥 '}{collectionMethod?.name}
+                </Text>
+              </div>
+            </Col>
+            <Col span={12}>
+              <div style={{ padding: '12px 16px', backgroundColor: '#fafafa', borderRadius: 8, border: '1px solid #f0f0f0' }}>
+                <Text type="secondary" style={{ fontSize: 12, display: 'block', marginBottom: 4 }}>KIT XÉT NGHIỆM</Text>
+                <Text strong style={{ fontSize: 14 }}>
+                  {selectedKitType ? (kitTypes.find(k => k.value === selectedKitType)?.label) : '—'}
+                </Text>
+              </div>
+            </Col>
+          </Row>
+          
+          <Divider style={{ margin: '16px 0' }} />
+          
+          {/* Address & Transport */}
+          <Row gutter={[16, 16]}>
+            <Col span={24}>
+              <div style={{ padding: '12px 16px', backgroundColor: '#f6ffed', borderRadius: 8, border: '1px solid #b7eb8f' }}>
+                <Text type="secondary" style={{ fontSize: 12, display: 'block', marginBottom: 4 }}>📍 ĐỊA CHỈ THU THẬP</Text>
+                <Text strong style={{ fontSize: 14, color: '#52c41a' }}>
+                  {collectionMethod?.name === 'At Home' ? homeAddress || '—' : '7 D1 Street, Long Thanh My Ward, Thu Duc City, Ho Chi Minh City'}
+                </Text>
+              </div>
+            </Col>
+            <Col span={12}>
+              <div style={{ padding: '12px 16px', backgroundColor: '#fafafa', borderRadius: 8, border: '1px solid #f0f0f0' }}>
+                <Text type="secondary" style={{ fontSize: 12, display: 'block', marginBottom: 4 }}>PHƯƠNG THỨC VẬN CHUYỂN</Text>
+                <Text strong style={{ fontSize: 14 }}>{getMediationLabel(medicationMethod)}</Text>
+              </div>
+            </Col>
+            <Col span={12}>
+              <div style={{ padding: '12px 16px', backgroundColor: isExpressService ? '#fff2e8' : '#fafafa', borderRadius: 8, border: `1px solid ${isExpressService ? '#ffbb96' : '#f0f0f0'}` }}>
+                <Text type="secondary" style={{ fontSize: 12, display: 'block', marginBottom: 4 }}>EXPRESS SERVICE</Text>
+                <Text strong style={{ fontSize: 14, color: isExpressService ? '#fa8c16' : '#666' }}>
+                  {isExpressService ? '⚡ Có' : '❌ Không'}
+                </Text>
+              </div>
+            </Col>
+          </Row>
+          
+          {/* Appointment */}
+          {appointmentDate && (
+            <>
+              <Divider style={{ margin: '16px 0' }} />
+              <div style={{ padding: '16px', backgroundColor: '#e6f7ff', borderRadius: 8, border: '1px solid #91d5ff' }}>
+                <Text type="secondary" style={{ fontSize: 12, display: 'block', marginBottom: 8 }}>📅 LỊCH HẸN</Text>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <CalendarOutlined style={{ color: '#1890ff', fontSize: 16 }} />
+                    <Text strong style={{ fontSize: 16, color: '#1890ff' }}>
+                      {moment(appointmentDate).format('DD/MM/YYYY (dddd)')}
+                    </Text>
                   </div>
-                )}
+                  {timeSlot && (
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 8,
+                      backgroundColor: '#f6ffed',
+                      padding: '6px 12px',
+                      borderRadius: 20,
+                      border: '1px solid #b7eb8f'
+                    }}>
+                      <ClockCircleOutlined style={{ color: '#52c41a', fontSize: 16 }} />
+                      <Text strong style={{ color: '#52c41a', fontSize: 14 }}>{timeSlot}</Text>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </>
+          )}
+        </Card>
+
+        {/* Customer Information Card */}
+        <Card 
+          title={
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <div style={{ 
+                width: 32, 
+                height: 32, 
+                borderRadius: '50%', 
+                backgroundColor: '#52c41a', 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'center' 
+              }}>
+                <TeamOutlined style={{ color: 'white', fontSize: 16 }} />
+              </div>
+              <span style={{ fontSize: 18, fontWeight: 600, color: '#52c41a' }}>Thông tin người xét nghiệm</span>
+            </div>
+          }
+          style={{ 
+            marginBottom: 20, 
+            borderRadius: 12, 
+            boxShadow: '0 2px 12px rgba(0,0,0,0.08)',
+            border: '1px solid #f6ffed'
+          }}
+          headStyle={{ 
+            backgroundColor: '#f6ffed', 
+            borderBottom: '1px solid #d9f7be',
+            borderRadius: '12px 12px 0 0'
+          }}
+        >
+          <Row gutter={[16, 16]}>
+            {/* Person 1 */}
+            <Col span={12}>
+              <div style={{ 
+                padding: 16, 
+                backgroundColor: '#fff', 
+                borderRadius: 8, 
+                border: '2px solid #1890ff',
+                position: 'relative'
+              }}>
+                <div style={{
+                  position: 'absolute',
+                  top: -10,
+                  left: 12,
+                  backgroundColor: '#1890ff',
+                  color: 'white',
+                  padding: '4px 12px',
+                  borderRadius: 12,
+                  fontSize: 12,
+                  fontWeight: 600
+                }}>
+                  👤 NGƯỜI ĐẠI DIỆN
+                </div>
+                <div style={{ marginTop: 8 }}>
+                  <div style={{ marginBottom: 8 }}>
+                    <Text type="secondary" style={{ fontSize: 11 }}>HỌ VÀ TÊN</Text>
+                    <br/>
+                    <Text strong style={{ fontSize: 14 }}>{firstPerson?.fullName}</Text>
+                  </div>
+                  <Row gutter={8}>
+                    <Col span={12}>
+                      <Text type="secondary" style={{ fontSize: 11 }}>NGÀY SINH</Text>
+                      <br/>
+                      <Text style={{ fontSize: 13 }}>{firstPerson?.dateOfBirth?.format ? firstPerson.dateOfBirth.format('DD/MM/YYYY') : firstPerson?.dateOfBirth}</Text>
+                    </Col>
+                    <Col span={12}>
+                      <Text type="secondary" style={{ fontSize: 11 }}>GIỚI TÍNH</Text>
+                      <br/>
+                      <Text style={{ fontSize: 13 }}>{firstPerson?.gender}</Text>
+                    </Col>
+                  </Row>
+                  <div style={{ marginTop: 8 }}>
+                    <Text type="secondary" style={{ fontSize: 11 }}>SỐ ĐIỆN THOẠI</Text>
+                    <br/>
+                    <Text style={{ fontSize: 13 }}>{firstPerson?.phoneNumber}</Text>
+                  </div>
+                  <div style={{ marginTop: 8 }}>
+                    <Text type="secondary" style={{ fontSize: 11 }}>EMAIL</Text>
+                    <br/>
+                    <Text style={{ fontSize: 13 }}>{firstPerson?.email}</Text>
+                  </div>
+                  <Row gutter={8} style={{ marginTop: 8 }}>
+                    <Col span={12}>
+                      <Text type="secondary" style={{ fontSize: 11 }}>MỐI QUAN HỆ</Text>
+                      <br/>
+                      <Text style={{ fontSize: 13 }}>{firstPerson?.relationship}</Text>
+                    </Col>
+                    <Col span={12}>
+                      <Text type="secondary" style={{ fontSize: 11 }}>LOẠI MẪU</Text>
+                      <br/>
+                      <Text style={{ fontSize: 13 }}>{firstPerson?.sampleType}</Text>
+                    </Col>
+                  </Row>
+                  <div style={{ marginTop: 8 }}>
+                    <Text type="secondary" style={{ fontSize: 11 }}>SỐ CCCD/CMND</Text>
+                    <br/>
+                    <Text style={{ fontSize: 13 }}>{firstPerson?.personalId}</Text>
+                  </div>
+                </div>
+              </div>
+            </Col>
+            
+            {/* Person 2 */}
+            <Col span={12}>
+              <div style={{ 
+                padding: 16, 
+                backgroundColor: '#fff', 
+                borderRadius: 8, 
+                border: '2px solid #52c41a',
+                position: 'relative'
+              }}>
+                <div style={{
+                  position: 'absolute',
+                  top: -10,
+                  left: 12,
+                  backgroundColor: '#52c41a',
+                  color: 'white',
+                  padding: '4px 12px',
+                  borderRadius: 12,
+                  fontSize: 12,
+                  fontWeight: 600
+                }}>
+                  👥 NGƯỜI THỨ HAI
+                </div>
+                <div style={{ marginTop: 8 }}>
+                  <div style={{ marginBottom: 8 }}>
+                    <Text type="secondary" style={{ fontSize: 11 }}>HỌ VÀ TÊN</Text>
+                    <br/>
+                    <Text strong style={{ fontSize: 14 }}>{secondPerson?.fullName}</Text>
+                  </div>
+                  <Row gutter={8}>
+                    <Col span={12}>
+                      <Text type="secondary" style={{ fontSize: 11 }}>NGÀY SINH</Text>
+                      <br/>
+                      <Text style={{ fontSize: 13 }}>{secondPerson?.dateOfBirth?.format ? secondPerson.dateOfBirth.format('DD/MM/YYYY') : secondPerson?.dateOfBirth}</Text>
+                    </Col>
+                    <Col span={12}>
+                      <Text type="secondary" style={{ fontSize: 11 }}>GIỚI TÍNH</Text>
+                      <br/>
+                      <Text style={{ fontSize: 13 }}>{secondPerson?.gender}</Text>
+                    </Col>
+                  </Row>
+                  <Row gutter={8} style={{ marginTop: 8 }}>
+                    <Col span={12}>
+                      <Text type="secondary" style={{ fontSize: 11 }}>MỐI QUAN HỆ</Text>
+                      <br/>
+                      <Text style={{ fontSize: 13 }}>{secondPerson?.relationship}</Text>
+                    </Col>
+                    <Col span={12}>
+                      <Text type="secondary" style={{ fontSize: 11 }}>LOẠI MẪU</Text>
+                      <br/>
+                      <Text style={{ fontSize: 13 }}>{secondPerson?.sampleType}</Text>
+                    </Col>
+                  </Row>
+                </div>
+              </div>
+            </Col>
+          </Row>
+        </Card>
+
+        {/* Cost Breakdown Card */}
+        <Card 
+          title={
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <div style={{ 
+                width: 32, 
+                height: 32, 
+                borderRadius: '50%', 
+                backgroundColor: '#fa8c16', 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'center' 
+              }}>
+                <CreditCardOutlined style={{ color: 'white', fontSize: 16 }} />
+              </div>
+              <span style={{ fontSize: 18, fontWeight: 600, color: '#fa8c16' }}>Chi phí chi tiết</span>
+            </div>
+          }
+          style={{ 
+            marginBottom: 20, 
+            borderRadius: 12, 
+            boxShadow: '0 2px 12px rgba(0,0,0,0.08)',
+            border: '1px solid #fff2e8'
+          }}
+          headStyle={{ 
+            backgroundColor: '#fff2e8', 
+            borderBottom: '1px solid #ffbb96',
+            borderRadius: '12px 12px 0 0'
+          }}
+        >
+          <div style={{ padding: '8px 0' }}>
+            <Row justify="space-between" style={{ marginBottom: 12, padding: '8px 12px', backgroundColor: '#fafafa', borderRadius: 6 }}>
+              <Text>💰 Service Cost</Text>
+              <Text strong>{formatCurrency(serviceCost)}</Text>
+            </Row>
+            <Row justify="space-between" style={{ marginBottom: 12, padding: '8px 12px', backgroundColor: '#fafafa', borderRadius: 6 }}>
+              <Text>🚚 Mediation Method Cost</Text>
+              <Text strong>{formatCurrency(mediationCost)}</Text>
+            </Row>
+            {isExpressService && (
+              <Row justify="space-between" style={{ marginBottom: 12, padding: '8px 12px', backgroundColor: '#fff2e8', borderRadius: 6 }}>
+                <Text>⚡ Express Service Cost</Text>
+                <Text strong style={{ color: '#fa8c16' }}>{formatCurrency(expressCost)}</Text>
+              </Row>
+            )}
+            <Divider style={{ margin: '12px 0' }} />
+            <Row justify="space-between" style={{ 
+              padding: '12px 16px', 
+              backgroundColor: '#e6f7ff', 
+              borderRadius: 8, 
+              border: '2px solid #1890ff' 
+            }}>
+              <Text strong style={{ fontSize: 16, color: '#1890ff' }}>💎 TỔNG CHI PHÍ</Text>
+              <Text strong style={{ fontSize: 18, color: '#1890ff' }}>{formatCurrency(totalCost)}</Text>
+            </Row>
+          </div>
+        </Card>
+
+        {/* Payment Method Card */}
+        <Card 
+          title={
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <div style={{ 
+                width: 32, 
+                height: 32, 
+                borderRadius: '50%', 
+                backgroundColor: paymentMethod === 'cash' ? '#52c41a' : '#1890ff', 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'center' 
+              }}>
+                {paymentMethod === 'cash' ? 
+                  <CreditCardOutlined style={{ color: 'white', fontSize: 16 }} /> : 
+                  <QrcodeOutlined style={{ color: 'white', fontSize: 16 }} />
+                }
+              </div>
+              <span style={{ fontSize: 18, fontWeight: 600, color: paymentMethod === 'cash' ? '#52c41a' : '#1890ff' }}>Phương thức thanh toán</span>
+            </div>
+          }
+          style={{ 
+            borderRadius: 12, 
+            boxShadow: '0 2px 12px rgba(0,0,0,0.08)',
+            border: `1px solid ${paymentMethod === 'cash' ? '#f6ffed' : '#e6f7ff'}`
+          }}
+          headStyle={{ 
+            backgroundColor: paymentMethod === 'cash' ? '#f6ffed' : '#e6f7ff', 
+            borderBottom: `1px solid ${paymentMethod === 'cash' ? '#d9f7be' : '#91d5ff'}`,
+            borderRadius: '12px 12px 0 0'
+          }}
+        >
+          <div style={{ 
+            padding: '16px', 
+            backgroundColor: paymentMethod === 'cash' ? '#f6ffed' : '#e6f7ff', 
+            borderRadius: 8, 
+            border: `2px solid ${paymentMethod === 'cash' ? '#52c41a' : '#1890ff'}`,
+            textAlign: 'center'
+          }}>
+            {paymentMethod === 'cash' ? (
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12 }}>
+                <CreditCardOutlined style={{ fontSize: 24, color: '#52c41a' }} />
+                <Text strong style={{ fontSize: 16, color: '#52c41a' }}>💵 Thanh toán tiền mặt khi nhận dịch vụ</Text>
               </div>
             ) : (
-              <span style={{ color: '#bfbfbf' }}>—</span>
-            )}
-          </Descriptions.Item>
-          <Descriptions.Item label="Thời gian đặt lịch">{bookingTime ? new Date(bookingTime).toLocaleString('vi-VN', { hour12: false }) : ''}</Descriptions.Item>
-        </Descriptions>
-        <Divider />
-        <Descriptions title="Thông tin người xét nghiệm" column={1} bordered size="middle">
-          <Descriptions.Item label="Người thứ nhất (người đại diện)">
-            <div>
-              Họ và tên: {firstPerson?.fullName}<br/>
-              Ngày sinh: {firstPerson?.dateOfBirth?.format ? firstPerson.dateOfBirth.format('DD/MM/YYYY') : firstPerson?.dateOfBirth}<br/>
-              Giới tính: {firstPerson?.gender}<br/>
-              Số điện thoại: {firstPerson?.phoneNumber}<br/>
-              Email: {firstPerson?.email}<br/>
-              Mối quan hệ: {firstPerson?.relationship}<br/>
-              Loại mẫu: {firstPerson?.sampleType}<br/>
-              Số CCCD/CMND: {firstPerson?.personalId}
-            </div>
-          </Descriptions.Item>
-          <Descriptions.Item label="Người thứ hai">
-            <div>
-              Họ và tên: {secondPerson?.fullName}<br/>
-              Ngày sinh: {secondPerson?.dateOfBirth?.format ? secondPerson.dateOfBirth.format('DD/MM/YYYY') : secondPerson?.dateOfBirth}<br/>
-              Giới tính: {secondPerson?.gender}<br/>
-              Mối quan hệ: {secondPerson?.relationship}<br/>
-              Loại mẫu: {secondPerson?.sampleType}
-            </div>
-          </Descriptions.Item>
-        </Descriptions>
-        <Divider />
-        <Descriptions title="Chi phí chi tiết" column={1} bordered size="middle">
-          <Descriptions.Item label="Service Cost">{formatCurrency(serviceCost)}</Descriptions.Item>
-          <Descriptions.Item label="Mediation Method Cost">{formatCurrency(mediationCost)}</Descriptions.Item>
-          {isExpressService && <Descriptions.Item label="Express Service Cost">{formatCurrency(expressCost)}</Descriptions.Item>}
-          <Descriptions.Item label={<b>Total Cost</b>}>
-            <span style={{ color: '#1890ff', fontWeight: 600 }}>{formatCurrency(totalCost)}</span>
-          </Descriptions.Item>
-        </Descriptions>
-        <Divider />
-        <div className="mt-6">
-          <Text strong style={{ fontSize: '16px' }}>Phương thức thanh toán</Text>
-          <div style={{ marginTop: '12px', width: '100%' }}>
-            {paymentMethod === 'cash' && (
-              <div className="flex items-center">
-                <CreditCardOutlined style={{ marginRight: 8, color: '#52c41a' }} />
-                <span style={{ fontSize: 16 }}>Thanh toán tiền mặt khi nhận dịch vụ</span>
-              </div>
-            )}
-            {paymentMethod === 'bank-transfer' && (
-              <div className="flex items-center">
-                <QrcodeOutlined style={{ marginRight: 8, color: '#1890ff' }} />
-                <span style={{ fontSize: 16 }}>Quét mã QR để thanh toán</span>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12 }}>
+                <QrcodeOutlined style={{ fontSize: 24, color: '#1890ff' }} />
+                <Text strong style={{ fontSize: 16, color: '#1890ff' }}>📱 Quét mã QR để thanh toán</Text>
               </div>
             )}
           </div>
-        </div>
-      </Card>
+        </Card>
+      </div>
     );
   };
 
@@ -252,21 +1042,123 @@ const ConfirmBookingModal = ({ visible, onCancel, bookingData, onConfirm, paymen
     </div>
   );
 
-  // Render signature form (giả lập)
+  // Render signature form với SignatureCanvas thật
   const renderSignature = () => (
-    <div className="text-center">
-      <div className="mb-4">Vui lòng ký tên xác nhận đặt lịch:</div>
-      <div className="mb-4">
-        {/* Giả lập vùng ký tên */}
-        <div ref={signatureRef} style={{ border: '1px solid #ccc', width: 300, height: 100, margin: '0 auto', background: '#fff' }}>
-          <span style={{ color: '#bbb', lineHeight: '100px' }}>[Ký tên tại đây]</span>
-        </div>
+    <div style={{ 
+      textAlign: 'center', 
+      padding: '40px 20px',
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      minHeight: '400px'
+    }}>
+      <Title level={3} style={{ 
+        marginBottom: '30px', 
+        color: '#1890ff',
+        fontSize: '24px',
+        fontWeight: 'bold'
+      }}>
+        ✍️ Vui lòng ký tên để xác nhận
+      </Title>
+      
+      <div style={{ 
+        border: '3px dashed #1890ff', 
+        borderRadius: '12px', 
+        padding: '30px', 
+        marginBottom: '24px', 
+        backgroundColor: '#f8fcff',
+        boxShadow: '0 4px 12px rgba(24, 144, 255, 0.1)',
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center'
+      }}>
+        <SignatureCanvas
+          ref={signatureRef}
+          canvasProps={{
+            width: 700,
+            height: 300,
+            className: 'signature-canvas',
+            style: { 
+              border: '2px solid #e6f7ff', 
+              borderRadius: '8px', 
+              backgroundColor: 'white',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+            }
+          }}
+        />
       </div>
-      <div className="mb-2 text-sm text-gray-500">Ký tên xác nhận, sau đó nhấn "Hoàn tất đặt lịch".</div>
+      
+      <Space size="large" style={{ marginBottom: '20px' }}>
+        <Button 
+          type="default" 
+          size="large"
+          onClick={() => signatureRef.current?.clear()}
+          disabled={isProcessingSignature}
+          style={{ 
+            height: '44px',
+            padding: '0 24px',
+            fontSize: '16px',
+            borderRadius: '8px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px'
+          }}
+        >
+          🗑️ Xóa chữ ký
+        </Button>
+      </Space>
+      
+      {isProcessingSignature && (
+        <div style={{ 
+          color: '#1890ff', 
+          fontSize: '14px',
+          marginTop: '16px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px',
+          marginBottom: '16px'
+        }}>
+          <span>⏳ Đang xử lý chữ ký...</span>
+        </div>
+      )}
+      
+      <div style={{ 
+        color: '#666', 
+        fontSize: '16px', 
+        lineHeight: '1.5',
+        maxWidth: '600px',
+        textAlign: 'center',
+        backgroundColor: '#f6ffed',
+        padding: '16px 24px',
+        borderRadius: '8px',
+        border: '1px solid #d9f7be'
+      }}>
+        💡 Vẽ chữ ký của bạn trong khung trên bằng chuột hoặc ngón tay.<br/>
+        Chữ ký sẽ được sử dụng để xác nhận đơn đăng ký của bạn.
+      </div>
     </div>
   );
 
-  // Render success
+  // Hàm tái tạo và tải PDF
+  const regenerateAndDownloadPDF = async (bookingCode) => {
+    try {
+      setIsGeneratingPDF(true);
+      
+      // Tái tạo PDF với dữ liệu hiện tại
+      await generatePDF();
+      
+      message.success('Tải lại file PDF thành công!');
+      
+    } catch (error) {
+      console.error('Error regenerating PDF:', error);
+      message.error('Không thể tải lại PDF. Vui lòng thử lại!');
+    } finally {
+      setIsGeneratingPDF(false);
+    }
+  };
+
+  // Render success với option xuất PDF
   const renderSuccess = () => {
     const getSuccessMessage = () => {
       const { collectionMethod, appointmentDate, timeSlot } = bookingData;
@@ -290,8 +1182,62 @@ const ConfirmBookingModal = ({ visible, onCancel, bookingData, onConfirm, paymen
           {getSuccessMessage()}
         </div>
         <div style={{ marginBottom: '8px' }}>Mã đặt lịch: <b>{paymentCode}</b></div>
-        <div style={{ fontSize: '14px', color: '#666' }}>
+        <div style={{ fontSize: '14px', color: '#666', marginBottom: '24px' }}>
           Chúng tôi sẽ liên hệ xác nhận trong thời gian sớm nhất.
+        </div>
+        
+        {/* PDF Export Option */}
+        {showPDFOption && (
+          <div style={{ 
+            padding: '20px', 
+            backgroundColor: '#f6ffed', 
+            border: '1px solid #b7eb8f', 
+            borderRadius: '8px',
+            marginBottom: '16px'
+          }}>
+            <FileTextOutlined style={{ fontSize: '24px', color: '#52c41a', marginBottom: '8px' }} />
+            <div style={{ marginBottom: '12px', fontSize: '16px', fontWeight: 'bold' }}>
+              Xuất đơn đăng ký xét nghiệm DNA
+            </div>
+            <div style={{ marginBottom: '16px', color: '#666' }}>
+              Bạn có muốn tải xuống file PDF đơn đăng ký không?
+            </div>
+            <Space>
+              <Button 
+                type="primary" 
+                icon={<DownloadOutlined />}
+                onClick={handleDownloadPDF}
+                style={{ backgroundColor: '#52c41a', borderColor: '#52c41a' }}
+              >
+                Tải xuống PDF
+              </Button>
+              <Button onClick={handleSkipPDF}>
+                Bỏ qua
+              </Button>
+            </Space>
+          </div>
+        )}
+        
+        {/* Thêm option tải lại PDF */}
+        <div style={{ 
+          marginTop: '20px',
+          padding: '16px',
+          backgroundColor: '#f0f9ff',
+          borderRadius: '8px',
+          border: '1px solid #bae7ff'
+        }}>
+          <Text style={{ display: 'block', marginBottom: '12px' }}>
+            📄 Bạn có thể tải lại file PDF bất cứ lúc nào
+          </Text>
+          <Button 
+            type="link" 
+            icon={<DownloadOutlined />}
+            onClick={() => regenerateAndDownloadPDF(paymentCode)}
+            loading={isGeneratingPDF}
+            disabled={isGeneratingPDF}
+          >
+            {isGeneratingPDF ? 'Đang tạo PDF...' : 'Tải lại PDF'}
+          </Button>
         </div>
       </div>
     );
@@ -299,6 +1245,75 @@ const ConfirmBookingModal = ({ visible, onCancel, bookingData, onConfirm, paymen
 
   // Render step content
   const renderStepContent = () => {
+    // Nếu đang ở bước xác nhận PDF
+    if (isPDFConfirmStep) {
+      return (
+        <div style={{ textAlign: 'center', padding: '40px 20px' }}>
+          <CheckCircleOutlined style={{ fontSize: '64px', color: '#52c41a', marginBottom: '24px' }} />
+          <Title level={3} style={{ color: '#52c41a', marginBottom: '16px' }}>
+            Ký tên thành công!
+          </Title>
+          <Text style={{ fontSize: '16px', color: '#666', display: 'block', marginBottom: '32px' }}>
+            Bạn có muốn tải xuống file PDF đơn đăng ký trước khi hoàn tất đặt lịch không?
+          </Text>
+          
+          {/* PDF Export Option */}
+          <div style={{ 
+            padding: '24px', 
+            backgroundColor: '#f6ffed', 
+            border: '1px solid #b7eb8f', 
+            borderRadius: '12px',
+            marginBottom: '24px',
+            maxWidth: '500px',
+            margin: '0 auto 24px auto'
+          }}>
+            <FileTextOutlined style={{ fontSize: '32px', color: '#52c41a', marginBottom: '12px' }} />
+            <div style={{ marginBottom: '12px', fontSize: '18px', fontWeight: 'bold', color: '#52c41a' }}>
+              Xuất đơn đăng ký xét nghiệm DNA
+            </div>
+            <div style={{ marginBottom: '20px', color: '#666', fontSize: '14px' }}>
+              File PDF sẽ chứa đầy đủ thông tin đăng ký và chữ ký của bạn
+            </div>
+            <Space size="large">
+              <Button 
+                type="primary" 
+                size="large"
+                icon={<DownloadOutlined />}
+                onClick={handleDownloadPDF}
+                loading={isGeneratingPDF}
+                disabled={isGeneratingPDF}
+                style={{ 
+                  backgroundColor: '#52c41a', 
+                  borderColor: '#52c41a',
+                  height: '48px',
+                  padding: '0 32px',
+                  fontSize: '16px'
+                }}
+              >
+                {isGeneratingPDF ? 'Đang tạo PDF...' : 'Tải xuống PDF'}
+              </Button>
+              <Button 
+                size="large"
+                onClick={handleSkipPDF}
+                disabled={isGeneratingPDF}
+                style={{
+                  height: '48px',
+                  padding: '0 32px',
+                  fontSize: '16px'
+                }}
+              >
+                Bỏ qua, hoàn tất đặt lịch
+              </Button>
+            </Space>
+          </div>
+          
+          <Text type="secondary" style={{ fontSize: '12px' }}>
+            💡 Bạn có thể tải file PDF sau trong phần lịch sử đặt lịch
+          </Text>
+        </div>
+      );
+    }
+    
     switch (currentStep) {
       case 1:
         return renderSummary();
@@ -317,6 +1332,11 @@ const ConfirmBookingModal = ({ visible, onCancel, bookingData, onConfirm, paymen
 
   // Render footer
   const renderFooter = () => {
+    // Ẩn footer khi đang ở bước xác nhận PDF
+    if (isPDFConfirmStep) {
+      return null;
+    }
+    
     switch (currentStep) {
       case 1:
         return [
@@ -327,8 +1347,8 @@ const ConfirmBookingModal = ({ visible, onCancel, bookingData, onConfirm, paymen
         if (paymentMethod === 'cash') {
           // Cash flow: ở step ký tên
           return [
-            <Button key="back" onClick={() => setCurrentStep(1)}>Quay lại</Button>,
-            <Button key="complete" type="primary" onClick={handleSignatureComplete}>Hoàn tất đặt lịch</Button>
+            <Button key="back" onClick={() => setCurrentStep(1)} disabled={isProcessingSignature}>Quay lại</Button>,
+            <Button key="complete" type="primary" onClick={handleSignatureComplete} loading={isProcessingSignature} disabled={isProcessingSignature}>Hoàn tất đặt lịch</Button>
           ];
         } else {
           // QR flow: ở step thanh toán
@@ -340,8 +1360,8 @@ const ConfirmBookingModal = ({ visible, onCancel, bookingData, onConfirm, paymen
       case 3:
         // QR flow: ở step ký tên sau thanh toán
         return [
-          <Button key="back" onClick={() => setCurrentStep(2)}>Quay lại</Button>,
-          <Button key="complete" type="primary" onClick={handleSignatureComplete}>Hoàn tất đặt lịch</Button>
+          <Button key="back" onClick={() => setCurrentStep(2)} disabled={isProcessingSignature}>Quay lại</Button>,
+          <Button key="complete" type="primary" onClick={handleSignatureComplete} loading={isProcessingSignature} disabled={isProcessingSignature}>Hoàn tất đặt lịch</Button>
         ];
       case 4:
         return [
@@ -389,22 +1409,23 @@ const ConfirmBookingModal = ({ visible, onCancel, bookingData, onConfirm, paymen
       open={visible}
       onCancel={handleClose}
       footer={renderFooter()}
-      width={700}
+      width={1000}
       destroyOnClose
+      centered
       styles={{
         body: {
           padding: '0',
-          maxHeight: '70vh',
+          maxHeight: '80vh',
           overflowY: 'auto'
         }
       }}
       bodyStyle={{
         padding: '0',
-        maxHeight: '70vh',
+        maxHeight: '80vh',
         overflowY: 'auto'
       }}
     >
-      <div style={{ padding: '24px' }}>
+      <div style={{ padding: '32px' }}>
         <Steps current={getCurrentStepIndex()} items={getSteps()} className="mb-6" />
         {renderStepContent()}
       </div>
@@ -629,8 +1650,12 @@ const BookingPage = () => {
       return Promise.reject(new Error('Vui lòng chọn mối quan hệ!'));
     }
     const firstPersonRelationship = form.getFieldValue(['firstPerson', 'relationship']);
+    // Nếu một trong hai là 'Sibling' thì cho phép trùng
+    if (value === 'Sibling' || firstPersonRelationship === 'Sibling') {
+      return Promise.resolve();
+    }
     if (value === firstPersonRelationship) {
-      return Promise.reject(new Error('Mối quan hệ của người thứ hai phải khác với người đại diện!'));
+      return Promise.reject(new Error('Mối quan hệ của người thứ hai phải khác với người đại diện (trừ trường hợp Sibling)!'));
     }
     return Promise.resolve();
   };
@@ -827,18 +1852,22 @@ const BookingPage = () => {
     try {
       setIsSubmitting(true);
       
-      // Gọi API
-      const response = await fetch('/api/bookings', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(finalBookingData)
-      });
+      // Tạm thời lưu vào localStorage thay vì gọi API
+      // TODO: Thay thế bằng API thực tế khi backend sẵn sàng
+      const bookingId = `BOOKING_${Date.now()}`;
+      const bookingWithId = {
+        ...finalBookingData,
+        bookingId,
+        createdAt: new Date().toISOString()
+      };
       
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
-      }
+      // Lưu vào localStorage
+      const existingBookings = JSON.parse(localStorage.getItem('dna_bookings') || '[]');
+      existingBookings.push(bookingWithId);
+      localStorage.setItem('dna_bookings', JSON.stringify(existingBookings));
       
-      await response.json();
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 1000));
       
       message.success('Đặt lịch thành công!');
       form.resetFields();
@@ -847,12 +1876,17 @@ const BookingPage = () => {
       setIsModalVisible(false);
       setBookingData(null);
       
-      // Redirect hoặc refresh data
-      // navigate('/booking-history');
+      // Reset form về trạng thái ban đầu
+      setSelectedService(null);
+      setSelectedCollectionMethod(null);
+      setSelectedMedicationMethod('');
+      setSelectedKitType(null);
+      setHomeAddress('');
+      setIsExpressService(false);
       
     } catch (error) {
       console.error('Error saving booking:', error);
-      message.error('Có lỗi xảy ra khi lưu thông tin đặt lịch!');
+      message.error('Có lỗi xảy ra khi lưu thông tin đặt lịch! Vui lòng thử lại.');
     } finally {
       setIsSubmitting(false);
     }
