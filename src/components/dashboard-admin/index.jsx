@@ -30,34 +30,15 @@ import "react-toastify/dist/ReactToastify.css";
 const { Header, Content, Footer, Sider } = Layout;
 const { Title, Text } = Typography;
 
-function getItem(label, key, icon, children) {
+function getItem(label, key, icon, children, onClick) {
   return {
     key,
     icon,
     children,
-    label: children ? label : <Link to={`/dashboard/${key}`}>{label}</Link>,
+    label,
+    onClick,
   };
 }
-
-const items = [
-  getItem("Dashboard", "overview", <DashboardOutlined />),
-  getItem("Account Management", "accounts", <UserOutlined />),
-  getItem("Services", "services", <MedicineBoxOutlined />, [
-    getItem(
-      <Link to="/dashboard/services/booking">Tracking Booking</Link>,
-      "services/booking",
-      <FileTextOutlined />
-    ),
-    getItem(
-      <Link to="/dashboard/services/service-management">
-        Service Management
-      </Link>,
-      "services/service-management",
-      <MedicineBoxOutlined />
-    ),
-  ]),
-  getItem("System Logs", "logs", <SafetyOutlined />),
-];
 
 const AdminDashboard = () => {
   const [collapsed, setCollapsed] = useState(false);
@@ -88,6 +69,35 @@ const AdminDashboard = () => {
   }, [location]);
 
   // User dropdown menu items
+
+  // Move items array here so navigate is in scope
+  const items = [
+    getItem("Dashboard", "overview", <DashboardOutlined />, undefined, () =>
+      navigate("/dashboard/overview")
+    ),
+    getItem("Account Management", "accounts", <UserOutlined />, undefined, () =>
+      navigate("/dashboard/accounts")
+    ),
+    getItem("Services", "services", <MedicineBoxOutlined />, [
+      getItem(
+        "Tracking Booking",
+        "services/booking",
+        <FileTextOutlined />,
+        undefined,
+        () => navigate("/dashboard/services/booking")
+      ),
+      getItem(
+        "Service Management",
+        "services/service-management",
+        <MedicineBoxOutlined />,
+        undefined,
+        () => navigate("/dashboard/services/service-management")
+      ),
+    ]),
+    getItem("System Logs", "logs", <SafetyOutlined />, undefined, () =>
+      navigate("/dashboard/logs")
+    ),
+  ];
 
   return (
     <Layout style={{ minHeight: "100vh" }}>
@@ -196,7 +206,7 @@ const AdminDashboard = () => {
               style={{ height: 40 }}
               onLogoutSuccess={() => {
                 // Callback khi logout thành công (tùy chọn)
-                console.log("Logout completed successfully");
+                // No-op
               }}
               onLogoutError={(error) => {
                 // Callback khi logout lỗi (tùy chọn)
@@ -211,24 +221,22 @@ const AdminDashboard = () => {
             style={{ marginBottom: 16 }}
             items={[
               {
-                key: "dashboard",
                 title:
                   location.pathname === "/dashboard" ? (
                     "Dashboard"
                   ) : (
                     <Link to="/dashboard">Dashboard</Link>
                   ),
-                path: "/dashboard",
+                key: "dashboard",
               },
               ...breadcrumbs.slice(1).map((breadcrumb, idx, arr) => ({
-                key: breadcrumb.path || `breadcrumb-${idx}`,
                 title:
                   idx === arr.length - 1 || !breadcrumb.path ? (
                     breadcrumb.title
                   ) : (
                     <Link to={breadcrumb.path}>{breadcrumb.title}</Link>
                   ),
-                path: breadcrumb.path,
+                key: breadcrumb.path || `breadcrumb-${idx}`,
               })),
             ]}
           />

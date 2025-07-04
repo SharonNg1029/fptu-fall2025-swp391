@@ -174,7 +174,7 @@ const AccountManagement = () => {
     try {
       setLoading(true);
       const response = await api.get("/admin/account");
-      console.log("Accounts API raw response:", response);
+      // console.log("Accounts API raw response:", response); // Remove or comment out in production
       // Map API fields to UI fields
       const accountsData = (response.data?.data || response.data || []).map(
         (acc) => ({
@@ -194,7 +194,7 @@ const AccountManagement = () => {
           ...acc,
         })
       );
-      console.log("Mapped accountsData:", accountsData);
+      // console.log("Mapped accountsData:", accountsData); // Remove or comment out in production
       setAccounts(accountsData);
       // Fetch related data
       await fetchActiveOrdersStatus(accountsData);
@@ -558,7 +558,7 @@ const AccountManagement = () => {
     }
     return result;
   });
-  console.log("Filtered accounts for table:", filteredAccounts);
+  // console.log("Filtered accounts for table:", filteredAccounts); // Remove or comment out in production
 
   /**
    * Calculate statistics for dashboard cards

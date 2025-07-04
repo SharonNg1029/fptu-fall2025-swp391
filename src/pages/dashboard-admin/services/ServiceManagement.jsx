@@ -52,7 +52,7 @@ const ServiceManagement = () => {
     try {
       setLoading(true);
       const response = await api.get("/services/service");
-      console.log("Services response:", response);
+      // console.log("Services response:", response); // Remove or comment out in production
 
       const servicesData = response.data?.data || response.data || [];
       setServices(servicesData);

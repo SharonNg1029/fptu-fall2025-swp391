@@ -190,7 +190,7 @@ function Overview() {
           sort: "desc",
           sortBy: "appointmentTime",
         };
-        console.log("fetchRecentBookings params:", params);
+        // Xoá log fetchRecentBookings params
         const response = await api.get("/booking/bookings", { params });
         let bookingsData = response.data?.data || response.data || [];
         // FE filter nếu cần
@@ -233,15 +233,14 @@ function Overview() {
     const fetchTotalCustomers = async () => {
       try {
         const response = await api.get("/admin/dashboard/customers");
-        console.log("Total customers response:", response);
-
+        // Xoá log Total customers response
         const customerData = response.data || {};
         setStats((prev) => ({
           ...prev,
           totalCustomer: customerData.totalCustomer || 0,
         }));
       } catch (error) {
-        console.error("Error fetching total customers:", error);
+        // Xoá log error fetching total customers
         let errorMessage = "Error fetching total customers";
         if (error.response?.data?.data) {
           errorMessage = error.response.data.data;
@@ -258,8 +257,7 @@ function Overview() {
     const fetchCompletedTests = async () => {
       try {
         const response = await api.get("/booking/bookings");
-        console.log("Completed tests response:", response);
-
+        // Xoá log Completed tests response
         const bookings = response.data?.data || response.data || [];
         const completedCount = Array.isArray(bookings)
           ? bookings.filter((b) => b.status === "Completed").length
@@ -269,7 +267,7 @@ function Overview() {
           completedTests: completedCount,
         }));
       } catch (error) {
-        console.error("Error fetching completed tests:", error);
+        // Xoá log error fetching completed tests
         let errorMessage = "Error fetching completed tests";
         if (error.response?.data?.data) {
           errorMessage = error.response.data.data;
@@ -286,8 +284,7 @@ function Overview() {
     const fetchKitsSold = async () => {
       try {
         const response = await api.get("/admin/kitInventory/available");
-        console.log("Kits sold response:", response);
-
+        // Xoá log Kits sold response
         const kitsData = response.data?.data || response.data || [];
         const totalKitSold = Array.isArray(kitsData)
           ? kitsData.reduce((sum, kit) => sum + (kit.isSelled || 0), 0)
@@ -297,7 +294,7 @@ function Overview() {
           kitsSold: totalKitSold,
         }));
       } catch (error) {
-        console.error("Error fetching kits sold:", error);
+        // Xoá log error fetching kits sold
         let errorMessage = "Error fetching kits sold";
         if (error.response?.data?.data) {
           errorMessage = error.response.data.data;
@@ -314,7 +311,7 @@ function Overview() {
     const fetchRevenue = async () => {
       try {
         const params = { limit: 10000 };
-        console.log("fetchRevenue params:", params);
+        // Xoá log fetchRevenue params
         const response = await api.get("/booking/bookings", { params });
         let bookings = response.data?.data || response.data || [];
         bookings = filterBookingsByDateRange(bookings);
@@ -334,13 +331,14 @@ function Overview() {
     const fetchAllBookings = async () => {
       try {
         const params = { limit: 10000 };
-        console.log("fetchAllBookings params:", params);
+        // Xoá log fetchAllBookings params
         const response = await api.get("/booking/bookings", { params });
         let bookings = response.data?.data || response.data || [];
         bookings = filterBookingsByDateRange(bookings);
         setAllBookings(bookings);
         window.__ALL_BOOKINGS__ = bookings;
       } catch (error) {
+        // Xoá log error fetching all bookings
         let errorMessage = "Error fetching all bookings";
         if (error.response?.data?.data) {
           errorMessage = error.response.data.data;
@@ -831,7 +829,16 @@ function Overview() {
             loading={loading}
             extra={
               <Button
-                type="link"
+                type="default"
+                style={{
+                  padding: 0,
+                  height: "auto",
+                  border: "none",
+                  background: "none",
+                  color: "#1890ff",
+                  textDecoration: "underline",
+                  boxShadow: "none",
+                }}
                 onClick={() => navigate("/dashboard/services/booking")}>
                 View All
               </Button>
