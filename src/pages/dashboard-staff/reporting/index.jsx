@@ -1,5 +1,6 @@
 import React from "react";
 import { useState, useEffect, useCallback } from "react";
+import { useSelector } from "react-redux";
 import {
   Tabs,
   Table,
@@ -34,7 +35,6 @@ const StaffReporting = () => {
   const [loading, setLoading] = useState(true);
   const [workReports, setWorkReports] = useState([]);
   const [editingKey, setEditingKey] = useState("");
-  const [isSubmitted, setIsSubmitted] = useState(false);
   const [activeTab, setActiveTab] = useState("today");
 
   // Lấy ngày hôm nay (YYYY-MM-DD)
@@ -45,23 +45,31 @@ const StaffReporting = () => {
     (r) => (r.appointmentTime || "").slice(0, 10) === today
   );
 
-  // Kiểm tra đã gửi chưa (giả sử có trường isSent hoặc tự xác định)
-  const allSent = todayReports.every((r) => r.isSent);
-
   // Lọc báo cáo đã gửi
-  const sentReports = workReports.filter((r) => r.isSent);
+  const completedWorkReports = workReports.filter((r) => r.isSent);
 
   // Pagination state for Sent Reports
-  const [sentPagination, setSentPagination] = useState({
+  const [completedReportsPagination, setCompletedReportsPagination] = useState({
     current: 1,
     pageSize: 10,
   });
 
-  // Lấy danh sách báo cáo
-  const fetchWorkReports = async () => {
+  // Lấy staffID từ redux
+  const staffID = useSelector(
+    (state) => state.user?.staffID || state.user?.id || ""
+  );
+
+  // Lấy danh sách báo cáo hôm nay cho staff
+  const fetchWorkReports = useCallback(async () => {
+    if (!staffID) {
+      toast.error("Can not find staffID!");
+      setWorkReports([]);
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     try {
-      const response = await api.get("/staff/reports");
+      const response = await api.get(`/staff/my-report/${staffID}`);
       setWorkReports(response.data?.data || response.data || []);
     } catch (error) {
       toast.error(
@@ -72,17 +80,17 @@ const StaffReporting = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [staffID]);
 
   useEffect(() => {
     fetchWorkReports();
-  }, []);
+  }, [fetchWorkReports]);
 
-  // Cập nhật trạng thái/note từng báo cáo
+  // Cập nhật trạng thái/note từng báo cáo (PATCH)
   const handleSave = async (record) => {
     try {
       setLoading(true);
-      await api.put(`/staff/reports/${record.id}`, {
+      await api.patch(`/staff/my-report/${record.id}`, {
         status: record.status,
         note: record.note,
       });
@@ -97,41 +105,6 @@ const StaffReporting = () => {
       setEditingKey("");
     }
   };
-
-  // Gửi báo cáo trong ngày
-  const handleSubmitReports = useCallback(async () => {
-    try {
-      setLoading(true);
-      await api.post("/staff/reports/submit", { date: today });
-      toast.success("Reports submitted successfully!");
-      setIsSubmitted(true);
-      fetchWorkReports();
-    } catch (error) {
-      toast.error(
-        "Failed to submit reports: " +
-          (error.response?.data?.message || error.message)
-      );
-    } finally {
-      setLoading(false);
-    }
-  }, [today]);
-
-  // Tự động gửi sau 18:30 nếu chưa gửi
-  useEffect(() => {
-    const now = new Date();
-    if (!allSent && !isSubmitted) {
-      const autoSend = () => handleSubmitReports();
-      const eighteenThirty = new Date();
-      eighteenThirty.setHours(18, 30, 0, 0);
-      if (now > eighteenThirty) {
-        autoSend();
-      } else {
-        const timeout = eighteenThirty - now;
-        const timer = setTimeout(autoSend, timeout);
-        return () => clearTimeout(timer);
-      }
-    }
-  }, [allSent, isSubmitted, workReports, handleSubmitReports]);
 
   // Table columns với editable cell
   const EditableCell = ({ editing, dataIndex, children, ...restProps }) => {
@@ -374,20 +347,7 @@ const StaffReporting = () => {
               />
             </Form>
           </Card>
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "flex-end",
-              marginTop: 16,
-            }}>
-            <Button
-              type="primary"
-              icon={<SendOutlined />}
-              onClick={handleSubmitReports}
-              disabled={allSent || isSubmitted}>
-              Submit Reports for Today
-            </Button>
-          </div>
+          {/* Submit Report button removed */}
         </>
       ),
     },
@@ -396,7 +356,7 @@ const StaffReporting = () => {
       label: (
         <span>
           <HistoryOutlined style={{ marginRight: 8 }} />
-          Sent Reports
+          Completed Reports
         </span>
       ),
       children: (
@@ -411,7 +371,7 @@ const StaffReporting = () => {
               gap: 16,
             }}>
             <Title level={3} style={{ margin: 0 }}>
-              Sent Reports ({sentReports.length})
+              Completed Reports ({completedWorkReports.length})
             </Title>
             <Space>
               <Button
@@ -436,10 +396,10 @@ const StaffReporting = () => {
             <Table
               loading={loading}
               columns={workReportColumns}
-              dataSource={sentReports}
+              dataSource={completedWorkReports}
               rowKey="id"
               pagination={{
-                ...sentPagination,
+                ...completedReportsPagination,
                 showSizeChanger: true,
                 pageSizeOptions: [10, 20, 50, 100],
                 showQuickJumper: true,
@@ -447,7 +407,7 @@ const StaffReporting = () => {
                   `${range[0]}-${range[1]} of ${total} reports`,
               }}
               onChange={(paginationConfig) => {
-                setSentPagination({
+                setCompletedReportsPagination({
                   current: paginationConfig.current,
                   pageSize: paginationConfig.pageSize,
                 });
