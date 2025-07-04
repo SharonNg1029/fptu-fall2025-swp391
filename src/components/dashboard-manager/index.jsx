@@ -190,7 +190,6 @@ const ManagerDashboard = () => {
               style={{ height: 40 }}
               onLogoutSuccess={() => {
                 // Callback khi logout thành công (tùy chọn)
-                console.log("Logout completed successfully");
               }}
               onLogoutError={(error) => {
                 // Callback khi logout lỗi (tùy chọn)

@@ -51,7 +51,8 @@ const TestingProcessMonitoringPage = () => {
           lastUpdate: item.lastUpdate,
           serviceType: item.serviceType,
           status: item.status,
-          timeRange: item.timeRange,
+          // Use appointmentTime from API, fallback to timeRange if needed
+          appointmentTime: item.appointmentTime || item.timeRange || null,
         }))
       );
     } catch (error) {
@@ -71,10 +72,13 @@ const TestingProcessMonitoringPage = () => {
 
   const filteredTests = tests.filter((test) => {
     const matchesSearch =
-      test.testId?.toLowerCase().includes(searchText.toLowerCase()) ||
+      test.assignedID
+        ?.toString()
+        .toLowerCase()
+        .includes(searchText.toLowerCase()) ||
       test.customerName?.toLowerCase().includes(searchText.toLowerCase()) ||
       test.serviceType?.toLowerCase().includes(searchText.toLowerCase()) ||
-      test.assignedStaff?.toLowerCase().includes(searchText.toLowerCase());
+      test.staffName?.toLowerCase().includes(searchText.toLowerCase());
 
     const matchesStatus = statusFilter === "" || test.status === statusFilter;
 
@@ -102,14 +106,25 @@ const TestingProcessMonitoringPage = () => {
     },
     {
       title: "Service",
-      dataIndex: "service",
-      key: "service",
+      dataIndex: "serviceType",
+      key: "serviceType",
     },
     {
       title: "Appointment Time",
-      dataIndex: "timeRange",
-      key: "timeRange",
-      render: (timeRange) => timeRange || "N/A",
+      dataIndex: "appointmentTime",
+      key: "appointmentTime",
+      render: (appointmentTime) => {
+        if (!appointmentTime) return "N/A";
+        // If array [YYYY, MM, DD, HH, mm], convert to string
+        if (Array.isArray(appointmentTime) && appointmentTime.length >= 3) {
+          const [year, month, day, hour = 0, minute = 0] = appointmentTime;
+          // month is 0-based in JS Date, but usually 1-based in API, so subtract 1 if needed
+          const dateObj = new Date(year, month - 1, day, hour, minute);
+          return dateObj.toLocaleString();
+        }
+        // If string, just return
+        return appointmentTime;
+      },
     },
     {
       title: "Status",

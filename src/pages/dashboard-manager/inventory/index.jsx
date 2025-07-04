@@ -220,7 +220,7 @@ const Inventory = () => {
   const fetchTransactions = async () => {
     try {
       const response = await api.get("/manager/kit-transaction");
-      console.log("Transactions response:", response);
+      // console.log("Transactions response:", response); // Removed for clean console
 
       // Chuẩn hóa dữ liệu theo mẫu API mới
       const transactionsData = (response.data?.data || response.data || []).map(

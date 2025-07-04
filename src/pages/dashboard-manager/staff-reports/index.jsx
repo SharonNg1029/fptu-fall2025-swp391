@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
+import { useParams } from "react-router-dom";
 import {
   Tabs,
   Table,
@@ -42,6 +43,7 @@ const { RangePicker } = DatePicker;
 const ViewReports = () => {
   const [loading, setLoading] = useState(true);
   const [reports, setReports] = useState([]);
+  const [futureReports, setFutureReports] = useState([]);
   const [todayReports, setTodayReports] = useState([]);
   const [staffList, setStaffList] = useState([]);
   const [activeTab, setActiveTab] = useState("today");
@@ -49,6 +51,7 @@ const ViewReports = () => {
   const [statusFilter, setStatusFilter] = useState("");
   const [staffFilter, setStaffFilter] = useState("");
   const [dateRange, setDateRange] = useState([]);
+  const { managerID } = useParams();
 
   // Pagination states
   const [todayPagination, setTodayPagination] = useState({
@@ -105,29 +108,56 @@ const ViewReports = () => {
     [today]
   );
 
-  // Fetch all reports with filters
-  const fetchAllReports = useCallback(async (filters = {}) => {
+  // Fetch all reports for this manager
+  const fetchAllReports = useCallback(
+    async (filters = {}) => {
+      if (!managerID) return;
+      setLoading(true);
+      try {
+        const response = await api.get(`/manager/report/${managerID}`, {
+          params: filters,
+        });
+        setReports(response.data?.data || response.data || []);
+      } catch (error) {
+        toast.error(
+          "Failed to fetch reports: " +
+            (error.response?.data?.message || error.message)
+        );
+      } finally {
+        setLoading(false);
+      }
+    },
+    [managerID]
+  );
+  // Assign staff to booking (PATCH)
+  // (Removed unused assignStaffToBooking function)
+
+  // Fetch future reports (from tomorrow onwards)
+  const fetchFutureReports = useCallback(async () => {
+    if (!managerID) return;
     setLoading(true);
     try {
-      const response = await api.get("/manager/all-reports", {
-        params: filters,
+      const tomorrow = dayjs().add(1, "day").format("YYYY-MM-DD");
+      const response = await api.get(`/manager/report/${managerID}`, {
+        params: { startDate: tomorrow },
       });
-      setReports(response.data?.data || response.data || []);
+      setFutureReports(response.data?.data || response.data || []);
     } catch (error) {
       toast.error(
-        "Failed to fetch reports: " +
+        "Failed to fetch future reports: " +
           (error.response?.data?.message || error.message)
       );
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [managerID]);
 
   useEffect(() => {
     fetchStaffList();
     fetchTodayReports();
     fetchAllReports();
-  }, [fetchStaffList, fetchTodayReports, fetchAllReports]);
+    fetchFutureReports();
+  }, [fetchStaffList, fetchTodayReports, fetchAllReports, fetchFutureReports]);
 
   // Handle search and filter for today's reports
   // Removed unused handleTodaySearch, handleAllSearch, handleReset (no longer needed)
@@ -594,11 +624,60 @@ const ViewReports = () => {
       ),
     },
     {
+      key: "future",
+      label: (
+        <span>
+          <CalendarOutlined style={{ marginRight: 8 }} />
+          Future Schedule
+        </span>
+      ),
+      children: (
+        <>
+          <Card>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                marginBottom: 16,
+                gap: 16,
+                flexWrap: "wrap",
+              }}>
+              <Title level={4} style={{ margin: 0, flex: 1 }}>
+                Future Reports ({futureReports.length})
+              </Title>
+              <Button
+                icon={<ReloadOutlined />}
+                onClick={fetchFutureReports}
+                loading={loading}
+                type="primary">
+                Refresh
+              </Button>
+            </div>
+            <Table
+              loading={loading}
+              columns={allReportColumns}
+              dataSource={futureReports}
+              rowKey="id"
+              pagination={{
+                pageSize: 10,
+                showSizeChanger: true,
+                pageSizeOptions: [10, 20, 50, 100],
+                showQuickJumper: true,
+                showTotal: (total, range) =>
+                  `${range[0]}-${range[1]} of ${total} reports`,
+              }}
+              scroll={{ x: 1000 }}
+            />
+          </Card>
+        </>
+      ),
+    },
+    {
       key: "all",
       label: (
         <span>
           <UserOutlined style={{ marginRight: 8 }} />
-          All Reports
+          Report History
         </span>
       ),
       children: (
@@ -614,7 +693,7 @@ const ViewReports = () => {
                 flexWrap: "wrap",
               }}>
               <Title level={4} style={{ margin: 0, flex: 1 }}>
-                All Staff Reports ({reports.length})
+                Report History ({reports.length})
               </Title>
               <Button
                 icon={<DownloadOutlined />}
