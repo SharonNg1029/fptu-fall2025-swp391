@@ -1,8 +1,12 @@
 import React, { useState } from "react";
 import { useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import {
+  selectUserRole,
   selectCustomerID,
+  selectStaffID,
+  selectManagerID,
+  selectAdminID,
 } from "../../../redux/features/userSlice";
 import {
   Shield,
@@ -22,13 +26,34 @@ import toast from "react-hot-toast";
 
 const ChangePasswordPage = () => {
   const navigate = useNavigate();
+  const { id } = useParams(); // Get ID from URL params
   const currentUser = useSelector((state) => state.user?.currentUser);
+  const userRole = useSelector(selectUserRole);
   const customerID = useSelector(selectCustomerID);
+  const staffID = useSelector(selectStaffID);
+  const managerID = useSelector(selectManagerID);
+  const adminID = useSelector(selectAdminID);
 
-  // Get customer ID
-  let userID = customerID;
+  // ✅ Get user ID based on role - prioritize URL param, then Redux
+  let userID = id; // From URL params first
+  if (!userID) {
+    if (userRole === "customer") userID = customerID;
+    else if (userRole === "staff") userID = staffID;
+    else if (userRole === "manager") userID = managerID;
+    else if (userRole === "admin") userID = adminID;
+  }
+
+  // Fallback to currentUser
   if (!userID && currentUser) {
-    userID = currentUser?.customerID || currentUser?.customerId;
+    userID =
+      currentUser?.customerID ||
+      currentUser?.customerId ||
+      currentUser?.staffID ||
+      currentUser?.staffId ||
+      currentUser?.managerID ||
+      currentUser?.managerId ||
+      currentUser?.adminID ||
+      currentUser?.adminId;
   }
 
   const [formData, setFormData] = useState({
@@ -106,7 +131,7 @@ const ChangePasswordPage = () => {
     e.preventDefault();
     
     if (!userID) {
-      setError("Customer ID not found. Please log in again.");
+      setError("User ID not found. Please log in again.");
       return;
     }
 
@@ -144,8 +169,11 @@ const ChangePasswordPage = () => {
     setError(null);
 
     try {
-      // Fixed API endpoint for customer
-      const apiPath = `/customer/reset-password/${userID}`;
+      // ✅ Dynamic API endpoint based on role
+      let apiPath = `/customer/reset-password/${userID}`; // Default
+      if (userRole === "staff") apiPath = `/staff/reset-password/${userID}`;
+      else if (userRole === "manager") apiPath = `/manager/reset-password/${userID}`;
+      else if (userRole === "admin") apiPath = `/admin/reset-password/${userID}`;
 
       const requestData = {
         currentPassword: formData.currentPassword,
@@ -153,10 +181,13 @@ const ChangePasswordPage = () => {
         confirmPassword: formData.confirmPassword,
       };
 
-      console.log('🔐 Sending password reset request to:', apiPath);
-      console.log('👤 Customer ID:', userID);
-      console.log('📅 Current UTC Time:', '2025-07-02 09:32:09');
-      console.log('🔑 Current User:', 'loclnx');
+      console.log('🔐 Sending password reset request:', {
+        apiPath,
+        userRole,
+        userID,
+        currentTime: '2025-07-04 06:48:04',
+        currentUser: 'loclnx'
+      });
 
       const response = await api.patch(apiPath, requestData, {
         headers: {
@@ -200,10 +231,14 @@ const ChangePasswordPage = () => {
       if (err.response) {
         const { status, data } = err.response;
         
-        console.log('🔍 Error Response Status:', status);
-        console.log('🔍 Error Response Data:', data);
-        console.log('📅 Error Time (UTC):', '2025-07-02 09:32:09');
-        console.log('👤 Error User:', 'loclnx');
+        console.log('🔍 Error Response:', {
+          status,
+          data,
+          userRole,
+          userID,
+          currentTime: '2025-07-04 06:48:04',
+          currentUser: 'loclnx'
+        });
         
         if (data?.message) {
           errorMessage = data.message;
@@ -222,7 +257,7 @@ const ChangePasswordPage = () => {
             errorMessage = "Current password is incorrect.";
             break;
           case 404:
-            errorMessage = "Customer account not found.";
+            errorMessage = `${userRole?.charAt(0).toUpperCase() + userRole?.slice(1) || 'User'} account not found.`;
             break;
           case 422:
             errorMessage = "New password does not meet security requirements.";
@@ -254,6 +289,16 @@ const ChangePasswordPage = () => {
     formData.newPassword &&
     formData.confirmPassword &&
     Object.values(validations).every(Boolean);
+
+  // ✅ Dynamic page title based on role
+  const getPageTitle = () => {
+    const roleTitle = userRole ? userRole.charAt(0).toUpperCase() + userRole.slice(1) : 'User';
+    return `Change ${roleTitle} Password`;
+  };
+
+  const getPageSubtitle = () => {
+    return `Update your ${userRole || 'account'} password to secure your account`;
+  };
 
   return (
     <div lang="en" className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
@@ -366,10 +411,10 @@ const ChangePasswordPage = () => {
                   </div>
                   <div className="text-white">
                     <h1 className="text-2xl font-bold english-text english-header">
-                      Change Password
+                      {getPageTitle()}
                     </h1>
                     <p className="text-blue-100 english-text">
-                      Update your password to secure your account
+                      {getPageSubtitle()}
                     </p>
                   </div>
                 </div>
@@ -525,9 +570,8 @@ const ChangePasswordPage = () => {
               </form>
             </div>
 
-            {/* Password Requirements Sidebar - Only this remains */}
+            {/* Password Requirements Sidebar */}
             <div className="space-y-6">
-              {/* Password Strength */}
               <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6">
                 <h3 className="text-lg font-bold text-gray-800 mb-4 english-text english-header">
                   Password Requirements
