@@ -264,6 +264,27 @@ const AdminDashboard = () => {
             display: none;
           }
         }
+        /* Ghi đè màu nền và màu chữ cho menu item đang chọn */
+        :where(.ant-menu-dark) .ant-menu-item-selected,
+        :where(.ant-menu-dark) .ant-menu-submenu-selected,
+        :where(.ant-menu-dark) .ant-menu-item-active,
+        :where(.ant-menu-dark) .ant-menu-submenu-active {
+          background-color: #1677ff !important;
+        }
+        :where(.ant-menu-dark) .ant-menu-item-selected .ant-menu-title-content,
+        :where(.ant-menu-dark) .ant-menu-item-selected .anticon,
+        :where(.ant-menu-dark) .ant-menu-submenu-selected .ant-menu-title-content,
+        :where(.ant-menu-dark) .ant-menu-submenu-selected .anticon,
+        :where(.ant-menu-dark) .ant-menu-item-active .ant-menu-title-content,
+        :where(.ant-menu-dark) .ant-menu-item-active .anticon,
+        :where(.ant-menu-dark) .ant-menu-submenu-active .ant-menu-title-content,
+        :where(.ant-menu-dark) .ant-menu-submenu-active .anticon {
+          color: #fff !important;
+        }
+        :where(.ant-menu-dark) .ant-menu-item-selected,
+        :where(.ant-menu-dark) .ant-menu-item-active {
+          border-radius: 6px !important;
+        }
       `}</style>
 
       <ToastContainer />

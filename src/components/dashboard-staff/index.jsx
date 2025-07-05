@@ -129,7 +129,7 @@ const StaffDashboard = () => {
           defaultSelectedKeys={["overview"]}
           mode="inline"
           items={items}
-          selectedKeys={[location.pathname.split("/").slice(1, 3).join("/")]}
+          selectedKeys={[location.pathname.split("/")[2] || "overview"]}
         />
       </Sider>
 
