@@ -169,6 +169,9 @@ const CustomerFeedbackPage = () => {
     // Actions column is removed as it's no longer applicable
   ];
 
+  // State for page size
+  const [pageSize, setPageSize] = useState(10);
+
   return (
     <div style={{ padding: "0 24px" }}>
       <div
@@ -233,11 +236,16 @@ const CustomerFeedbackPage = () => {
           dataSource={filteredFeedback}
           rowKey="bookingID" // Assuming bookingID is unique for each feedback
           pagination={{
-            pageSize: 10,
+            pageSize: pageSize,
+            pageSizeOptions: [5, 10, 20, 50, 100],
             showSizeChanger: true,
             showQuickJumper: true,
             showTotal: (total, range) =>
               `${range[0]}-${range[1]} of ${total} feedback`,
+            onShowSizeChange: (current, size) => setPageSize(size),
+            onChange: (page, size) => {
+              if (size !== pageSize) setPageSize(size);
+            },
           }}
           scroll={{ x: 1000 }}
         />

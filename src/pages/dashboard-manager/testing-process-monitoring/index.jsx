@@ -93,7 +93,10 @@ const TestingProcessMonitoringPage = () => {
       test.serviceType?.toLowerCase().includes(searchText.toLowerCase()) ||
       test.staffName?.toLowerCase().includes(searchText.toLowerCase());
 
-    const matchesStatus = statusFilter === "" || test.status === statusFilter;
+    // Case-insensitive status filter
+    const matchesStatus =
+      statusFilter === "" ||
+      (test.status && test.status.toLowerCase() === statusFilter.toLowerCase());
 
     return matchesSearch && matchesStatus;
   });
@@ -241,6 +244,9 @@ const TestingProcessMonitoringPage = () => {
     }
   };
 
+  // State for page size
+  const [pageSize, setPageSize] = useState(10);
+
   return (
     <div style={{ padding: "0 24px" }}>
       <div
@@ -312,11 +318,16 @@ const TestingProcessMonitoringPage = () => {
           dataSource={filteredTests}
           rowKey="assignedID"
           pagination={{
-            pageSize: 10,
+            pageSize: pageSize,
+            pageSizeOptions: [5, 10, 20, 50, 100],
             showSizeChanger: true,
             showQuickJumper: true,
             showTotal: (total, range) =>
               `${range[0]}-${range[1]} of ${total} tests`,
+            onShowSizeChange: (current, size) => setPageSize(size),
+            onChange: (page, size) => {
+              if (size !== pageSize) setPageSize(size);
+            },
           }}
           scroll={{ x: 1000 }}
         />

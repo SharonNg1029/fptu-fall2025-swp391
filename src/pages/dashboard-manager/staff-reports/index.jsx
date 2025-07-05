@@ -388,9 +388,11 @@ const ViewReports = () => {
               pagination={{
                 ...assignPagination,
                 showSizeChanger: true,
-                pageSizeOptions: [10, 20, 50],
+                pageSizeOptions: [5, 10, 20, 50, 100],
                 showTotal: (total, range) =>
                   `${range[0]}-${range[1]} of ${total} bookings`,
+                onShowSizeChange: (current, size) =>
+                  setAssignPagination({ current: 1, pageSize: size }),
                 onChange: (page, pageSize) =>
                   setAssignPagination({ current: page, pageSize: pageSize }),
               }}
@@ -504,9 +506,11 @@ const ViewReports = () => {
               pagination={{
                 ...allPagination,
                 showSizeChanger: true,
-                pageSizeOptions: [10, 20, 50, 100],
+                pageSizeOptions: [5, 10, 20, 50, 100],
                 showTotal: (total, range) =>
                   `${range[0]}-${range[1]} of ${total} reports`,
+                onShowSizeChange: (current, size) =>
+                  setAllPagination({ current: 1, pageSize: size }),
                 onChange: (page, pageSize) =>
                   setAllPagination({ current: page, pageSize: pageSize }),
               }}

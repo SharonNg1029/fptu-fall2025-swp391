@@ -314,6 +314,9 @@ const Inventory = () => {
     .map((kit) => kit.kitID || kit.id || kit.name)
     .filter(Boolean);
 
+  // State for page size of transactions table
+  const [transactionPageSize, setTransactionPageSize] = useState(10);
+
   // Export PDF for Inventory
   const handleExportInventoryPDF = () => {
     const doc = new jsPDF();
@@ -726,11 +729,18 @@ const Inventory = () => {
                     dataSource={filteredTransactions}
                     rowKey="transactionID"
                     pagination={{
-                      pageSize: 10,
+                      pageSize: transactionPageSize,
+                      pageSizeOptions: [5, 10, 20, 50, 100],
                       showSizeChanger: true,
                       showQuickJumper: true,
                       showTotal: (total, range) =>
                         `${range[0]}-${range[1]} of ${total} transactions`,
+                      onShowSizeChange: (current, size) =>
+                        setTransactionPageSize(size),
+                      onChange: (page, size) => {
+                        if (size !== transactionPageSize)
+                          setTransactionPageSize(size);
+                      },
                     }}
                   />
                 </Card>
