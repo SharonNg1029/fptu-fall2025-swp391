@@ -158,6 +158,23 @@ function App() {
       path: "/reset-password",
       element: <ChangePasswordPage />,
     },
+    // ✅ Add new routes for role-based password reset
+    {
+      path: "/customer/reset-password/:id",
+      element: <ChangePasswordPage />,
+    },
+    {
+      path: "/staff/reset-password/:id",
+      element: <ChangePasswordPage />,
+    },
+    {
+      path: "/manager/reset-password/:id",
+      element: <ChangePasswordPage />,
+    },
+    {
+      path: "/admin/reset-password/:id",
+      element: <ChangePasswordPage />,
+    },
   ]);
 
   return (

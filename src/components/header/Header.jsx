@@ -21,10 +21,7 @@ const Header = () => {
     user?.fullName ||
     user?.name ||
     `${user?.firstName || ""} ${user?.lastName || ""}`.trim() ||
-    "loclnx";
-
-  console.log('👤 Current user:', 'loclnx');
-  console.log('📅 Current UTC Time:', '2025-07-02 10:56:22');
+    "Guest";
 
   const navItems = [
     { id: 1, label: "Home", href: "/" },
