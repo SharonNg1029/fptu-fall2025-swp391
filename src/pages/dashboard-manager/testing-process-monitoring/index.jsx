@@ -30,6 +30,19 @@ import autoTable from "jspdf-autotable";
 const { Title } = Typography;
 const { Option } = Select;
 
+// Helper to format date from array or string
+const formatDate = (date) => {
+  if (!date) return "N/A";
+  if (Array.isArray(date) && date.length >= 3) {
+    const [year, month, day, hour = 0, minute = 0] = date;
+    // JS Date month is 0-based, API is 1-based.
+    const dateObj = new Date(year, month - 1, day, hour, minute);
+    return dateObj.toLocaleString();
+  }
+  // Fallback for string dates
+  return new Date(date).toLocaleString();
+};
+
 const TestingProcessMonitoringPage = () => {
   const [loading, setLoading] = useState(true);
   const [tests, setTests] = useState([]);
@@ -113,18 +126,7 @@ const TestingProcessMonitoringPage = () => {
       title: "Appointment Time",
       dataIndex: "appointmentTime",
       key: "appointmentTime",
-      render: (appointmentTime) => {
-        if (!appointmentTime) return "N/A";
-        // If array [YYYY, MM, DD, HH, mm], convert to string
-        if (Array.isArray(appointmentTime) && appointmentTime.length >= 3) {
-          const [year, month, day, hour = 0, minute = 0] = appointmentTime;
-          // month is 0-based in JS Date, but usually 1-based in API, so subtract 1 if needed
-          const dateObj = new Date(year, month - 1, day, hour, minute);
-          return dateObj.toLocaleString();
-        }
-        // If string, just return
-        return appointmentTime;
-      },
+      render: (appointmentTime) => formatDate(appointmentTime),
     },
     {
       title: "Status",
@@ -187,10 +189,16 @@ const TestingProcessMonitoringPage = () => {
       title: "Last Update Status",
       dataIndex: "lastUpdate",
       key: "lastUpdate",
-      render: (date) => (date ? new Date(date).toLocaleString() : "N/A"),
-      sorter: (a, b) =>
-        new Date(a.lastUpdate || "1970-01-01") -
-        new Date(b.lastUpdate || "1970-01-01"),
+      render: (lastUpdate) => formatDate(lastUpdate),
+      sorter: (a, b) => {
+        const dateA = Array.isArray(a.lastUpdate)
+          ? new Date(a.lastUpdate[0], a.lastUpdate[1] - 1, a.lastUpdate[2])
+          : new Date(a.lastUpdate || 0);
+        const dateB = Array.isArray(b.lastUpdate)
+          ? new Date(b.lastUpdate[0], b.lastUpdate[1] - 1, b.lastUpdate[2])
+          : new Date(b.lastUpdate || 0);
+        return dateA.getTime() - dateB.getTime();
+      },
     },
   ];
 
@@ -214,10 +222,10 @@ const TestingProcessMonitoringPage = () => {
         test.assignedID,
         test.customerName,
         test.staffName,
-        test.timeRange || "N/A",
+        formatDate(test.appointmentTime), // Use formatter
         test.serviceType,
         test.status,
-        test.lastUpdate ? new Date(test.lastUpdate).toLocaleString() : "N/A",
+        formatDate(test.lastUpdate), // Use formatter
       ]);
       autoTable(doc, {
         head: [tableColumn],
