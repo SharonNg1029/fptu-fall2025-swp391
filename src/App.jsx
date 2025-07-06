@@ -39,6 +39,7 @@ import ViewReports from "./pages/dashboard-manager/staff-reports";
 import BookingPage from "./pages/booking/BookingPage";
 import BlogDetail from "./pages/home-page/blog/BlogDetail";
 import ChangePasswordPage from "./pages/home-page/resetPassword/ChangePasswordPage";
+import MyBookingPage from "./pages/my-booking/MyBooking";
 
 function App() {
   const router = createBrowserRouter([
@@ -92,6 +93,10 @@ function App() {
     {
       path: "/profile",
       element: <ProfilePage />,
+    },
+    {
+    path: "/my-booking",
+    element: <MyBookingPage />,
     },
     {
       path: "/booking",

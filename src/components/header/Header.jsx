@@ -310,8 +310,9 @@ const Header = () => {
                   >
                     <img
                       src={
-                        user?.avatar ||
-                        "https://i.pinimg.com/1200x/59/95/a7/5995a77843eb9f5752a0004b1c1250fb.jpg"
+                        user?.avatar?.startsWith("/media")
+                        ? `/api${user.avatar}`
+                        : user?.avatar || "https://i.pinimg.com/1200x/59/95/a7/5995a77843eb9f5752a0004b1c1250fb.jpg"
                       }
                       alt={userDisplayName}
                       className="h-12 w-12 rounded-full object-cover border-2 border-gray-300"
