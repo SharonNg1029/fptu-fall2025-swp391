@@ -3407,6 +3407,7 @@ const BookingPage = () => {
       
       // Log để debug
       console.log('📋 Booking Data:', bookingData);
+      console.log('📅 Appointment Date:', appointmentDateValue ? appointmentDateValue.format('YYYY-MM-DD') : 'N/A');
       
       // Tạo payload API theo format đã thành công
       const apiPayload = buildBookingPayload(bookingData);
