@@ -23,10 +23,12 @@ import {
   ExclamationCircleOutlined,
   EyeOutlined,
   ExperimentOutlined,
+  DownloadOutlined,
 } from "@ant-design/icons";
 import { useSelector } from "react-redux";
 import api from "../../configs/axios";
 import { toast } from "react-toastify";
+import BookingDetailModal from "./BookingDetailModal";
 
 const { Title, Text } = Typography;
 const { Option } = Select;
@@ -68,9 +70,6 @@ const MyBooking = () => {
     setLoading(true);
     try {
         const res = await api.get(`/booking/my-bookings/${customerID}`);
-        console.log("Full API response:", res);
-        console.log("res.data:", res.data);
-        console.log("res.data.data:", res.data?.data);
         setBookings(res.data || []);
     } catch (err) {
       toast.error("Failed to fetch your bookings.");
@@ -83,6 +82,25 @@ const MyBooking = () => {
     setSelectedBooking(record);
     setShowModal(true);
   };
+
+  const handleDownloadResult = async (record) => {
+  try {
+    const res = await api.get(`/booking/export-pdf/${record.bookingId}`, {
+      responseType: "blob",
+    });
+
+    const url = window.URL.createObjectURL(new Blob([res.data]));
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", `KetQua_DNA_${record.bookingId}.pdf`);
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+  } catch (err) {
+    toast.error("Tải kết quả thất bại. Vui lòng thử lại!");
+  }
+};
+
 
   const getStatusTag = (status) => {
     let color = "default";
@@ -165,17 +183,29 @@ const MyBooking = () => {
         : "",
   },
   {
-    title: "Action",
-    key: "action",
-    render: (_, record) => (
+  title: "Action",
+  key: "action",
+  render: (_, record) => (
+    <Space>
       <Button
         icon={<EyeOutlined />}
         onClick={() => handleViewDetail(record)}
       >
         View
       </Button>
-    ),
-  },
+      
+      {record.status === "Completed" && (
+        <Button
+          icon={<DownloadOutlined />}
+          type="primary"
+          onClick={() => handleDownloadResult(record)}
+        >
+          Tải kết quả
+        </Button>
+      )}
+    </Space>
+  ),
+},
 ];
 
 
@@ -265,38 +295,18 @@ const MyBooking = () => {
         />
       </Card>
 
-      <Modal
+      <BookingDetailModal
         open={showModal}
-        onCancel={() => setShowModal(false)}
-        footer={null}
-        width={800}
-        title={`Chi tiết lịch hẹn: #${selectedBooking?.bookingId}`}
+        onClose={() => setShowModal(false)}
+        bookingDetail={selectedBooking}
       >
-        {selectedBooking && (
-          <Descriptions column={1} bordered size="small">
-            <Descriptions.Item label="Service">
-              {selectedBooking.serviceID || "N/A"}
-            </Descriptions.Item>
-            <Descriptions.Item label="Appointment">
-              {Array.isArray(selectedBooking.appointmentTime)
-                ? selectedBooking.appointmentTime.reverse().join("/")
-                : "N/A"}
-            </Descriptions.Item>
-            <Descriptions.Item label="Status">
-              {getStatusTag(selectedBooking.status)}
-            </Descriptions.Item>
-            <Descriptions.Item label="Total Cost">
-              {selectedBooking.totalCost?.toLocaleString("vi-VN")} VNĐ
-            </Descriptions.Item>
-            <Descriptions.Item label="Payment Method">
-              {selectedBooking.paymentMethod || "N/A"}
-            </Descriptions.Item>
-            <Descriptions.Item label="Note">
-              {selectedBooking.note || "Không có ghi chú"}
-            </Descriptions.Item>
-          </Descriptions>
-        )}
-      </Modal>
+        {/* 👇 Paste nội dung các Card chi tiết tại đây 👇 */}
+        {/* <Card>Thông tin dịch vụ...</Card>
+            <Card>Thông tin người xét nghiệm...</Card>
+            <Card>Chi phí chi tiết...</Card>
+            <Card>Phương thức thanh toán...</Card> 
+        */}
+      </BookingDetailModal>
     </div>
   );
 };
