@@ -46,33 +46,36 @@ const StaffReporting = () => {
   const [editingKey, setEditingKey] = useState("");
   const [activeTab, setActiveTab] = useState("today");
 
+  // Helper: get date string (YYYY-MM-DD) from appointmentDate or appointmentTime
+  const getReportDate = (report) => {
+    if (report.appointmentDate) {
+      if (typeof report.appointmentDate === "string") {
+        return report.appointmentDate.slice(0, 10);
+      }
+      if (report.appointmentDate instanceof Date) {
+        return report.appointmentDate.toISOString().slice(0, 10);
+      }
+    }
+    if (report.appointmentTime) {
+      const match = report.appointmentTime.match(/(\d{4}-\d{2}-\d{2})/);
+      if (match) return match[1];
+    }
+    return null;
+  };
+
   // Lấy ngày hôm nay (YYYY-MM-DD)
   const today = new Date().toISOString().slice(0, 10);
 
-  // Helper function to extract date from appointment time
-  const extractDateFromAppointment = (appointmentTime) => {
-    if (!appointmentTime) return null;
-    // If appointmentTime is just time format like "8:15 - 9:15", we can't extract date
-    // We'll need to check if it contains date information
-    const dateMatch = appointmentTime.match(/(\d{4}-\d{2}-\d{2})/);
-    return dateMatch ? dateMatch[1] : null;
-  };
-
-  // Lọc báo cáo trong ngày - chỉ lấy những báo cáo có status là Pending
+  // Lọc báo cáo trong ngày - chỉ lấy những báo cáo có status là Pending và appointment date = hôm nay
   const todayReports = workReports.filter((r) => {
-    const appointmentDate = extractDateFromAppointment(r.appointmentTime);
-    return (
-      (appointmentDate === today || !appointmentDate) && r.status === "Pending"
-    );
+    const reportDate = getReportDate(r);
+    return reportDate === today && r.status === "Pending";
   });
 
-  // Lọc báo cáo trong tương lai - chỉ lấy những báo cáo có status là Pending
-  const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000)
-    .toISOString()
-    .slice(0, 10);
+  // Lọc báo cáo trong tương lai - chỉ lấy những báo cáo có status là Pending và appointment date > hôm nay
   const futureReports = workReports.filter((r) => {
-    const appointmentDate = extractDateFromAppointment(r.appointmentTime);
-    return appointmentDate >= tomorrow && r.status === "Pending";
+    const reportDate = getReportDate(r);
+    return reportDate && reportDate > today && r.status === "Pending";
   });
 
   // Lọc báo cáo đã hoàn thành - lấy những báo cáo có status khác Pending
@@ -308,13 +311,15 @@ const StaffReporting = () => {
     if (!col.editable) return col;
     return {
       ...col,
-      onCell: (record) => ({
-        record,
-        inputType: col.dataIndex === "status" ? "select" : "text",
-        dataIndex: col.dataIndex,
-        title: col.title,
-        editing: isEditing(record),
-      }),
+      onCell: (record) => {
+        // Remove inputType to avoid React warning
+        return {
+          record,
+          dataIndex: col.dataIndex,
+          title: col.title,
+          editing: isEditing(record),
+        };
+      },
     };
   });
 
@@ -862,7 +867,7 @@ const StaffReporting = () => {
               Save
             </Button>,
           ]}
-          bodyStyle={{ textAlign: "left" }}>
+          styles={{ body: { textAlign: "left" } }}>
           <div
             style={{
               display: "flex",

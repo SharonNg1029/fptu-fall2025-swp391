@@ -167,7 +167,7 @@ const Inventory = () => {
   };
 
   // Low stock threshold
-  const LOW_STOCK_THRESHOLD = 20;
+  const LOW_STOCK_THRESHOLD = 50;
 
   // Fetch inventory data
   const fetchInventory = async () => {
@@ -300,11 +300,18 @@ const Inventory = () => {
   };
 
   const filteredInventory = inventory;
-  const filteredTransactions = transactions.filter((t) => {
-    if (typeFilter === "received") return t.received === true;
-    if (typeFilter === "not-received") return t.received === false;
-    return true;
-  });
+  const filteredTransactions = transactions
+    .filter((t) => {
+      if (typeFilter === "received") return t.received === true;
+      if (typeFilter === "unreceived") return t.received === false;
+      return true;
+    })
+    // Sắp xếp theo ngày mới nhất đến cũ nhất
+    .sort((a, b) => {
+      const dateA = a.date ? new Date(a.date) : new Date(0);
+      const dateB = b.date ? new Date(b.date) : new Date(0);
+      return dateB - dateA;
+    });
 
   // Derived: Low stock kit names & items
   const lowStockKits = inventory.filter(
@@ -715,7 +722,7 @@ const Inventory = () => {
                         style={{ width: "100%" }}
                         allowClear>
                         <Option value="received">Received</Option>
-                        <Option value="not-received">Not Received</Option>
+                        <Option value="unreceived">Unreceived</Option>
                       </Select>
                     </Col>
                   </Row>
