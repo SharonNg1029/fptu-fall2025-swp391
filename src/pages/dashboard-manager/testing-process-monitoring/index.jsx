@@ -66,6 +66,7 @@ const TestingProcessMonitoringPage = () => {
           status: item.status,
           // Use appointmentTime from API, fallback to timeRange if needed
           appointmentTime: item.appointmentTime || item.timeRange || null,
+          appointmentDate: item.appointmentDate || null, // catch appointmentDate from API
         }))
       );
     } catch (error) {
@@ -83,23 +84,47 @@ const TestingProcessMonitoringPage = () => {
     fetchTests();
   }, [fetchTests]);
 
-  const filteredTests = tests.filter((test) => {
-    const matchesSearch =
-      test.assignedID
-        ?.toString()
-        .toLowerCase()
-        .includes(searchText.toLowerCase()) ||
-      test.customerName?.toLowerCase().includes(searchText.toLowerCase()) ||
-      test.serviceType?.toLowerCase().includes(searchText.toLowerCase()) ||
-      test.staffName?.toLowerCase().includes(searchText.toLowerCase());
+  const filteredTests = tests
+    .filter((test) => {
+      // Defensive: always check for undefined/null before calling toLowerCase
+      const search = (searchText || "").toLowerCase();
+      const assignedID = test.assignedID
+        ? test.assignedID.toString().toLowerCase()
+        : "";
+      const customerName = test.customerName
+        ? test.customerName.toLowerCase()
+        : "";
+      const serviceType = test.serviceType
+        ? test.serviceType.toLowerCase()
+        : "";
+      const staffName = test.staffName ? test.staffName.toLowerCase() : "";
 
-    // Case-insensitive status filter
-    const matchesStatus =
-      statusFilter === "" ||
-      (test.status && test.status.toLowerCase() === statusFilter.toLowerCase());
+      const matchesSearch =
+        assignedID.includes(search) ||
+        customerName.includes(search) ||
+        serviceType.includes(search) ||
+        staffName.includes(search);
 
-    return matchesSearch && matchesStatus;
-  });
+      // Defensive: check status and statusFilter before toLowerCase
+      const matchesStatus =
+        !statusFilter ||
+        (test.status || "").toLowerCase() === statusFilter.toLowerCase();
+
+      return matchesSearch && matchesStatus;
+    })
+    // Sắp xếp theo lastUpdate mới nhất đến cũ nhất
+    .sort((a, b) => {
+      // lastUpdate có thể là array [y,m,d,h,m] hoặc string
+      const getDate = (val) => {
+        if (Array.isArray(val) && val.length >= 3) {
+          // [year, month, day, hour, minute]
+          return new Date(val[0], val[1] - 1, val[2], val[3] || 0, val[4] || 0);
+        }
+        if (val) return new Date(val);
+        return new Date(0);
+      };
+      return getDate(b.lastUpdate) - getDate(a.lastUpdate);
+    });
 
   const columns = [
     {
@@ -126,6 +151,12 @@ const TestingProcessMonitoringPage = () => {
       key: "serviceType",
     },
     {
+      title: "Appointment Date",
+      dataIndex: "appointmentDate",
+      key: "appointmentDate",
+      render: (date) => (date ? date : "-"),
+    },
+    {
       title: "Appointment Time",
       dataIndex: "appointmentTime",
       key: "appointmentTime",
@@ -138,7 +169,7 @@ const TestingProcessMonitoringPage = () => {
       render: (status) => {
         let color = "default";
         let icon = <ClockCircleOutlined />;
-        if (status === "Waiting confirmed") {
+        if (status === "Awaiting confirm") {
           color = "gold";
           icon = <ClockCircleOutlined />;
         }
@@ -158,7 +189,7 @@ const TestingProcessMonitoringPage = () => {
           color = "lime";
           icon = <CheckCircleOutlined />;
         }
-        if (status === "Pending Payment") {
+        if (status === "Pending payment") {
           color = "orange";
           icon = <ExclamationCircleOutlined />;
         }
@@ -177,12 +208,12 @@ const TestingProcessMonitoringPage = () => {
         );
       },
       filters: [
-        { text: "Waiting confirmed", value: "Waiting confirmed" },
+        { text: "Awaiting confirm", value: "Awaiting confirm" },
         { text: "Booking confirmed", value: "Booking confirmed" },
         { text: "Awaiting Sample", value: "Awaiting Sample" },
         { text: "In Progress", value: "In Progress" },
         { text: "Ready", value: "Ready" },
-        { text: "Pending Payment", value: "Pending Payment" },
+        { text: "Pending payment", value: "Pending payment" },
         { text: "Completed", value: "Completed" },
         { text: "Cancel", value: "Cancel" },
       ],
@@ -294,16 +325,16 @@ const TestingProcessMonitoringPage = () => {
             <Select
               placeholder="Filter by status"
               value={statusFilter}
-              onChange={setStatusFilter}
+              onChange={(value) => setStatusFilter(value)}
               style={{ width: "100%" }}
-              allowClear>
-              <Option value="">All Statuses</Option>
-              <Option value="Waiting confirmed">Waiting confirmed</Option>
+              allowClear={true}>
+              <Option value={undefined}>All Statuses</Option>
+              <Option value="Awaiting confirm">Awaiting confirm</Option>
               <Option value="Booking confirmed">Booking confirmed</Option>
               <Option value="Awaiting Sample">Awaiting Sample</Option>
               <Option value="In Progress">In Progress</Option>
               <Option value="Ready">Ready</Option>
-              <Option value="Pending Payment">Pending Payment</Option>
+              <Option value="Pending payment">Pending payment</Option>
               <Option value="Completed">Completed</Option>
               <Option value="Cancel">Cancel</Option>
             </Select>
