@@ -39,7 +39,15 @@ import ViewReports from "./pages/dashboard-manager/staff-reports";
 import BookingPage from "./pages/booking/BookingPage";
 import BlogDetail from "./pages/home-page/blog/BlogDetail";
 import ChangePasswordPage from "./pages/home-page/resetPassword/ChangePasswordPage";
+
+import MyBookingPage from "./pages/my-booking/MyBooking";
+
 import ProtectedRoute from "./components/routes/ProtectedRoute";
+
+import ResultManagementPage from "./pages/dashboard-staff/result-management";
+
+import FeedbackPage from "./pages/feedback/feedback";
+
 
 function App() {
   const router = createBrowserRouter([
@@ -95,6 +103,14 @@ function App() {
       element: <ProfilePage />,
     },
     {
+    path: "/my-booking",
+    element: <MyBookingPage />,
+    },
+    {
+    path: "/feedback",
+    element: <FeedbackPage />,
+    },
+    {
       path: "/booking",
       element: <BookingPage />,
     },
@@ -144,9 +160,9 @@ function App() {
           children: [
             { index: true, element: <StaffOverviewPage /> },
             { path: "overview", element: <StaffOverviewPage /> },
-            { path: "order-processing", element: <OrderProcessingPage /> }, // Combined
-            { path: "staff-reporting", element: <StaffReportingPage /> }, // Combined
-            // { path: "customer-contact", element: <CustomerContactPage /> }, // Still separate
+            { path: "order-processing", element: <OrderProcessingPage /> },
+            { path: "staff-reporting", element: <StaffReportingPage /> },
+            { path: "result-management", element: <ResultManagementPage /> },
           ],
         },
       ],
