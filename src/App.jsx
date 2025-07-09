@@ -43,7 +43,10 @@ import ChangePasswordPage from "./pages/home-page/resetPassword/ChangePasswordPa
 import MyBookingPage from "./pages/my-booking/MyBooking";
 
 import ProtectedRoute from "./components/routes/ProtectedRoute";
+
 import ResultManagementPage from "./pages/dashboard-staff/result-management";
+
+import FeedbackPage from "./pages/feedback/feedback";
 
 
 function App() {
@@ -102,6 +105,10 @@ function App() {
     {
     path: "/my-booking",
     element: <MyBookingPage />,
+    },
+    {
+    path: "/feedback",
+    element: <FeedbackPage />,
     },
     {
       path: "/booking",
