@@ -172,7 +172,7 @@ const ResultManagementPage = () => {
         bookingID: record.bookingID,
         relationship: record.relationship,
         conclusion: record.conclusion,
-        confidencePercentage: record.confidencePercentage,
+        confidencePercentage: 99.99, // Always set to 99.99 when marking available
         pdfPath: record.pdfPath,
         updateAt: new Date().toISOString(),
         createAt: record.createAt,
@@ -181,7 +181,6 @@ const ResultManagementPage = () => {
       };
 
       await api.patch(`/staff/update-result/${record.resultID}`, payload);
-      // const data = response.data;
 
       toast.success("Result marked as available!");
       fetchResults();
@@ -319,7 +318,7 @@ const ResultManagementPage = () => {
       key: "relationship",
     },
     {
-      title: "Matching Percentage",
+      title: "Matching Percent",
       dataIndex: "matchingPercentage",
       key: "matchingPercentage",
       render: (value, record) => {
@@ -359,18 +358,7 @@ const ResultManagementPage = () => {
         </span>
       ),
     },
-    {
-      title: "Confidence Percentage",
-      dataIndex: "confidencePercentage",
-      key: "confidencePercentage",
-      render: (percentage) => {
-        const color =
-          percentage > 95 ? "green" : percentage < 5 ? "red" : "orange";
-        return <Tag color={color}>{percentage?.toFixed(2)}%</Tag>;
-      },
-      sorter: (a, b) =>
-        (a.confidencePercentage || 0) - (b.confidencePercentage || 0),
-    },
+
     {
       title: "Update At",
       dataIndex: "updateAt",
@@ -432,8 +420,8 @@ const ResultManagementPage = () => {
             style={
               record.available
                 ? {
-                    backgroundColor: "#52c41a",
-                    color: "#fff",
+                    backgroundColor: "#fff",
+                    color: "#52c41a",
                     borderColor: "#52c41a",
                   }
                 : {}
