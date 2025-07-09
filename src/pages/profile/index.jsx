@@ -261,9 +261,8 @@ const ProfilePage = () => {
     ) {
       return "";
     }
-
-
-
+    return value;
+  };
 
   // ✅ Helper function để lấy tất cả fields từ database
   const getFieldValue = (profile, fieldName, fallbackFields = []) => {
