@@ -40,6 +40,7 @@ import BookingPage from "./pages/booking/BookingPage";
 import BlogDetail from "./pages/home-page/blog/BlogDetail";
 import ChangePasswordPage from "./pages/home-page/resetPassword/ChangePasswordPage";
 import ProtectedRoute from "./components/routes/ProtectedRoute";
+import ResultManagementPage from "./pages/dashboard-staff/result-management";
 
 function App() {
   const router = createBrowserRouter([
@@ -144,9 +145,9 @@ function App() {
           children: [
             { index: true, element: <StaffOverviewPage /> },
             { path: "overview", element: <StaffOverviewPage /> },
-            { path: "order-processing", element: <OrderProcessingPage /> }, // Combined
-            { path: "staff-reporting", element: <StaffReportingPage /> }, // Combined
-            // { path: "customer-contact", element: <CustomerContactPage /> }, // Still separate
+            { path: "order-processing", element: <OrderProcessingPage /> },
+            { path: "staff-reporting", element: <StaffReportingPage /> },
+            { path: "result-management", element: <ResultManagementPage /> },
           ],
         },
       ],
