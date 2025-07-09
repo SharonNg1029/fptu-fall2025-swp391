@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useCallback } from "react";
+import axios from "axios"
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import {
@@ -36,6 +37,8 @@ const ProfilePage = () => {
   const staffID = useSelector(selectStaffID);
   const managerID = useSelector(selectManagerID);
   const adminID = useSelector(selectAdminID);
+  const fileInputRef = useRef(null);
+  const [previewUrl, setPreviewUrl] = useState(null);
 
   // Ưu tiên lấy đúng ID theo role
   let userID = null;
@@ -258,9 +261,9 @@ const ProfilePage = () => {
     ) {
       return "";
     }
-    // ✅ Không filter gender values nữa - accept all including 1073741824
-    return value;
-  };
+
+
+
 
   // ✅ Helper function để lấy tất cả fields từ database
   const getFieldValue = (profile, fieldName, fallbackFields = []) => {
@@ -440,15 +443,12 @@ const ProfilePage = () => {
     setError(null);
 
     try {
-      // ✅ FIXED: Correct API endpoint paths based on working Swagger endpoint
-      let updatePath;
-      if (userRole === "customer")
-        updatePath = `/customer/my-account/${userID}`;
-      else if (userRole === "staff") updatePath = `/staff/my-account/${userID}`;
-      else if (userRole === "manager")
-        updatePath = `/manager/my-account/${userID}`;
-      else if (userRole === "admin") updatePath = `/admin/my-account/${userID}`;
-      else updatePath = `/customer/my-account/${userID}`; // fallback
+
+      // ✅ Correct update paths
+      let updatePath = `/customer/my-account/${userID}`;
+      if (userRole === "staff") updatePath = `/staff/my-account/${userID}`;
+      if (userRole === "manager") updatePath = `/manager/my-account/${userID}`;
+      if (userRole === "admin") updatePath = `/admin/my-account/${userID}`;
 
       // ✅ FIXED: Convert gender từ UI sang Database
       const genderForDatabase = convertUIGenderToDatabase(editForm.gender);
@@ -473,6 +473,7 @@ const ProfilePage = () => {
         address: normalizeVietnamese(editForm.address, false) || null,
         dob: dobForDatabase, // ✅ FIXED: Use array format
         gender: genderForDatabase,
+        avatar: editForm.avatar || null
       };
 
       // Remove null/empty values
@@ -567,8 +568,8 @@ const ProfilePage = () => {
       }
 
       // ✅ FIXED: Convert gender từ Database sang UI
-      const refreshedGenderForUI =
-        convertDatabaseGenderToUI(refreshedRawGender);
+
+      const refreshedGenderForUI = convertDatabaseGenderToUI(refreshedRawGender);
 
       const updatedEditForm = {
         fullName: normalizeVietnamese(refreshedFullName, false) || "",
@@ -577,6 +578,7 @@ const ProfilePage = () => {
         phone: normalizeVietnamese(refreshedPhone, true) || "",
         address: normalizeVietnamese(refreshedAddress, false) || "",
         gender: refreshedGenderForUI,
+        avatar:getFieldValue(refreshedProfile, "avatar", ["avatarPath"]) || ""
       };
 
       setEditForm(updatedEditForm);
@@ -634,7 +636,7 @@ const ProfilePage = () => {
 
     // ✅ FIXED: Convert gender từ Database sang UI
     const genderForUI = convertDatabaseGenderToUI(rawGender);
-
+    const avatarPath = getFieldValue(profile, "avatar", ["avatarPath"]);
     setEditForm({
       fullName: normalizeVietnamese(fullName, false) || "",
       dob: dobForInput,
@@ -642,6 +644,7 @@ const ProfilePage = () => {
       phone: normalizeVietnamese(phone, true) || "",
       address: normalizeVietnamese(address, false) || "",
       gender: genderForUI,
+      avatar: avatarPath || "",
     });
 
     // ✅ Reset DOB validation khi cancel
@@ -652,6 +655,47 @@ const ProfilePage = () => {
 
   const goBack = () => {
     navigate(-1);
+  };
+
+  const handleFileChange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+  
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+  
+      // Gọi API upload ảnh
+      const response = await api.post("/files/upload", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+  
+      const uploadedPath = response?.data?.path || response?.data?.data || response?.data;
+  
+      if (!uploadedPath) {
+        throw new Error("Upload succeeded but no path returned.");
+      }
+  
+      // Tạo preview cho giao diện
+      const preview = URL.createObjectURL(file);
+      setPreviewUrl(preview);
+  
+      //Lưu vào form để khi Save gửi cùng thông tin
+      setEditForm((prev) => ({
+        ...prev,
+        avatar: uploadedPath.startsWith("/media") ? uploadedPath : `/media/${uploadedPath}`,
+      }));
+  
+    } catch (error) {
+      console.error("Upload failed:", error);
+      toast.error("Upload failed. Please try again.");
+    }
+  };
+
+  const getAvatarUrl = (path) => {
+    if (!path) return "";
+    if (path.startsWith("http")) return path;
+    return `/api${path}`;
   };
 
   const handleChangePassword = () => {
@@ -791,12 +835,34 @@ const ProfilePage = () => {
 
                 <div className="flex items-center space-x-4 flex-1">
                   <div className="relative">
-                    <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-md border-2 border-blue-200">
-                      <User className="h-8 w-8 text-blue-800" />
-                    </div>
-                    <button className="absolute -bottom-1 -right-1 bg-blue-600 text-white p-1.5 rounded-full shadow-lg transition-transform duration-200 hover:scale-110 hover:bg-blue-700 border-2 border-white">
+
+                  {previewUrl || userProfile?.avatar ? (
+                      <img
+                      src={previewUrl || `/api${userProfile.avatar}`}
+                        alt="Avatar Preview"
+                        className="w-16 h-16 rounded-full object-cover border-2 border-blue-200 shadow-md"
+                      />
+                      ) : (
+                        <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-md border-2 border-blue-200">
+                          <User className="h-8 w-8 text-blue-800" />
+                        </div>
+                    )}
+                    {isEditing && (
+                      <>
+                    <button className="absolute -bottom-1 -right-1 bg-blue-600 text-white p-1.5 rounded-full shadow-lg transition-transform duration-200 hover:scale-110 hover:bg-blue-700 border-2 border-white"
+                            onClick={() => fileInputRef.current.click()}
+                    >
                       <Camera className="h-3 w-3" />
                     </button>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      ref={fileInputRef}
+                      onChange={handleFileChange}
+                      className="hidden"
+                    />
+                    </>
+                    )}                  
                   </div>
                   <div className="text-white flex-1">
                     <h1 className="text-2xl font-bold mb-1 vietnamese-text vietnamese-header">
