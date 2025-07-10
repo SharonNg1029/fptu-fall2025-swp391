@@ -22,10 +22,351 @@ import {
   CheckCircle,
   AlertCircle,
   ArrowLeft,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import api from "../../configs/axios";
 import { updateUser } from "../../redux/features/userSlice";
 import toast from "react-hot-toast";
+
+// Custom DatePicker Component
+const CustomDatePicker = ({ value, onChange, min, max, className, placeholder, disabled = false }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
+  const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
+  const [selectedDate, setSelectedDate] = useState(value ? new Date(value) : null);
+  const dropdownRef = useRef(null);
+
+  const months = [
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December"
+  ];
+
+  const weekDays = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
+
+  // Initialize date from value prop
+  useEffect(() => {
+    if (value) {
+      const date = new Date(value);
+      setSelectedDate(date);
+      setCurrentMonth(date.getMonth());
+      setCurrentYear(date.getFullYear());
+    }
+  }, [value]);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Get min/max dates
+  const minDate = min ? new Date(min) : new Date(new Date().getFullYear() - 100, 0, 1);
+  const maxDate = max ? new Date(max) : new Date();
+
+  // Generate calendar days
+  const getDaysInMonth = (month, year) => {
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    const daysInMonth = lastDay.getDate();
+    const startingDayOfWeek = firstDay.getDay();
+
+    const days = [];
+
+    // Previous month's trailing days
+    const prevMonth = month === 0 ? 11 : month - 1;
+    const prevYear = month === 0 ? year - 1 : year;
+    const daysInPrevMonth = new Date(prevYear, prevMonth + 1, 0).getDate();
+    
+    for (let i = startingDayOfWeek - 1; i >= 0; i--) {
+      days.push({
+        day: daysInPrevMonth - i,
+        isCurrentMonth: false,
+        isNextMonth: false,
+        date: new Date(prevYear, prevMonth, daysInPrevMonth - i)
+      });
+    }
+
+    // Current month days
+    for (let day = 1; day <= daysInMonth; day++) {
+      days.push({
+        day,
+        isCurrentMonth: true,
+        isNextMonth: false,
+        date: new Date(year, month, day)
+      });
+    }
+
+    // Next month's leading days
+    const remainingDays = 42 - days.length; // 6 weeks * 7 days
+    const nextMonth = month === 11 ? 0 : month + 1;
+    const nextYear = month === 11 ? year + 1 : year;
+    
+    for (let day = 1; day <= remainingDays; day++) {
+      days.push({
+        day,
+        isCurrentMonth: false,
+        isNextMonth: true,
+        date: new Date(nextYear, nextMonth, day)
+      });
+    }
+
+    return days;
+  };
+
+  const handleDateClick = (day) => {
+    if (!day.isCurrentMonth || disabled) return;
+    
+    const newDate = new Date(currentYear, currentMonth, day.day);
+    
+    // Check if date is within min/max bounds
+    if (newDate < minDate || newDate > maxDate) return;
+    
+    setSelectedDate(newDate);
+    const formattedDate = newDate.toISOString().split('T')[0];
+    onChange(formattedDate);
+    setIsOpen(false);
+  };
+
+  const handlePrevMonth = () => {
+    if (currentMonth === 0) {
+      setCurrentMonth(11);
+      setCurrentYear(currentYear - 1);
+    } else {
+      setCurrentMonth(currentMonth - 1);
+    }
+  };
+
+  const handleNextMonth = () => {
+    if (currentMonth === 11) {
+      setCurrentMonth(0);
+      setCurrentYear(currentYear + 1);
+    } else {
+      setCurrentMonth(currentMonth + 1);
+    }
+  };
+
+  const handleClear = () => {
+    if (disabled) return;
+    setSelectedDate(null);
+    onChange('');
+    setIsOpen(false);
+  };
+
+  const handleToday = () => {
+    if (disabled) return;
+    const today = new Date();
+    if (today >= minDate && today <= maxDate) {
+      setSelectedDate(today);
+      setCurrentMonth(today.getMonth());
+      setCurrentYear(today.getFullYear());
+      onChange(today.toISOString().split('T')[0]);
+      setIsOpen(false);
+    }
+  };
+
+  const formatDisplayDate = (date) => {
+    if (!date) return '';
+    return date.toLocaleDateString('en-US', {
+      month: '2-digit',
+      day: '2-digit',
+      year: 'numeric'
+    });
+  };
+
+  const isDateDisabled = (date) => {
+    return date < minDate || date > maxDate;
+  };
+
+  const isDateSelected = (day) => {
+    if (!selectedDate || !day.isCurrentMonth) return false;
+    return selectedDate.getDate() === day.day &&
+           selectedDate.getMonth() === currentMonth &&
+           selectedDate.getFullYear() === currentYear;
+  };
+
+  const isToday = (day) => {
+    if (!day.isCurrentMonth) return false;
+    const today = new Date();
+    return today.getDate() === day.day &&
+           today.getMonth() === currentMonth &&
+           today.getFullYear() === currentYear;
+  };
+
+  const days = getDaysInMonth(currentMonth, currentYear);
+
+  // Generate year options from current year to 100 years ago
+  const yearOptions = [];
+  const currentYearNum = new Date().getFullYear();
+  for (let i = 0; i <= 100; i++) {
+    yearOptions.push(currentYearNum - i);
+  }
+
+  return (
+    <div className="relative" ref={dropdownRef}>
+      {/* Input Field */}
+      <div
+        className={`w-full px-4 py-2.5 border rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${disabled ? 'bg-gray-100 cursor-not-allowed' : 'cursor-pointer bg-white'} flex items-center justify-between ${className || ''}`}
+        onClick={() => !disabled && setIsOpen(!isOpen)}
+      >
+        <span className={`vietnamese-text ${selectedDate ? 'text-gray-900' : 'text-gray-500'}`}>
+          {selectedDate ? formatDisplayDate(selectedDate) : (placeholder || 'Select date')}
+        </span>
+        <Calendar className="h-5 w-5 text-gray-400" />
+      </div>
+
+      {/* Dropdown Calendar */}
+      {isOpen && !disabled && (
+        <div 
+          className="absolute top-full left-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-xl date-picker-dropdown p-4 w-80"
+          style={{ 
+            pointerEvents: 'auto', 
+            zIndex: 99999,
+            position: 'absolute'
+          }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* Header with Month/Year Dropdowns */}
+          <div className="flex items-center justify-between mb-4">
+            <button
+              onClick={handlePrevMonth}
+              className="p-1 hover:bg-gray-100 rounded transition-colors"
+              type="button"
+              style={{ pointerEvents: 'auto' }}
+            >
+              <ChevronLeft className="h-5 w-5 text-gray-600" />
+            </button>
+            
+            <div className="flex items-center space-x-2">
+              {/* Month Selector */}
+              <select
+                value={currentMonth}
+                onChange={(e) => {
+                  e.stopPropagation();
+                  setCurrentMonth(parseInt(e.target.value));
+                }}
+                className="px-2 py-1 text-sm font-semibold text-gray-800 bg-white border border-gray-200 rounded hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 vietnamese-text cursor-pointer"
+                style={{ pointerEvents: 'auto', zIndex: 100000 }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                {months.map((month, index) => (
+                  <option key={index} value={index} className="vietnamese-text">
+                    {month}
+                  </option>
+                ))}
+              </select>
+              
+              {/* Year Selector */}
+              <select
+                value={currentYear}
+                onChange={(e) => {
+                  e.stopPropagation();
+                  setCurrentYear(parseInt(e.target.value));
+                }}
+                className="px-2 py-1 text-sm font-semibold text-gray-800 bg-white border border-gray-200 rounded hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 vietnamese-text cursor-pointer"
+                style={{ pointerEvents: 'auto', zIndex: 100000 }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                {yearOptions.map((year) => (
+                  <option key={year} value={year} className="vietnamese-text">
+                    {year}
+                  </option>
+                ))}
+              </select>
+            </div>
+            
+            <button
+              onClick={handleNextMonth}
+              className="p-1 hover:bg-gray-100 rounded transition-colors"
+              type="button"
+              style={{ pointerEvents: 'auto' }}
+            >
+              <ChevronRight className="h-5 w-5 text-gray-600" />
+            </button>
+          </div>
+
+          {/* Week Days Header */}
+          <div className="grid grid-cols-7 gap-1 mb-2">
+            {weekDays.map((day) => (
+              <div key={day} className="text-center text-sm font-medium text-gray-500 py-2">
+                {day}
+              </div>
+            ))}
+          </div>
+
+          {/* Calendar Grid */}
+          <div className="grid grid-cols-7 gap-1">
+            {days.map((day, index) => {
+              const dayDisabled = !day.isCurrentMonth || isDateDisabled(day.date);
+              const selected = isDateSelected(day);
+              const todayDate = isToday(day);
+              
+              return (
+                <button
+                  key={index}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDateClick(day);
+                  }}
+                  disabled={dayDisabled}
+                  type="button"
+                  style={{ pointerEvents: 'auto' }}
+                  className={`
+                    w-8 h-8 text-sm rounded transition-colors relative
+                    ${day.isCurrentMonth 
+                      ? dayDisabled
+                        ? 'text-gray-300 cursor-not-allowed'
+                        : selected
+                          ? 'bg-blue-600 text-white font-semibold'
+                          : todayDate
+                            ? 'bg-blue-100 text-blue-800 font-semibold'
+                            : 'text-gray-700 hover:bg-gray-100'
+                      : 'text-gray-300 cursor-default'
+                    }
+                  `}
+                >
+                  {day.day}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Footer Buttons */}
+          <div className="flex justify-between mt-4 pt-3 border-t border-gray-200">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                handleClear();
+              }}
+              type="button"
+              style={{ pointerEvents: 'auto' }}
+              className="text-blue-600 hover:text-blue-800 font-medium vietnamese-text transition-colors"
+            >
+              Clear
+            </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                handleToday();
+              }}
+              type="button"
+              style={{ pointerEvents: 'auto' }}
+              className="text-blue-600 hover:text-blue-800 font-medium vietnamese-text transition-colors"
+            >
+              Today
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
 
 const ProfilePage = () => {
   const dispatch = useDispatch();
@@ -225,9 +566,6 @@ const ProfilePage = () => {
     return value;
   };
 
-
-  // ✅ Helper function để lấy tất cả fields từ database
-
   const getFieldValue = (profile, fieldName, fallbackFields = []) => {
     let value = profile?.[fieldName];
     if (
@@ -300,14 +638,12 @@ const ProfilePage = () => {
         });
         const profile = response.data.data || response.data[0] || response.data;
 
-
         const fullName = getFieldValue(profile, "fullName", ["full_name", "fullname"]);
         const email = getFieldValue(profile, "email", ["Email"]);
         const phone = getFieldValue(profile, "phone", ["Phone"]);
         const address = getFieldValue(profile, "address", ["Address"]);
         const rawGender = getFieldValue(profile, "gender", ["Gender"]);
         const dobValue = getFieldValue(profile, "dob", ["DOB", "dateOfBirth"]);
-
 
         let dobForInput = "";
         if (dobValue) {
@@ -328,7 +664,6 @@ const ProfilePage = () => {
           }
         }
 
-
         const genderForUI = convertDatabaseGenderToUI(rawGender);
 
         setUserProfile(profile);
@@ -341,8 +676,6 @@ const ProfilePage = () => {
           address: normalizeVietnamese(address, false) || "",
           gender: genderForUI,
         });
-
- 
 
         setError(null);
       } catch (err) {
@@ -593,7 +926,6 @@ const ProfilePage = () => {
     navigate(passwordResetPath);
   };
 
-
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -666,6 +998,27 @@ const ProfilePage = () => {
             font-weight: 600 !important;
             letter-spacing: -0.01em !important;
           }
+
+          .date-picker-dropdown {
+            pointer-events: auto !important;
+            z-index: 99999 !important;
+            position: absolute !important;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;
+          }
+          
+          .date-picker-dropdown * {
+            pointer-events: auto !important;
+          }
+          
+          .date-picker-dropdown select {
+            pointer-events: auto !important;
+            z-index: 100000 !important;
+            position: relative !important;
+          }
+
+          .date-picker-dropdown button {
+            pointer-events: auto !important;
+          }
           
           @keyframes slideIn {
             from { transform: translateX(100%); opacity: 0; }
@@ -715,33 +1068,32 @@ const ProfilePage = () => {
 
                 <div className="flex items-center space-x-4 flex-1">
                   <div className="relative">
-
-                  {previewUrl || userProfile?.avatar ? (
+                    {previewUrl || userProfile?.avatar ? (
                       <img
-                      src={previewUrl || `/api${userProfile.avatar}`}
+                        src={previewUrl || `/api${userProfile.avatar}`}
                         alt="Avatar Preview"
                         className="w-16 h-16 rounded-full object-cover border-2 border-blue-200 shadow-md"
                       />
-                      ) : (
-                        <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-md border-2 border-blue-200">
-                          <User className="h-8 w-8 text-blue-800" />
-                        </div>
+                    ) : (
+                      <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-md border-2 border-blue-200">
+                        <User className="h-8 w-8 text-blue-800" />
+                      </div>
                     )}
                     {isEditing && (
                       <>
-                    <button className="absolute -bottom-1 -right-1 bg-blue-600 text-white p-1.5 rounded-full shadow-lg transition-transform duration-200 hover:scale-110 hover:bg-blue-700 border-2 border-white"
-                            onClick={() => fileInputRef.current.click()}
-                    >
-                      <Camera className="h-3 w-3" />
-                    </button>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      ref={fileInputRef}
-                      onChange={handleFileChange}
-                      className="hidden"
-                    />
-                    </>
+                        <button className="absolute -bottom-1 -right-1 bg-blue-600 text-white p-1.5 rounded-full shadow-lg transition-transform duration-200 hover:scale-110 hover:bg-blue-700 border-2 border-white"
+                                onClick={() => fileInputRef.current.click()}
+                        >
+                          <Camera className="h-3 w-3" />
+                        </button>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          ref={fileInputRef}
+                          onChange={handleFileChange}
+                          className="hidden"
+                        />
+                      </>
                     )}                  
                   </div>
                   <div className="text-white flex-1">
@@ -803,26 +1155,23 @@ const ProfilePage = () => {
                       />
                     </div>
 
-                    {/* Date of Birth with Validation */}
+                    {/* Date of Birth with Custom DatePicker */}
                     <div>
                       <label className="block text-sm font-semibold text-gray-600 mb-2 vietnamese-text">
                         Date of Birth
                       </label>
-                      <input
-                        type="date"
+                      <CustomDatePicker
                         value={editForm.dob}
-                        onChange={(e) =>
-                          handleInputChange("dob", e.target.value)
-                        }
-                        min={getMinDate()} // ✅ Không cho chọn quá 100 năm trước
-                        max={getTodayDate()} // ✅ Không cho chọn tương lai
-                        className={`w-full px-4 py-2.5 border rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent vietnamese-input ${
+                        onChange={(value) => handleInputChange("dob", value)}
+                        min={getMinDate()}
+                        max={getTodayDate()}
+                        placeholder="Select your date of birth"
+                        className={`${
                           !dobValidation.isValid
                             ? "border-red-500 focus:ring-red-500"
                             : "border-gray-300"
                         }`}
                       />
-                      {/* ✅ Hiển thị error message cho DOB */}
                       {!dobValidation.isValid && (
                         <p className="mt-1 text-sm text-red-600 vietnamese-text flex items-center">
                           <AlertCircle className="h-4 w-4 mr-1" />
@@ -1001,10 +1350,9 @@ const ProfilePage = () => {
                     className="px-6 py-2.5 border border-gray-300 text-gray-700 rounded-lg font-semibold transition-all duration-200 hover:bg-gray-100 disabled:opacity-50 vietnamese-button">
                     <span className="vietnamese-text">Cancel</span>
                   </button>
-                  {/* ✅ Updated Save button để disable khi có validation error */}
                   <button
                     onClick={handleSaveProfile}
-                    disabled={saving || !dobValidation.isValid} // ✅ Disable khi DOB không valid
+                    disabled={saving || !dobValidation.isValid}
                     className={`px-6 py-2.5 text-white rounded-lg font-semibold transition-all duration-300 shadow-md flex items-center space-x-2 disabled:cursor-not-allowed transform vietnamese-button ${
                       saving || !dobValidation.isValid
                         ? "opacity-60 cursor-not-allowed"
