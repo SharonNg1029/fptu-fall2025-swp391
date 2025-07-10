@@ -225,6 +225,9 @@ const ProfilePage = () => {
     return value;
   };
 
+
+  // ✅ Helper function để lấy tất cả fields từ database
+
   const getFieldValue = (profile, fieldName, fallbackFields = []) => {
     let value = profile?.[fieldName];
     if (
