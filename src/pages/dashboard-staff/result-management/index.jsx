@@ -468,7 +468,7 @@ const ResultManagementPage = () => {
           gap: 16,
         }}>
         <Title level={2} style={{ margin: 0 }}>
-          Test Results Management
+          Managing Tests Result
         </Title>
         <Space>
           <Button

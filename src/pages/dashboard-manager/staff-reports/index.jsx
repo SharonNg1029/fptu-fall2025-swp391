@@ -645,11 +645,16 @@ const ViewReports = () => {
             }}>
             <Title level={3} style={{ margin: 0 }}>
               Reports Awaiting Assignment (
-              {reports.filter((r) => r.status === "Pending").length})
+              {
+                bookingAssigned.filter((b) => b.status === "Awaiting confirm")
+                  .length
+              }
+              )
             </Title>
             <Button
               icon={<ReloadOutlined />}
               onClick={fetchAllReports}
+              type="primary"
               loading={loading}>
               Refresh
             </Button>
@@ -658,9 +663,42 @@ const ViewReports = () => {
             <Table
               loading={loading}
               columns={assignBookingColumns}
-              dataSource={bookingAssigned.filter(
-                (b) => b.status === "Awaiting confirm"
-              )}
+              dataSource={bookingAssigned
+                .filter((b) => b.status === "Awaiting confirm")
+                .sort((a, b) => {
+                  // 1. Sort by appointmentDate (closest first)
+                  const dateA = a.appointmentDate
+                    ? new Date(a.appointmentDate)
+                    : new Date(0);
+                  const dateB = b.appointmentDate
+                    ? new Date(b.appointmentDate)
+                    : new Date(0);
+                  if (dateA.getTime() !== dateB.getTime()) {
+                    return dateA - dateB;
+                  }
+                  // 2. If same date, sort by appointmentTime (closest first)
+                  const timeA = a.appointmentTime || "";
+                  const timeB = b.appointmentTime || "";
+                  const getMinutes = (t) => {
+                    if (!t) return 0;
+                    const match = t.match(/(\d{1,2}):(\d{2})/);
+                    if (match) {
+                      return (
+                        parseInt(match[1], 10) * 60 + parseInt(match[2], 10)
+                      );
+                    }
+                    return 0;
+                  };
+                  const minA = getMinutes(timeA);
+                  const minB = getMinutes(timeB);
+                  if (minA !== minB) {
+                    return minA - minB;
+                  }
+                  // 3. If same time, sort by bookingID (ascending)
+                  const bookingA = a.bookingID || a.bookingId || 0;
+                  const bookingB = b.bookingID || b.bookingId || 0;
+                  return bookingA.toString().localeCompare(bookingB.toString());
+                })}
               rowKey={(record) =>
                 record.assignedID ||
                 record.id ||
@@ -720,6 +758,7 @@ const ViewReports = () => {
             <Button
               icon={<ReloadOutlined />}
               onClick={fetchAllReports}
+              type="primary"
               loading={loading}>
               Refresh
             </Button>
@@ -728,13 +767,48 @@ const ViewReports = () => {
             <Table
               loading={loading}
               columns={approveColumns}
-              dataSource={reports.filter(
-                (r) =>
-                  r.isApproved === false ||
-                  r.isApproved === 0 ||
-                  r.isApproved === null ||
-                  typeof r.isApproved === "undefined"
-              )}
+              dataSource={reports
+                .filter(
+                  (r) =>
+                    r.isApproved === false ||
+                    r.isApproved === 0 ||
+                    r.isApproved === null ||
+                    typeof r.isApproved === "undefined"
+                )
+                .sort((a, b) => {
+                  // 1. Sort by appointmentDate (closest first)
+                  const dateA = a.appointmentDate
+                    ? new Date(a.appointmentDate)
+                    : new Date(0);
+                  const dateB = b.appointmentDate
+                    ? new Date(b.appointmentDate)
+                    : new Date(0);
+                  if (dateA.getTime() !== dateB.getTime()) {
+                    return dateA - dateB;
+                  }
+                  // 2. If same date, sort by appointmentTime (closest first)
+                  const timeA = a.appointmentTime || "";
+                  const timeB = b.appointmentTime || "";
+                  const getMinutes = (t) => {
+                    if (!t) return 0;
+                    const match = t.match(/(\d{1,2}):(\d{2})/);
+                    if (match) {
+                      return (
+                        parseInt(match[1], 10) * 60 + parseInt(match[2], 10)
+                      );
+                    }
+                    return 0;
+                  };
+                  const minA = getMinutes(timeA);
+                  const minB = getMinutes(timeB);
+                  if (minA !== minB) {
+                    return minA - minB;
+                  }
+                  // 3. If same time, sort by bookingID (ascending)
+                  const bookingA = a.bookingID || a.bookingId || 0;
+                  const bookingB = b.bookingID || b.bookingId || 0;
+                  return bookingA.toString().localeCompare(bookingB.toString());
+                })}
               rowKey={(record) =>
                 record.id || record.bookingId || Math.random().toString()
               }
@@ -831,15 +905,12 @@ const ViewReports = () => {
                     "all_reports.pdf"
                   )
                 }
-                style={{
-                  background: "#1677ff",
-                  color: "#fff",
-                  border: "none",
-                }}>
+                type="default">
                 Export PDF
               </Button>
               <Button
                 icon={<ReloadOutlined />}
+                type="primary"
                 onClick={fetchAllReports}
                 loading={loading}>
                 Refresh

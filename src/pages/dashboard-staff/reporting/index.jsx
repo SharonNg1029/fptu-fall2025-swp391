@@ -733,7 +733,8 @@ const StaffReporting = () => {
             <Button
               icon={<ReloadOutlined />}
               onClick={fetchWorkReports}
-              loading={loading}>
+              loading={loading}
+              type="primary">
               Refresh Reports
             </Button>
           </div>
@@ -788,7 +789,8 @@ const StaffReporting = () => {
             <Button
               icon={<ReloadOutlined />}
               onClick={fetchWorkReports}
-              loading={loading}>
+              loading={loading}
+              type="primary">
               Refresh Reports
             </Button>
           </div>
@@ -844,17 +846,14 @@ const StaffReporting = () => {
               <Button
                 icon={<DownloadOutlined />}
                 onClick={handleExportPDF}
-                style={{
-                  background: "#1677ff",
-                  color: "#fff",
-                  border: "none",
-                }}>
+                className="custom-btn-export">
                 Export PDF
               </Button>
               <Button
                 icon={<ReloadOutlined />}
                 onClick={fetchWorkReports}
-                loading={loading}>
+                loading={loading}
+                type="primary">
                 Refresh Reports
               </Button>
             </Space>
