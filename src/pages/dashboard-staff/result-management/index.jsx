@@ -1,6 +1,8 @@
+// PDF export dependencies
+
 import React, { useState, useEffect, useCallback } from "react";
 import { useSelector } from "react-redux";
-import { Card } from "antd";
+import { Card, Tabs } from "antd";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
@@ -19,6 +21,7 @@ import {
   Descriptions,
   InputNumber,
   DatePicker,
+  Popconfirm,
 } from "antd";
 import {
   EditOutlined,
@@ -29,19 +32,71 @@ import {
   ExclamationCircleOutlined,
   FileTextOutlined,
   ClockCircleOutlined,
+  HistoryOutlined,
 } from "@ant-design/icons";
 import moment from "moment";
+import api from "../../../configs/axios";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-import api from "../../../configs/axios";
 
 const { Title, Text } = Typography;
 const { Option } = Select;
-const { TextArea } = Input;
-
 const ResultManagementPage = () => {
   const [loading, setLoading] = useState(true);
   const [results, setResults] = useState([]);
+
+  // Export Completed Results to PDF
+  const handleExportPDF = () => {
+    try {
+      const doc = new jsPDF({ orientation: "landscape" });
+      doc.setFontSize(16);
+      doc.text("Completed Results", 14, 14);
+
+      // Table columns and rows
+      const columns = [
+        "Result ID",
+        "Booking ID",
+        "Relationship",
+        "Matching %",
+        "Conclusion",
+        "Update At",
+        "Available",
+      ];
+
+      const rows = resultsDone.map(function (item) {
+        return [
+          item.resultID || "",
+          item.bookingID || "",
+          item.relationship || "",
+          typeof item.matchingPercentage === "number"
+            ? item.matchingPercentage.toFixed(2) + "%"
+            : "N/A",
+          item.conclusion || "",
+          item.updateAt
+            ? moment(item.updateAt).format("DD/MM/YYYY HH:mm")
+            : "N/A",
+          item.available ? "Available" : "Unavailable",
+        ];
+      });
+
+      // Use autoTable method from jspdf-autotable
+      autoTable(doc, {
+        head: [columns],
+        body: rows,
+        startY: 22,
+        styles: { fontSize: 10 },
+        headStyles: { fillColor: [41, 128, 185] },
+        margin: { left: 14, right: 14 },
+        tableWidth: "auto",
+      });
+
+      doc.save("Completed_Results.pdf");
+      toast.success("Exported Completed Results to PDF!");
+    } catch (error) {
+      console.error("Error exporting PDF:", error);
+      toast.error("Failed to export PDF: " + error.message);
+    }
+  };
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [editingResult, setEditingResult] = useState(null);
   const [searchText, setSearchText] = useState("");
@@ -49,6 +104,7 @@ const ResultManagementPage = () => {
   const [pageSize, setPageSize] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
   const [actionLoading, setActionLoading] = useState("");
+  const [activeTab, setActiveTab] = useState("need");
 
   // Get staffID from Redux store
   const currentUser = useSelector((state) => state.user?.currentUser);
@@ -70,13 +126,12 @@ const ResultManagementPage = () => {
       if (data && Array.isArray(data.data)) {
         data = data.data;
       }
-      // Convert updateAt and createAt arrays to JS Date objects if needed
+      // Convert updateAt, createAt, deadline arrays to JS Date objects if needed, and normalize all fields
       const normalized = Array.isArray(data)
         ? data.map((item) => {
-            // Helper to convert [YYYY, MM, DD, HH, mm, ss, ms] to Date
+            // Helper to convert [YYYY, MM, DD, ...] to Date
             const convertArrayToDate = (arr) => {
-              if (!Array.isArray(arr) || arr.length < 3) return arr;
-              // Month in JS Date is 0-based
+              if (!Array.isArray(arr) || arr.length < 3) return null;
               return new Date(
                 arr[0],
                 arr[1] - 1,
@@ -88,19 +143,43 @@ const ResultManagementPage = () => {
               );
             };
             return {
-              ...item,
+              resultID: item.resultID ?? null,
+              bookingID: item.bookingID ?? null,
+              relationship: item.relationship ?? "",
+              conclusion: item.conclusion ?? "",
+              confidencePercentage:
+                typeof item.confidencePercentage === "number"
+                  ? item.confidencePercentage
+                  : item.confidencePercentage
+                  ? Number(item.confidencePercentage)
+                  : 0,
+              pdfPath: item.pdfPath ?? null,
               matchingPercentage:
                 item.matchingPercentage !== undefined &&
                 item.matchingPercentage !== null &&
                 item.matchingPercentage !== ""
                   ? Number(item.matchingPercentage)
                   : null,
+              deadline: Array.isArray(item.deadline)
+                ? convertArrayToDate(item.deadline)
+                : item.deadline
+                ? new Date(item.deadline)
+                : null,
               updateAt: Array.isArray(item.updateAt)
                 ? convertArrayToDate(item.updateAt)
-                : item.updateAt,
+                : item.updateAt
+                ? new Date(item.updateAt)
+                : null,
               createAt: Array.isArray(item.createAt)
                 ? convertArrayToDate(item.createAt)
-                : item.createAt,
+                : item.createAt
+                ? new Date(item.createAt)
+                : null,
+              staffID: item.staffID ?? "",
+              available:
+                typeof item.available === "boolean"
+                  ? item.available
+                  : Boolean(item.available),
             };
           })
         : [];
@@ -202,79 +281,7 @@ const ResultManagementPage = () => {
     }
   }
 
-  const handleExportPDF = () => {
-    try {
-      const doc = new jsPDF();
-
-      // Add title
-      doc.setFontSize(18);
-      doc.text("Test Results Report", 14, 22);
-
-      // Add date
-      doc.setFontSize(12);
-      doc.text(`Generated on: ${moment().format("DD/MM/YYYY HH:mm")}`, 14, 32);
-
-      // Prepare table data
-      const tableColumns = [
-        "Result ID",
-        "Booking ID",
-        "Customer Name",
-        "Service",
-        "Relationship",
-        "Conclusion",
-        "Confidence %",
-        "Available",
-        "Update Date",
-      ];
-
-      const tableRows = filteredResults.map((result) => [
-        result.resultID || "N/A",
-        result.bookingID?.toString() || "N/A",
-        result.customerName || "N/A",
-        result.service || "N/A",
-        result.relationship || "N/A",
-        result.conclusion || "N/A",
-        result.confidencePercentage?.toFixed(2) + "%" || "N/A",
-        result.available ? "Yes" : "No",
-        result.updateAt
-          ? moment(result.updateAt).format("DD/MM/YYYY HH:mm")
-          : "N/A",
-      ]);
-
-      // Generate PDF table using autoTable
-      autoTable(doc, {
-        head: [tableColumns],
-        body: tableRows,
-        startY: 40,
-        styles: {
-          fontSize: 8,
-          cellPadding: 2,
-        },
-        headStyles: {
-          fillColor: [66, 139, 202],
-          textColor: 255,
-          fontSize: 9,
-          fontStyle: "bold",
-        },
-        alternateRowStyles: {
-          fillColor: [245, 245, 245],
-        },
-        margin: { top: 40, left: 14, right: 14 },
-      });
-
-      // Save the PDF
-      const fileName = `test-results-report-${moment().format(
-        "YYYY-MM-DD-HHmm"
-      )}.pdf`;
-      doc.save(fileName);
-
-      toast.success("PDF exported successfully!");
-    } catch (error) {
-      console.error("Error exporting PDF:", error);
-      toast.error("Failed to export PDF: " + error.message);
-    }
-  };
-
+  // Split results into two groups for tabs
   const filteredResults = results
     .filter((result) => {
       // Ensure all fields are string before calling toLowerCase
@@ -306,12 +313,17 @@ const ResultManagementPage = () => {
         relationshipStr.includes(searchText.toLowerCase()) ||
         conclusionStr.includes(searchText.toLowerCase());
 
-      const matchesStatus =
-        !statusFilter ||
-        (statusFilter === "available" && result.available) ||
-        (statusFilter === "unavailable" && !result.available);
+      // Fix: filter by conclusion (Match/Not Match/Inconclusive)
+      let matchesConclusion = true;
+      if (
+        statusFilter === "Match" ||
+        statusFilter === "Not Match" ||
+        statusFilter === "Inconclusive"
+      ) {
+        matchesConclusion = result.conclusion === statusFilter;
+      }
 
-      return matchesSearch && matchesStatus;
+      return matchesSearch && matchesConclusion;
     })
     .sort((a, b) => {
       const dateA = moment(a.updateAt);
@@ -319,16 +331,42 @@ const ResultManagementPage = () => {
       return dateB.diff(dateA);
     });
 
-  const columns = [
+  // Results need to be completed (not available)
+  const resultsNeedToComplete = filteredResults.filter((r) => !r.available);
+  // Results done (available)
+  const resultsDone = filteredResults.filter((r) => r.available);
+
+  // Columns for both tables, but remove Action column for Processed Results
+  // Add Due Date column for Unprocessed Results
+  const dueDateColumn = {
+    title: "Due Date",
+    dataIndex: "deadline",
+    key: "deadline",
+    render: (deadline) => {
+      if (!deadline) return "N/A";
+      // deadline is localDate, e.g. "2025-07-11"
+      return moment(deadline).format("DD/MM/YYYY");
+    },
+    sorter: (a, b) => {
+      if (!a.deadline && !b.deadline) return 0;
+      if (!a.deadline) return 1;
+      if (!b.deadline) return -1;
+      return moment(a.deadline).unix() - moment(b.deadline).unix();
+    },
+  };
+
+  const baseColumns = [
     {
       title: "Result ID",
       dataIndex: "resultID",
+      width: 100,
       key: "resultID",
       sorter: (a, b) => (a.resultID || 0) - (b.resultID || 0),
     },
     {
       title: "Booking ID",
       dataIndex: "bookingID",
+      width: 110,
       key: "bookingID",
       sorter: (a, b) => (a.bookingID || 0) - (b.bookingID || 0),
     },
@@ -378,7 +416,6 @@ const ResultManagementPage = () => {
         </span>
       ),
     },
-
     {
       title: "Update At",
       dataIndex: "updateAt",
@@ -418,25 +455,50 @@ const ResultManagementPage = () => {
         (value === "available" && record.available) ||
         (value === "unavailable" && !record.available),
     },
-    {
-      title: "Actions",
-      key: "actions",
-      fixed: "right",
-      align: "center",
-      responsive: ["md"],
-      width: 180,
-      render: (_, record) => (
-        <Space>
-          <Button
-            icon={<EditOutlined />}
-            onClick={() => handleEdit(record)}
-            size="small"
-            type="default">
-            Update
-          </Button>
+  ];
+
+  // Action column for unprocessed results only
+  const actionColumn = {
+    title: "Actions",
+    key: "actions",
+    fixed: "right",
+    align: "center",
+    responsive: ["md"],
+    width: 200,
+    render: (_, record) => (
+      <Space>
+        <Button
+          icon={<EditOutlined />}
+          onClick={() => handleEdit(record)}
+          size="small"
+          type="default">
+          Update
+        </Button>
+        <Popconfirm
+          title={
+            <>
+              <span style={{ fontWeight: 600, fontSize: 16 }}>
+                Are you sure?
+              </span>
+              <div style={{ fontSize: 13, color: "#555", marginTop: 2 }}>
+                Once a result is <b style={{ color: "#52c41a" }}>available</b>,
+                it cannot be edited.
+              </div>
+            </>
+          }
+          placement="top"
+          okText="Yes"
+          cancelText="No"
+          onConfirm={() => handleSetAvailable(record)}
+          disabled={
+            record.available ||
+            !record.relationship ||
+            record.matchingPercentage === undefined ||
+            record.matchingPercentage === null ||
+            !record.conclusion
+          }>
           <Button
             icon={<CheckCircleOutlined />}
-            onClick={() => handleSetAvailable(record)}
             size="small"
             type="primary"
             style={
@@ -458,98 +520,226 @@ const ResultManagementPage = () => {
             loading={actionLoading === record.resultID}>
             Available
           </Button>
-        </Space>
-      ),
-    },
-  ];
+        </Popconfirm>
+      </Space>
+    ),
+  };
 
   return (
     <div style={{ padding: "0 24px" }}>
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: 24,
-          flexWrap: "wrap",
-          gap: 16,
-        }}>
-        <Title level={2} style={{ margin: 0 }}>
-          Managing Tests Result
-        </Title>
-        <Space>
-          <Button
-            icon={<DownloadOutlined />}
-            onClick={handleExportPDF}
-            type="default">
-            Export PDF
-          </Button>
-          <Button
-            icon={<ReloadOutlined />}
-            onClick={fetchResults}
-            loading={loading}
-            type="primary">
-            Refresh
-          </Button>
-        </Space>
-      </div>
-
-      <Card style={{ marginBottom: 16 }}>
-        <Row gutter={[16, 16]} align="middle">
-          <Col xs={24} sm={12} lg={10}>
-            <Input
-              placeholder="Search by Result ID, Booking ID, Customer, Relationship..."
-              prefix={<SearchOutlined />}
-              value={searchText}
-              onChange={(e) => setSearchText(e.target.value)}
-              allowClear
-            />
-          </Col>
-          <Col xs={24} sm={6} lg={7}>
-            <Select
-              placeholder="Filter by availability"
-              value={statusFilter}
-              onChange={setStatusFilter}
-              style={{ width: "100%" }}
-              allowClear>
-              <Option value="">All Results</Option>
-              <Option value="available">Available</Option>
-              <Option value="unavailable">Unavailable</Option>
-            </Select>
-          </Col>
-        </Row>
-      </Card>
-
-      <Card>
-        <Table
-          loading={loading}
-          columns={columns}
-          dataSource={filteredResults.map((item) => ({
-            ...item,
-            key: item.resultID || item.bookingID || Math.random(),
-          }))}
-          rowKey="key"
-          pagination={{
-            pageSize: pageSize,
-            current: currentPage,
-            showSizeChanger: true,
-            showQuickJumper: true,
-            showTotal: (total, range) =>
-              `${range[0]}-${range[1]} of ${total} results`,
-            pageSizeOptions: ["5", "10", "20", "50", "100"],
-            showLessItems: false,
-            onShowSizeChange: (current, size) => {
-              setPageSize(size);
-              setCurrentPage(1);
-            },
-            onChange: (page, size) => {
-              setCurrentPage(page);
-              if (size !== pageSize) setPageSize(size);
-            },
-          }}
-          scroll={{ x: 1000 }}
-        />
-      </Card>
+      <Title level={2} style={{ margin: 0, marginBottom: 24 }}>
+        Managing Tests Result
+      </Title>
+      <Tabs
+        activeKey={activeTab}
+        onChange={setActiveTab}
+        type="card"
+        style={{ marginBottom: 24 }}
+        tabBarStyle={{ marginBottom: 32 }}
+        items={[
+          {
+            key: "need",
+            label: (
+              <span>
+                <ClockCircleOutlined style={{ marginRight: 8 }} />
+                Unprocessed Results
+              </span>
+            ),
+            children: (
+              <>
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    marginBottom: 24,
+                    flexWrap: "wrap",
+                    gap: 16,
+                  }}>
+                  <Title level={3} style={{ margin: 0 }}>
+                    Results To Be Completed ({resultsNeedToComplete.length})
+                  </Title>
+                  <Space>
+                    {/* Export PDF button ONLY for Processed Results tab */}
+                    <Button
+                      icon={<ReloadOutlined />}
+                      onClick={fetchResults}
+                      loading={loading}
+                      type="primary">
+                      Refresh
+                    </Button>
+                  </Space>
+                </div>
+                <Card style={{ marginBottom: 16 }}>
+                  <Row gutter={[16, 16]} align="middle">
+                    <Col xs={24} sm={12} lg={10}>
+                      <Input
+                        placeholder="Search by Result ID, Booking ID, Customer, Relationship..."
+                        prefix={<SearchOutlined />}
+                        value={searchText}
+                        onChange={(e) => setSearchText(e.target.value)}
+                        allowClear
+                      />
+                    </Col>
+                    <Col xs={24} sm={6} lg={7}>
+                      <Select
+                        placeholder="Filter by conclusion"
+                        value={statusFilter}
+                        onChange={setStatusFilter}
+                        style={{ width: "100%" }}
+                        allowClear>
+                        <Option value="">All Conclusions</Option>
+                        <Option value="Match">Match</Option>
+                        <Option value="Not Match">Not Match</Option>
+                        <Option value="Inconclusive">Inconclusive</Option>
+                      </Select>
+                    </Col>
+                  </Row>
+                </Card>
+                <Table
+                  loading={loading}
+                  columns={[
+                    ...baseColumns.slice(0, 5),
+                    dueDateColumn,
+                    ...baseColumns.slice(5),
+                    actionColumn,
+                  ]}
+                  dataSource={resultsNeedToComplete.map((item) => ({
+                    ...item,
+                    key: item.resultID || item.bookingID || Math.random(),
+                  }))}
+                  rowKey="key"
+                  pagination={{
+                    pageSize: pageSize,
+                    current: currentPage,
+                    showSizeChanger: true,
+                    showQuickJumper: true,
+                    showTotal: (total, range) =>
+                      `${range[0]}-${range[1]} of ${total} results`,
+                    pageSizeOptions: ["5", "10", "20", "50", "100"],
+                    showLessItems: false,
+                    onShowSizeChange: (current, size) => {
+                      setPageSize(size);
+                      setCurrentPage(1);
+                    },
+                    onChange: (page, size) => {
+                      setCurrentPage(page);
+                      if (size !== pageSize) setPageSize(size);
+                    },
+                  }}
+                  scroll={{ x: 1000 }}
+                />
+              </>
+            ),
+          },
+          {
+            key: "done",
+            label: (
+              <span>
+                <CheckCircleOutlined style={{ marginRight: 8 }} />
+                Processed Results
+              </span>
+            ),
+            children: (
+              <>
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    marginBottom: 24,
+                    flexWrap: "wrap",
+                    gap: 16,
+                  }}>
+                  <Title level={3} style={{ margin: 0 }}>
+                    Completed Results ({resultsDone.length})
+                  </Title>
+                  <Space>
+                    <Button
+                      icon={<DownloadOutlined />}
+                      type="default"
+                      onClick={handleExportPDF}>
+                      Export PDF
+                    </Button>
+                    <Button
+                      icon={<ReloadOutlined />}
+                      onClick={fetchResults}
+                      loading={loading}
+                      type="primary">
+                      Refresh
+                    </Button>
+                  </Space>
+                </div>
+                <Card style={{ marginBottom: 16 }}>
+                  <Row gutter={[16, 16]} align="middle">
+                    <Col xs={24} sm={12} lg={10}>
+                      <Input
+                        placeholder="Search by Result ID, Booking ID, Customer, Relationship..."
+                        prefix={<SearchOutlined />}
+                        value={searchText}
+                        onChange={(e) => setSearchText(e.target.value)}
+                        allowClear
+                      />
+                    </Col>
+                    <Col xs={24} sm={6} lg={7}>
+                      <Select
+                        placeholder="Filter by conclusion"
+                        value={statusFilter}
+                        onChange={setStatusFilter}
+                        style={{ width: "100%" }}
+                        allowClear>
+                        <Option value="">All Conclusions</Option>
+                        <Option value="Match">Match</Option>
+                        <Option value="Not Match">Not Match</Option>
+                        <Option value="Inconclusive">Inconclusive</Option>
+                      </Select>
+                    </Col>
+                  </Row>
+                </Card>
+                <Table
+                  loading={loading}
+                  columns={baseColumns}
+                  dataSource={resultsDone
+                    .filter((item) => {
+                      if (!statusFilter) return true;
+                      if (statusFilter === "Match")
+                        return item.conclusion === "Match";
+                      if (statusFilter === "Not Match")
+                        return item.conclusion === "Not Match";
+                      if (statusFilter === "Inconclusive")
+                        return item.conclusion === "Inconclusive";
+                      return true;
+                    })
+                    .map((item) => ({
+                      ...item,
+                      key: item.resultID || item.bookingID || Math.random(),
+                    }))}
+                  rowKey="key"
+                  pagination={{
+                    pageSize: pageSize,
+                    current: currentPage,
+                    showSizeChanger: true,
+                    showQuickJumper: true,
+                    showTotal: (total, range) =>
+                      `${range[0]}-${range[1]} of ${total} results`,
+                    pageSizeOptions: ["5", "10", "20", "50", "100"],
+                    showLessItems: false,
+                    onShowSizeChange: (current, size) => {
+                      setPageSize(size);
+                      setCurrentPage(1);
+                    },
+                    onChange: (page, size) => {
+                      setCurrentPage(page);
+                      if (size !== pageSize) setPageSize(size);
+                    },
+                  }}
+                  scroll={{ x: 1000 }}
+                />
+              </>
+            ),
+          },
+        ]}
+      />
 
       <Modal
         title="Update Test Result"
