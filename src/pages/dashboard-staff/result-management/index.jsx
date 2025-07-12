@@ -255,19 +255,10 @@ const ResultManagementPage = () => {
     setActionLoading(record.resultID);
     try {
       const payload = {
-        bookingID: record.bookingID,
-        relationship: record.relationship,
-        conclusion: record.conclusion,
-        matchingPercentage: record.matchingPercentage, // Bổ sung trường này
-        confidencePercentage: 99.99, // Always set to 99.99 when marking available
-        pdfPath: record.pdfPath,
-        updateAt: new Date().toISOString(),
-        createAt: record.createAt,
-        staffID: record.staffID,
         available: 1,
       };
 
-      await api.patch(`/staff/update-result/${record.resultID}`, payload);
+      await api.patch(`/staff/is-available/${record.resultID}`, payload);
 
       toast.success("Result marked as available!");
       fetchResults();
