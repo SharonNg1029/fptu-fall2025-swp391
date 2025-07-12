@@ -1,6 +1,3 @@
-
-
-
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useSelector } from "react-redux";
 import { useNavigate, useSearchParams } from "react-router-dom";
@@ -122,7 +119,7 @@ const ConfirmBookingModal = ({
   const [paymentCode, setPaymentCode] = useState("");
   // We still need setShowPDFOption but showPDFOption is now used directly in renderStepContent
   const [_, setShowPDFOption] = useState(false);
-  // State for managing steps
+  const [isPDFConfirmStep, setIsPDFConfirmStep] = useState(false);
   const [finalBookingData, setFinalBookingData] = useState(null);
   const [isProcessingSignature, setIsProcessingSignature] = useState(false);
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
@@ -174,15 +171,15 @@ const ConfirmBookingModal = ({
       }
 
       // Ưu tiên sử dụng initialStep từ props
-      if (initialStep && initialStep >= 1 && initialStep <= 3) {
+      if (initialStep && initialStep >= 1 && initialStep <= 4) {
         console.log("Setting currentStep from initialStep:", initialStep);
         setCurrentStep(initialStep);
       } else if (
         bookingData?.status === "paid" &&
         bookingData?.paymentMethod === "vnpay"
       ) {
-        console.log("Setting currentStep to 2 for paid VNPay booking");
-        setCurrentStep(2);
+        console.log("Setting currentStep to 3 for paid VNPay booking");
+        setCurrentStep(3);
       } else {
         console.log("Setting currentStep to default: 1");
         setCurrentStep(1);
@@ -206,7 +203,7 @@ const ConfirmBookingModal = ({
   const getMediationLabel = (method) => {
     if (method === "postal-delivery") return "Gửi bưu điện";
     if (method === "staff-collection") return "Nhân viên thu thập";
-    if (method === "walk-in") return "Services at the facility";
+    if (method === "walk-in") return "Dịch vụ tại cơ sở";
     if (method === "express") return "Dịch vụ Express";
     return method;
   };
@@ -271,7 +268,12 @@ const ConfirmBookingModal = ({
         const code = generatePaymentCode();
         setPaymentCode(code);
 
-        setCurrentStep(2); // Skip payment step, go directly to signature
+        // Cash payment: skip to step 3 (Sign), VNPay: go to step 2 (Payment)
+        if (paymentMethod === "cash") {
+          setCurrentStep(3); // Skip payment, go directly to signature
+        } else {
+          setCurrentStep(2); // VNPay payment step
+        }
       },
     });
   };
@@ -324,8 +326,8 @@ const ConfirmBookingModal = ({
 
       setFinalBookingData(bookingDataWithSignature);
 
-      // Chuyển đến bước PDF Options (bước 3)
-      setCurrentStep(3);
+      // Chuyển đến bước PDF Options (bước 4)
+      setCurrentStep(4);
       setShowPDFOption(true);
 
       message.success("Signature successful!");
@@ -358,7 +360,7 @@ const ConfirmBookingModal = ({
         status: "pending_payment",
       };
 
-      // Debug: Log booking data being saved
+      // Debug: Log booking data được lưu
       console.log("💾 Saving booking data to localStorage:", {
         paymentCode,
         customerID: tempBookingData.customerID,
@@ -521,7 +523,7 @@ const ConfirmBookingModal = ({
         );
       } else {
         console.error("Request configuration error:", error.message);
-        message.error("Request configuration error: " + error.message);
+        message.error("Lỗi thiết lập yêu cầu: " + error.message);
       }
 
       setIsSubmittingPayment(false);
@@ -537,11 +539,11 @@ const ConfirmBookingModal = ({
         !finalBookingData?.signature &&
         (!signatureRef.current || signatureRef.current.isEmpty())
       ) {
-        message.error("Signature not found. Please sign again!");
+        message.error("Không tìm thấy chữ ký. Vui lòng ký lại!");
         setIsGeneratingPDF(false);
         return;
       }
-      const processingMsg = message.loading("Creating PDF file...", 0);
+      const processingMsg = message.loading("Đang tạo file PDF...", 0);
 
       try {
         await generatePDF(true);
@@ -555,12 +557,13 @@ const ConfirmBookingModal = ({
         };
 
         onConfirm(updatedBookingData);
-        setCurrentStep(3);
+        setCurrentStep(4);
+        setIsPDFConfirmStep(false);
 
-        // Display redirect notification
+        // Hiển thị thông báo chuyển hướng
         message.info("Returning to homepage in 2 seconds...", 2);
 
-        // Redirect to home after 2 seconds
+        // Chuyển về trang home sau 2 giây
         setTimeout(() => {
           window.location.href = "/";
         }, 2000);
@@ -580,14 +583,15 @@ const ConfirmBookingModal = ({
   };
   const handleSkipPDF = async () => {
     onConfirm(finalBookingData);
-    setCurrentStep(3);
+    setCurrentStep(4);
+    setIsPDFConfirmStep(false);
     setShowPDFOption(false);
 
-    // Display completion notification and redirect
+    // Hiển thị thông báo hoàn thành và chuyển hướng
     message.success("Booking completed successfully!", 2);
     message.info("Returning to homepage in 2 seconds...", 2);
 
-    // Redirect to home after 2 seconds
+    // Chuyển về trang home sau 2 giây
     setTimeout(() => {
       window.location.href = "/";
     }, 2000);
@@ -596,43 +600,38 @@ const ConfirmBookingModal = ({
   const generatePDF = async (shouldDownload = true) => {
     let loadingMessage;
     try {
-      console.log("=== STARTING PDF CREATION ===");
-      loadingMessage = message.loading("Creating PDF file...", 0);
+      console.log("=== BẮT ĐẦU TẠO PDF ===");
+      loadingMessage = message.loading("Đang tạo file PDF...", 0);
       if (!bookingData) {
-        throw new Error("No booking data!");
+        throw new Error("Không có dữ liệu booking!");
       }
 
-      let pdfMake;
       try {
-        console.log("Loading pdfmake library...");
+        console.log("Đang tải thư viện pdfmake...");
         const pdfMakeModule = await import("pdfmake/build/pdfmake");
         const pdfFonts = await import("pdfmake/build/vfs_fonts");
-        pdfMake = pdfMakeModule.default;
+        const pdfMake = pdfMakeModule.default;
         pdfMake.vfs =
           pdfFonts && pdfFonts.pdfMake ? pdfFonts.pdfMake.vfs : pdfFonts.vfs;
-        console.log("pdfmake library loaded successfully");
+        console.log("Đã tải thư viện pdfmake thành công");
       } catch (error) {
         console.error("Error loading pdfmake library:", error);
-        throw new Error("Cannot load PDF library. Please try again!");
+        throw new Error("Không thể tải thư viện PDF. Vui lòng thử lại!");
       }
 
       const { firstPerson, secondPerson, appointmentDate, totalCost } =
         bookingData;
 
-      if (!firstPerson?.fullName) {
-        throw new Error("Missing first person name information");
-      }
-
-      if (!secondPerson?.fullName) {
-        throw new Error("Missing second person name information");
+      if (!firstPerson?.fullName || !secondPerson?.fullName) {
+        throw new Error("Thiếu thông tin tên");
       }
 
       if (!appointmentDate) {
-        throw new Error("Missing appointment date information");
+        throw new Error("Thiếu thông tin ngày hẹn");
       }
 
       if (!totalCost || totalCost <= 0) {
-        throw new Error("Invalid cost information");
+        throw new Error("Thông tin chi phí không hợp lệ");
       }
 
       let signatureImg = "";
@@ -645,13 +644,13 @@ const ConfirmBookingModal = ({
           console.log("✓ Signature retrieved from signatureRef");
         } catch (sigError) {
           console.error("Error retrieving signature from canvas:", sigError);
-          throw new Error("Cannot get signature from canvas");
+          throw new Error("Không thể lấy chữ ký từ canvas");
         }
       }
 
       if (!signatureImg || signatureImg.length < 100) {
         console.error("Error: Invalid signature");
-        throw new Error("Invalid or too short signature");
+        throw new Error("Chữ ký không hợp lệ hoặc quá ngắn");
       }
 
       console.log("Signature length:", signatureImg.length);
@@ -878,7 +877,7 @@ const ConfirmBookingModal = ({
                 text:
                   bookingData?.collectionMethod?.name === "At Home"
                     ? bookingData?.homeAddress || firstPerson?.address || ""
-                    : "Số 7 Đường D1, Phường Long Thạnh Mỹ, Thành phố Thủ Đức, TP.HCM",
+                    : "7 D1 Street, Long Thanh My Ward, Thu Duc City, Ho Chi Minh City",
                 color: "#e91e63",
                 bold: true,
               },
@@ -1494,6 +1493,8 @@ const ConfirmBookingModal = ({
       }
 
       try {
+        const pdfMakeModule = await import("pdfmake/build/pdfmake");
+        const pdfMake = pdfMakeModule.default;
         const pdfDocGenerator = pdfMake.createPdf(docDefinition);
         await new Promise((resolve, reject) => {
           pdfDocGenerator.getBuffer((buffer) => {
@@ -1501,7 +1502,7 @@ const ConfirmBookingModal = ({
               console.log("PDF created successfully, size:", buffer.length);
               resolve();
             } else {
-              reject(new Error("Cannot create PDF buffer"));
+              reject(new Error("Không thể tạo buffer PDF"));
             }
           });
         });
@@ -1510,30 +1511,30 @@ const ConfirmBookingModal = ({
           pdfDocGenerator.download(
             `DonYeuCauXetNghiemADN_${paymentCode || "DNA"}.pdf`
           );
-          message.success("PDF file downloaded successfully!");
+          message.success("Tải file PDF thành công!");
         } else {
-          message.success("PDF file created successfully!");
+          message.success("Tạo file PDF thành công!");
         }
         if (loadingMessage) loadingMessage();
-        console.log("✓ PDF created successfully");
+        console.log("✓ PDF đã tạo thành công");
 
         return pdfDocGenerator;
       } catch (pdfError) {
         console.error("Error creating or downloading PDF:", pdfError);
         throw new Error(
-          `Cannot create or download PDF: ${pdfError.message}`
+          `Không thể tạo hoặc tải xuống PDF: ${pdfError.message}`
         );
       }
     } catch (error) {
-      console.error("=== PDF CREATION ERROR ===");
+      console.error("=== LỖI TẠO PDF ===");
       console.error("Error details:", error);
       console.error("Error stack:", error.stack);
       if (loadingMessage) loadingMessage();
       if (error.message?.includes("vfs") || error.message?.includes("fonts")) {
-        message.error("PDF font loading error. Retrying with default font...");
+        message.error("Lỗi tải font PDF. Đang thử lại với font mặc định...");
       } else if (error.message?.includes("Timeout")) {
         message.error(
-          "PDF library loading timeout. Please check your network connection!"
+          "Hết thời gian tải thư viện PDF. Vui lòng kiểm tra kết nối mạng!"
         );
       } else if (
         error.message?.includes("import") ||
@@ -1541,19 +1542,19 @@ const ConfirmBookingModal = ({
         error.message?.includes("library")
       ) {
         message.error(
-          "PDF library loading error. Please reload the page and try again!"
+          "Lỗi tải thư viện PDF. Vui lòng tải lại trang và thử lại!"
         );
       } else if (
         error.message?.includes("signature") ||
         error.message?.includes("signature") ||
         error.message?.includes("canvas")
       ) {
-        message.error("Signature processing error. Please sign again!");
+        message.error("Lỗi xử lý chữ ký. Vui lòng ký lại!");
       } else if (error.message?.includes("Missing information")) {
-        message.error(`Missing required information: ${error.message}`);
+        message.error(`Thiếu thông tin cần thiết: ${error.message}`);
       } else {
         message.error(
-          `Error occurred while creating PDF file: ${error.message}. Please try again!`
+          `Có lỗi xảy ra khi tạo file PDF: ${error.message}. Vui lòng thử lại!`
         );
       }
 
@@ -1563,7 +1564,7 @@ const ConfirmBookingModal = ({
 
   const handleClose = () => {
     if (isRedirectingToVNPAY) {
-      message.warning("Please wait for payment redirect to complete!");
+      message.warning("Vui lòng đợi chuyển hướng thanh toán hoàn thành!");
       return;
     }
 
@@ -1572,6 +1573,7 @@ const ConfirmBookingModal = ({
     setQrCodeData(null);
     setPaymentCode("");
     setShowPDFOption(false);
+    setIsPDFConfirmStep(false);
     setFinalBookingData(null);
     setIsProcessingSignature(false);
     setIsGeneratingPDF(false);
@@ -1591,6 +1593,7 @@ const ConfirmBookingModal = ({
       setQrCodeData(null);
       setPaymentCode("");
       setShowPDFOption(false);
+      setIsPDFConfirmStep(false);
       setFinalBookingData(null);
       setIsProcessingSignature(false);
       setIsGeneratingPDF(false);
@@ -1648,7 +1651,8 @@ const ConfirmBookingModal = ({
         <Alert
           message={
             <span style={{ fontWeight: 600 }}>
-              ⚠️ Information cannot be changed after booking is successful, please check carefully!
+              ⚠️ Thông tin không thể thay đổi sau khi booking thành công, vui
+              lòng kiểm tra cẩn thận!
             </span>
           }
           type="warning"
@@ -2149,18 +2153,6 @@ const ConfirmBookingModal = ({
                       </Text>
                     </Col>
                   </Row>
-                  {/* Personal ID cho Second Person */}
-                  {secondPerson?.personalId && (
-                    <div style={{ marginTop: 8 }}>
-                      <Text type="secondary" style={{ fontSize: 11 }}>
-                        PERSONAL ID
-                      </Text>
-                      <br />
-                      <Text style={{ fontSize: 13 }}>
-                        {secondPerson?.personalId}
-                      </Text>
-                    </div>
-                  )}
                 </div>
               </div>
             </Col>
@@ -2644,9 +2636,155 @@ const ConfirmBookingModal = ({
     switch (currentStep) {
       case 1: // Confirm Information
         return renderSummary();
-      case 2: // Sign (was previously step 3)
+      case 2: // VNPay Payment (only for VNPay)
+        // If cash payment, this step should not be rendered
+        if (paymentMethod === "cash") {
+          console.log("Cash payment detected, skipping step 2");
+          setTimeout(() => setCurrentStep(3), 100);
+          return null;
+        }
+
+        if (paymentMethod === "vnpay") {
+          // Nếu đã thanh toán VNPay thành công, tự động chuyển sang step 3
+          if (
+            bookingData?.status === "paid" &&
+            bookingData?.paymentMethod === "vnpay"
+          ) {
+            console.log(
+              "VNPay payment detected as paid, switching to step 3 (Sign)"
+            );
+            setTimeout(() => setCurrentStep(3), 100); // Sử dụng setTimeout để tránh vấn đề re-render
+            return (
+              <div style={{ textAlign: "center", padding: "40px 20px" }}>
+                <CheckCircleOutlined
+                  style={{
+                    fontSize: "64px",
+                    color: "#52c41a",
+                    marginBottom: "24px",
+                  }}
+                />
+                <Title
+                  level={3}
+                  style={{ color: "#52c41a", marginBottom: "16px" }}
+                >
+                  VNPay Payment Successful!
+                </Title>
+                <Text
+                  style={{
+                    fontSize: "16px",
+                    color: "#666",
+                    display: "block",
+                    marginBottom: "32px",
+                  }}
+                >
+                  Chuyển đến bước ký tên...
+                </Text>
+              </div>
+            );
+          }
+
+          // VNPAY Payment component
+          return (
+            <div style={{ textAlign: "center", padding: "40px 20px" }}>
+              <div
+                style={{
+                  padding: "24px",
+                  backgroundColor: "#f6ffed",
+                  border: "1px solid #b7eb8f",
+                  borderRadius: "12px",
+                  marginBottom: "24px",
+                  maxWidth: "500px",
+                  margin: "0 auto 24px auto",
+                }}
+              >
+                <QrcodeOutlined
+                  style={{
+                    fontSize: "48px",
+                    color: "#1890ff",
+                    marginBottom: "16px",
+                  }}
+                />
+                <Title level={3} style={{ marginBottom: "16px" }}>
+                  VNPAY Payment
+                </Title>
+                <Text
+                  style={{
+                    fontSize: "16px",
+                    color: "#666",
+                    display: "block",
+                    marginBottom: "24px",
+                  }}
+                >
+                  You will be redirected to VNPAY to complete your payment.
+                </Text>
+
+                <Button
+                  type="primary"
+                  size="large"
+                  onClick={handleVNPAYPayment}
+                  loading={isRedirectingToVNPAY}
+                  disabled={isRedirectingToVNPAY}
+                  style={{
+                    backgroundColor: "#1890ff",
+                    borderColor: "#1890ff",
+                    height: "48px",
+                    padding: "0 32px",
+                    fontSize: "16px",
+                  }}
+                >
+                  {isRedirectingToVNPAY ? "Processing..." : "Pay with VNPAY"}
+                </Button>
+
+                {isRedirectingToVNPAY && (
+                  <div
+                    style={{
+                      marginTop: "16px",
+                      padding: "16px",
+                      backgroundColor: "#e6f7ff",
+                      borderRadius: "8px",
+                      border: "1px solid #91d5ff",
+                    }}
+                  >
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        gap: "12px",
+                        marginBottom: "8px",
+                      }}
+                    >
+                      <div
+                        className="vnpay-loading-spinner"
+                        style={{
+                          width: "20px",
+                          height: "20px",
+                          border: "2px solid #1890ff",
+                          borderTopColor: "transparent",
+                          borderRadius: "50%",
+                        }}
+                      ></div>
+                      <Text
+                        strong
+                        style={{ color: "#1890ff", fontSize: "16px" }}
+                      >
+                        Processing VNPAY payment...
+                      </Text>
+                    </div>
+                    <Text type="secondary" style={{ fontSize: "14px" }}>
+                      Please wait a moment, you will be redirected to the
+                      payment page.
+                    </Text>
+                  </div>
+                )}
+              </div>
+            </div>
+          );
+        }
+        return null;
+      case 3: // Sign
         return renderSignature();
-      case 3: // PDF Options (was previously step 4)
+      case 4: // PDF Options
         // PDF Options component
         return (
           <div style={{ textAlign: "center", padding: "40px 20px" }}>
@@ -2776,11 +2914,27 @@ const ConfirmBookingModal = ({
             {isSubmittingPayment ? "Processing..." : "Confirm"}
           </Button>,
         ];
-      case 2: // Sign (previously step 3)
+      case 2: // VNPay Payment (only for VNPay)
+        return [
+          <Button key="back" onClick={() => setCurrentStep(1)}>
+            Back
+          </Button>,
+          <Button key="next" type="primary" onClick={() => setCurrentStep(3)}>
+            Continue to Sign
+          </Button>,
+        ];
+      case 3: // Sign
         return [
           <Button
             key="back"
-            onClick={() => setCurrentStep(1)}
+            onClick={() => {
+              // Cash payment: go back to step 1, VNPay: go back to step 2
+              if (paymentMethod === "cash") {
+                setCurrentStep(1);
+              } else {
+                setCurrentStep(2);
+              }
+            }}
             disabled={isProcessingSignature}
           >
             Back
@@ -2795,9 +2949,9 @@ const ConfirmBookingModal = ({
             Sign and Continue
           </Button>,
         ];
-      case 3: // PDF Options (previously step 4)
+      case 4: // PDF Options
         return [
-          <Button key="back" onClick={() => setCurrentStep(2)}>
+          <Button key="back" onClick={() => setCurrentStep(3)}>
             Back
           </Button>,
           <Button key="complete" type="primary" onClick={handleClose}>
@@ -2809,22 +2963,43 @@ const ConfirmBookingModal = ({
     }
   };
 
-
   const getSteps = () => {
-    return [
-      { title: "Confirm Information" },
-      { title: "Sign" },
-      { title: "PDF Options" },
-    ];
+    // Cash payment: 3 steps, VNPay: 4 steps
+    if (paymentMethod === "cash") {
+      return [
+        { title: "Confirm Information" },
+        { title: "Sign" },
+        { title: "PDF Options" },
+      ];
+    } else {
+      return [
+        { title: "Confirm Information" },
+        { title: "VNPay Payment" },
+        { title: "Sign" },
+        { title: "PDF Options" },
+      ];
+    }
   };
 
   const getCurrentStepIndex = () => {
-    switch (currentStep) {
-      case 1: return 0;
-      case 2: return 1; 
-      case 3: return 2; 
-      default: return 0;
+    if (isPDFConfirmStep) {
+      return paymentMethod === "cash" ? 1 : 2; // Sign step index for cash/vnpay
     }
+
+    if (paymentMethod === "cash") {
+      // Cash payment: 3 steps mapping
+      if (currentStep === 1) return 0; // Confirm Information
+      if (currentStep === 3) return 1; // Sign (skip payment step)
+      if (currentStep === 4) return 2; // PDF Options
+    } else {
+      // VNPay: 4 steps mapping
+      if (currentStep === 1) return 0; // Confirm Information
+      if (currentStep === 2) return 1; // VNPay Payment
+      if (currentStep === 3) return 2; // Sign
+      if (currentStep === 4) return 3; // PDF Options
+    }
+
+    return 0;
   };
 
   return (
@@ -2910,27 +3085,36 @@ const BookingPage = () => {
   const [showFirstPersonPersonalId, setShowFirstPersonPersonalId] =
     useState(false);
   const [modalInitialStep, setModalInitialStep] = useState(1);
+  //khởi tạo giá trị ban đầu lưu trữ cho ngiời thứ 2 đhieenien personnalID
   const [isSecondPersonAdult, setIsSecondPersonAdult] = useState(false);
 
+  // State để quản lý thông báo tập trung
   const [currentNotification, setCurrentNotification] = useState(null);
 
+  //hàm sự kiện hiện personnalID cho người thứ 2 đủ 18 tuổi
   const handleSecondPersonDOBChange = (date) => {
-    console.log("Second person date changed to:", date);
-    
-    updateSecondPersonPersonalIdVisibility(date);
-    
     if (!date) {
       setIsSecondPersonAdult(false);
       return;
     }
-    
+    // Phải chắc chắn date là dayjs object
     const today = dayjs();
     const age = today.diff(date, "year");
+    const relationship = form.getFieldValue(["secondPerson", "relationship"]);
+    console.log("Second person age:", age, "relationship:", relationship);
+
     setIsSecondPersonAdult(age >= 18);
-    
-    form.validateFields([["secondPerson", "personalId"]]).catch(() => {});
+    console.log("Should show personal ID:", age >= 18);
+
+    if (age < 18) {
+      const secondPerson = form.getFieldValue("secondPerson") || {};
+      form.setFieldsValue({
+        secondPerson: { ...secondPerson, personalId: undefined },
+      });
+    }
   };
 
+  // Hàm hiển thị thông báo tập trung
   const showNotification = useCallback((type, content, duration = 4000) => {
     setCurrentNotification({ type, content, id: Date.now() });
     setTimeout(() => {
@@ -2938,15 +3122,18 @@ const BookingPage = () => {
     }, duration);
   }, []);
 
+  // Hàm ẩn thông báo
   const hideNotification = useCallback(() => {
     setCurrentNotification(null);
   }, []);
 
+  // Hàm tính tuổi từ ngày sinh
   const calculateAge = (dateOfBirth) => {
     if (!dateOfBirth) return null;
     return moment().diff(moment(dateOfBirth), "years");
   };
 
+  // Hàm kiểm tra và cập nhật trạng thái hiển thị Personal ID cho người thứ nhất
   const updateFirstPersonPersonalIdVisibility = (dateOfBirth) => {
     const age = calculateAge(dateOfBirth);
     const relationship = form.getFieldValue(["firstPerson", "relationship"]);
@@ -2955,6 +3142,7 @@ const BookingPage = () => {
     );
   };
 
+  // Hàm kiểm tra và cập nhật trạng thái hiển thị Personal ID cho người thứ hai
   const updateSecondPersonPersonalIdVisibility = (dateOfBirth) => {
     if (!dateOfBirth) {
       setShowSecondPersonPersonalId(false);
@@ -2965,12 +3153,14 @@ const BookingPage = () => {
     const relationship = form.getFieldValue(["secondPerson", "relationship"]);
     console.log("Second person age:", age, "relationship:", relationship);
 
+    // Chỉ hiển thị và yêu cầu Personal ID khi là Child và trên 15 tuổi
     const shouldShowPersonalId =
       relationship === "Child" && age !== null && age > 15;
     console.log("Should show personal ID:", shouldShowPersonalId);
 
     setShowSecondPersonPersonalId(shouldShowPersonalId);
 
+    // Xóa giá trị Personal ID khi không được phép nhập (dưới 15 tuổi hoặc không phải Child)
     if (!shouldShowPersonalId) {
       form.setFieldsValue({
         secondPerson: {
@@ -2980,6 +3170,7 @@ const BookingPage = () => {
       });
     }
 
+    // Force re-render để cập nhật UI
     setTimeout(() => {
       form.validateFields([["secondPerson", "personalId"]]).catch(() => {});
     }, 50);
@@ -3035,6 +3226,7 @@ const BookingPage = () => {
     return total;
   };
 
+  // Time slots available
   const timeSlots = [
     "8:15 - 9:15",
     "9:30 - 10:30",
@@ -3071,6 +3263,7 @@ const BookingPage = () => {
     return timeSlots.every((timeSlot) => isTimeSlotDisabled(timeSlot));
   };
 
+  // Loại mẫu cơ bản không bao gồm Amniotic Fluid
   const sampleTypes = ["Blood", "Buccal Swab", "Hair", "Nail"];
 
   const getValidRelationshipsForService = useCallback((serviceName) => {
@@ -3330,7 +3523,9 @@ const BookingPage = () => {
     return Promise.resolve();
   };
 
+  // Hàm kiểm tra giới tính và mối quan hệ hợp lệ
   const validateGenderRelationshipCompatibility = (gender, relationship) => {
+    // Quy tắc cơ bản: Mother phải là female, Father phải là male
     if (relationship === "Mother" && gender === "male") {
       return { isValid: false, message: 'Men can not be "Mother"!' };
     }
@@ -3458,6 +3653,7 @@ const BookingPage = () => {
           },
         });
 
+        // Cập nhật trạng thái hiển thị Personal ID cho người thứ nhất và thứ hai
         if (first.dateOfBirth) {
           updateFirstPersonPersonalIdVisibility(first.dateOfBirth);
           updateSecondPersonPersonalIdVisibility(first.dateOfBirth);
@@ -3468,6 +3664,7 @@ const BookingPage = () => {
     }
   }, [form]);
 
+  // Kiểm tra và cập nhật trạng thái Personal ID khi component được render
   useEffect(() => {
     const secondPersonDateOfBirth = form.getFieldValue([
       "secondPerson",
@@ -3683,6 +3880,7 @@ const BookingPage = () => {
     }
   }, [form]);
 
+  // Theo dõi sự thay đổi của dateOfBirth của người thứ hai
   useEffect(() => {
     try {
       const dateOfBirth = form.getFieldValue(["secondPerson", "dateOfBirth"]);
@@ -3710,13 +3908,16 @@ const BookingPage = () => {
 
   useEffect(() => {
     if (selectedService?.name === "Non-Invasive Relationship Testing (NIPT)") {
+      // Set facility collection method
       setSelectedCollectionMethod({ name: "At Facility", price: 0 });
       setSelectedMedicationMethod("walk-in");
 
+      // For NIPT, limit relationships to only Father and Mother
       const validRelationships = ["Father", "Mother"];
       setAvailableRelationships(validRelationships);
       setAvailableSecondPersonRelationships(validRelationships);
 
+      // Clear existing relationship selections
       form.setFieldsValue({
         firstPerson: {
           ...form.getFieldValue("firstPerson"),
@@ -3793,6 +3994,7 @@ const BookingPage = () => {
         "relationship",
       ]);
 
+      // For NIPT service, Mother must always have Amniotic Fluid
       if (firstPersonRelationship === "Mother") {
         form.setFieldsValue({
           firstPerson: {
@@ -3804,6 +4006,7 @@ const BookingPage = () => {
         firstPersonRelationship === "Father" &&
         !form.getFieldValue(["firstPerson", "sampleType"])
       ) {
+        // Default Father to Blood if not set
         form.setFieldsValue({
           firstPerson: {
             ...form.getFieldValue("firstPerson"),
@@ -3812,6 +4015,7 @@ const BookingPage = () => {
         });
       }
 
+      // Same for the second person
       if (secondPersonRelationship === "Mother") {
         form.setFieldsValue({
           secondPerson: {
@@ -4042,20 +4246,6 @@ const BookingPage = () => {
       return;
     }
 
-    if (
-      values.secondPerson?.relationship === "Child" &&
-      values.secondPerson?.dateOfBirth
-    ) {
-      const age = moment().diff(moment(values.secondPerson.dateOfBirth), "years");
-      if (age > 15 && !values.secondPerson?.personalId) {
-        showNotification(
-          "error",
-          "Please enter Personal ID for second person (required for children over 15 years old)!"
-        );
-        return;
-      }
-    }
-
     setIsSubmitting(true);
     try {
       const bookingData = {
@@ -4106,19 +4296,23 @@ const BookingPage = () => {
       return genderValue === "male" ? 1 : 2;
     };
 
+    // Xác định địa chỉ dựa trên collection method và medication method
     const getAddress = () => {
+      // Nếu là At Home hoặc postal-delivery thì dùng địa chỉ nhà
       if (
         data.collectionMethod?.name === "At Home" ||
         data.medicationMethod === "postal-delivery"
       ) {
         return data.homeAddress || "";
       }
+      // Nếu là At Facility hoặc walk-in thì dùng địa chỉ cơ sở
       else if (
         data.collectionMethod?.name === "At Facility" ||
         data.medicationMethod === "walk-in"
       ) {
         return "7 D1 Street, Long Thanh My Ward, Thu Duc City, Ho Chi Minh City";
       }
+      // Mặc định trả về địa chỉ cơ sở
       return "7 D1 Street, Long Thanh My Ward, Thu Duc City, Ho Chi Minh City";
     };
 
@@ -4203,6 +4397,8 @@ const BookingPage = () => {
         throw new Error("No data received from server");
       }
       showNotification("success", getSuccessMessage(), 6000);
+      // Không chuyển hướng về trang chủ sau khi hoàn thành đặt lịch
+      // Người dùng sẽ ở lại trang hiện tại để xem thông tin đặt lịch
       form.resetFields();
       setAppointmentDate("");
       setTimeSlot("");
@@ -4235,7 +4431,7 @@ const BookingPage = () => {
     console.log("handleModalCancel được gọi - đóng modal");
     setIsModalVisible(false);
     setBookingData(null);
-    setModalInitialStep(1); 
+    setModalInitialStep(1); // Reset về step 1 khi đóng modal
   };
 
   useEffect(() => {
@@ -4247,6 +4443,7 @@ const BookingPage = () => {
 
     if (vnpResponseCode && vnpOrderInfo) {
       try {
+        // Xóa URL params nhưng giữ lại đường dẫn hiện tại
         const newUrl = window.location.pathname;
         window.history.replaceState({}, document.title, newUrl);
 
@@ -4258,6 +4455,7 @@ const BookingPage = () => {
             5000
           );
 
+          // Debug: Kiểm tra localStorage
           const pendingBookings = JSON.parse(
             localStorage.getItem("pending_vnpay_bookings") || "[]"
           );
@@ -4267,8 +4465,10 @@ const BookingPage = () => {
           const orderInfo = decodeURIComponent(vnpOrderInfo);
           console.log("🔍 Decoded Order Info:", orderInfo);
 
+          // Tìm kiếm booking bằng nhiều cách
           let currentBooking = null;
 
+          // Cách 1: Tìm theo paymentCode
           currentBooking = pendingBookings.find((booking) => {
             const match =
               booking.paymentCode && orderInfo.includes(booking.paymentCode);
@@ -4278,6 +4478,7 @@ const BookingPage = () => {
             return match;
           });
 
+          // Cách 2: Tìm theo customerID nếu không tìm thấy
           if (!currentBooking) {
             currentBooking = pendingBookings.find((booking) => {
               const match =
@@ -4289,6 +4490,7 @@ const BookingPage = () => {
             });
           }
 
+          // Cách 3: Nếu vẫn không tìm thấy, lấy booking mới nhất
           if (!currentBooking && pendingBookings.length > 0) {
             currentBooking = pendingBookings[pendingBookings.length - 1];
             console.log("🔎 Using latest booking as fallback:", currentBooking);
@@ -4309,9 +4511,10 @@ const BookingPage = () => {
               "Setting booking data and opening modal at step 3 (Sign)"
             );
             setBookingData(updatedBookingData);
-            setModalInitialStep(3);
+            setModalInitialStep(3); // Mở modal ở step 3 (Sign)
             setPaymentMethod("vnpay");
 
+            // Hiển thị modal ngay lập tức ở bước Sign
             setTimeout(() => {
               console.log("Opening modal for signature...");
               setIsModalVisible(true);
@@ -5972,8 +6175,3 @@ const BookingPage = () => {
 };
 
 export default BookingPage;
-
-
-
-
-
