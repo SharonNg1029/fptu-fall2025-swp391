@@ -55,24 +55,23 @@ const { Title } = Typography;
 
 // Định nghĩa các trạng thái booking và màu sắc riêng biệt
 const STATUS_COLORS = {
-  "Waiting confirmed": "#bdbdbd", // xám nhạt
-  "Booking confirmed": "#40a9ff", // xanh dương nhạt
-  "Awaiting Sample": "#faad14", // vàng
-  "In Progress": "#1890ff", // xanh dương
-  Ready: "#722ed1", // tím
-  "Pending Payment": "#ff4d4f", // đỏ
-  Completed: "#52c41a", // xanh lá
-  Cancel: "#8c8c8c", // xám đậm
+  "Awaiting Confirmation": "#faad14", // Orange
+  "Payment Confirmed": "#1890ff", // Blue
+  "Booking Confirmed": "#52c41a", // Green
+  "Awaiting Sample": "#722ed1", // Purple
+  "In Progress": "#13c2c2", // Cyan
+  Completed: "#52c41a", // Green
+  Cancelled: "#ff4d4f", // Red
 };
+
 const STATUS_ORDER = [
-  "Waiting confirmed",
-  "Booking confirmed",
+  "Awaiting Confirmation",
+  "Payment Confirmed",
+  "Booking Confirmed",
   "Awaiting Sample",
   "In Progress",
-  "Ready",
-  "Pending Payment",
   "Completed",
-  "Cancel",
+  "Cancelled",
 ];
 
 const StaffOverviewPage = () => {
@@ -106,41 +105,47 @@ const StaffOverviewPage = () => {
       const assignments = response.data || [];
       // Tổng số booking
       const totalAppointments = assignments.length;
-      const pendingAppointments = assignments.filter(
-        (a) =>
-          (a.status || "").trim().toLowerCase() ===
-          "awaiting sample".toLowerCase()
-      ).length;
-      // Số booking đã hoàn thành
-      const totalAppointmentFinished = assignments.filter(
-        (a) =>
-          (a.status || "").trim().toLowerCase() === "completed".toLowerCase()
-      ).length;
-      // Phân bố trạng thái: gom nhóm status động và gán màu hợp lý
-      const statusCounts = {};
-      assignments.forEach((a) => {
-        let status = (a.status || "Unknown").trim();
-        statusCounts[status] = (statusCounts[status] || 0) + 1;
-      });
-      // Danh sách màu động cho status
-      const statusColors = [
-        "#52c41a",
-        "#faad14",
-        "#ff4d4f",
-        "#1890ff",
-        "#722ed1",
-        "#13c2c2",
-        "#eb2f96",
-        "#b37feb",
-        "#fa8c16",
-        "#a0d911",
+
+      // Filter for allowed statuses only
+      const allowedStatuses = [
+        "Awaiting Confirmation",
+        "Payment Confirmed",
+        "Booking Confirmed",
+        "Awaiting Sample",
+        "In Progress",
+        "Completed",
+        "Cancelled",
       ];
-      const statusNames = Object.keys(statusCounts);
-      const orderStatusDistribution = statusNames.map((name, idx) => ({
-        name,
-        value: statusCounts[name],
-        color: statusColors[idx % statusColors.length],
-      }));
+
+      const validAssignments = assignments.filter((assignment) =>
+        allowedStatuses.includes(assignment.status)
+      );
+
+      const pendingAppointments = validAssignments.filter(
+        (a) => a.status === "Awaiting Sample"
+      ).length;
+
+      // Số booking đã hoàn thành
+      const totalAppointmentFinished = validAssignments.filter(
+        (a) => a.status === "Completed"
+      ).length;
+      // Phân bố trạng thái: chỉ hiển thị các status được phép
+      const statusCounts = {};
+      validAssignments.forEach((a) => {
+        const status = a.status;
+        if (allowedStatuses.includes(status)) {
+          statusCounts[status] = (statusCounts[status] || 0) + 1;
+        }
+      });
+
+      // Sử dụng màu từ STATUS_COLORS
+      const orderStatusDistribution = Object.entries(statusCounts).map(
+        ([name, value]) => ({
+          name,
+          value,
+          color: STATUS_COLORS[name] || "#d9d9d9",
+        })
+      );
       // Thống kê theo timeRange (sáng, chiều, tối)
       const timeRangeStats = [
         { period: "Morning", count: 0 },

@@ -48,12 +48,24 @@ const StaffReporting = () => {
 
   // Helper: get date string (YYYY-MM-DD) from appointmentDate or appointmentTime
   const getReportDate = (report) => {
+    // Dữ liệu đã được chuẩn hóa trong fetchWorkReports, appointmentDate đã là string
     if (report.appointmentDate) {
       if (typeof report.appointmentDate === "string") {
+        // Đảm bảo trả về định dạng YYYY-MM-DD
         return report.appointmentDate.slice(0, 10);
       }
       if (report.appointmentDate instanceof Date) {
         return report.appointmentDate.toISOString().slice(0, 10);
+      }
+      // Fallback cho trường hợp vẫn còn mảng (không nên xảy ra sau khi chuẩn hóa)
+      if (
+        Array.isArray(report.appointmentDate) &&
+        report.appointmentDate.length >= 3
+      ) {
+        const y = report.appointmentDate[0];
+        const m = String(report.appointmentDate[1]).padStart(2, "0");
+        const d = String(report.appointmentDate[2]).padStart(2, "0");
+        return `${y}-${m}-${d}`;
       }
     }
     if (report.appointmentTime) {
@@ -63,8 +75,8 @@ const StaffReporting = () => {
     return null;
   };
 
-  // Lấy ngày hôm nay (YYYY-MM-DD)
-  const today = new Date().toISOString().slice(0, 10);
+  // Lấy ngày hôm nay (YYYY-MM-DD) - sử dụng local time để tránh vấn đề timezone
+  const today = new Date().toLocaleDateString("en-CA"); // 'en-CA' format: YYYY-MM-DD
 
   // Lọc báo cáo trong ngày - chỉ lấy những báo cáo có status là Pending và appointment date = hôm nay
   const todayReports = workReports.filter((r) => {
@@ -76,11 +88,10 @@ const StaffReporting = () => {
   const futureReports = workReports
     .filter((r) => {
       const reportDate = getReportDate(r);
-      return (
-        reportDate &&
-        new Date(reportDate).getTime() > new Date(today).getTime() &&
-        r.status === "Pending"
-      );
+      if (!reportDate) return false;
+
+      // So sánh chuỗi ngày trực tiếp (YYYY-MM-DD)
+      return reportDate > today && r.status === "Pending";
     })
     .sort((a, b) => {
       // So sánh ngày gần nhất ở trên, nếu trùng ngày thì so sánh giờ gần nhất ở trên
@@ -144,9 +155,11 @@ const StaffReporting = () => {
     try {
       const response = await api.get(`/staff/my-report/${staffID}`);
       const rawData = response.data?.data || response.data || [];
+
       // Chuẩn hóa dữ liệu: appointmentDate luôn là string YYYY-MM-DD
       const normalized = rawData.map((item) => {
         let appointmentDate = item.appointmentDate;
+
         if (Array.isArray(appointmentDate) && appointmentDate.length >= 3) {
           // [YYYY, MM, DD] => 'YYYY-MM-DD'
           const y = appointmentDate[0];
@@ -154,11 +167,13 @@ const StaffReporting = () => {
           const d = String(appointmentDate[2]).padStart(2, "0");
           appointmentDate = `${y}-${m}-${d}`;
         }
+
         return {
           ...item,
           appointmentDate,
         };
       });
+
       setWorkReports(normalized);
     } catch (error) {
       toast.error(
@@ -184,9 +199,6 @@ const StaffReporting = () => {
         note: record.note || "",
       };
 
-      console.log("Sending payload:", payload);
-      console.log("Report ID:", record.reportID);
-
       await api.patch(`/staff/my-report/${record.reportID}`, payload);
       toast.success("Update successfully!");
       fetchWorkReports();
@@ -206,11 +218,7 @@ const StaffReporting = () => {
     let inputNode;
     if (dataIndex === "status") {
       inputNode = (
-        <Select
-          style={{ minWidth: 100 }}
-          onChange={(value) => {
-            console.log("Status changed to:", value);
-          }}>
+        <Select style={{ minWidth: 100 }}>
           <Option value="Pending">Pending</Option>
           <Option value="Completed">Completed</Option>
           <Option value="Delay">Delay</Option>
@@ -218,13 +226,7 @@ const StaffReporting = () => {
         </Select>
       );
     } else if (dataIndex === "note") {
-      inputNode = (
-        <Input
-          onChange={(e) => {
-            console.log("Note changed to:", e.target.value);
-          }}
-        />
-      );
+      inputNode = <Input />;
     } else {
       inputNode = <Input disabled />;
     }
@@ -340,6 +342,9 @@ const StaffReporting = () => {
     {
       title: "Actions",
       dataIndex: "actions",
+      fixed: "right",
+      align: "center",
+      responsive: ["md"],
       render: (_, record) => {
         return record.isSent ? null : (
           <Button

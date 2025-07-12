@@ -117,30 +117,42 @@ function Overview() {
       revenue: Math.round(monthlyMap[ym].revenue),
     }));
 
-    // Status distribution based on ALL bookings
+    // Status distribution based on ALL bookings - only include specific statuses
+    const allowedStatuses = [
+      "Awaiting Confirmation",
+      "Payment Confirmed",
+      "Booking Confirmed",
+      "Awaiting Sample",
+      "In Progress",
+      "Completed",
+      "Cancelled",
+    ];
+
     const statusCounts = bookings.reduce((acc, booking) => {
-      const status = booking.status || "Unknown";
-      acc[status] = (acc[status] || 0) + 1;
+      const status = booking.status;
+      // Only count bookings with allowed statuses
+      if (allowedStatuses.includes(status)) {
+        acc[status] = (acc[status] || 0) + 1;
+      }
       return acc;
     }, {});
-    // Màu status theo mẫu
-    const statusColors = [
-      "#52c41a",
-      "#faad14",
-      "#ff4d4f",
-      "#1890ff",
-      "#722ed1",
-      "#13c2c2",
-      "#eb2f96",
-      "#b37feb",
-      "#fa8c16",
-      "#a0d911",
-    ];
+
+    // Define specific colors for each status
+    const statusColorMap = {
+      "Awaiting Confirmation": "#faad14", // Orange
+      "Payment Confirmed": "#1890ff", // Blue
+      "Booking Confirmed": "#52c41a", // Green
+      "Awaiting Sample": "#722ed1", // Purple
+      "In Progress": "#13c2c2", // Cyan
+      Completed: "#52c41a", // Green
+      Cancelled: "#ff4d4f", // Red
+    };
+
     const statusDistribution = Object.entries(statusCounts).map(
-      ([status, count], idx) => ({
+      ([status, count]) => ({
         name: status,
         value: count,
-        color: statusColors[idx % statusColors.length],
+        color: statusColorMap[status],
       })
     );
 
@@ -254,6 +266,7 @@ function Overview() {
         const response = await api.get("/booking/bookings");
         // Xoá log Completed tests response
         const bookings = response.data?.data || response.data || [];
+        // Only count bookings with "Completed" status (exact match)
         const completedCount = Array.isArray(bookings)
           ? bookings.filter((b) => b.status === "Completed").length
           : 0;
@@ -439,21 +452,43 @@ function Overview() {
       dataIndex: "status",
       key: "status",
       render: (status) => {
-        let color = "blue";
-        let style = {};
-        if (status === "Completed") color = "green";
-        if (status === "Pending") color = "orange";
-        if (status === "Cancelled" || status === "Cancel") {
-          color = "red";
-          style = {
-            border: "1px solid #ff4d4f",
-            borderRadius: 4,
-            padding: "0 8px",
-          };
+        const allowedStatuses = [
+          "Awaiting Confirmation",
+          "Payment Confirmed",
+          "Booking Confirmed",
+          "Awaiting Sample",
+          "In Progress",
+          "Completed",
+          "Cancelled",
+        ];
+
+        // Only show tags for allowed statuses
+        if (!allowedStatuses.includes(status)) {
+          return <Tag color="default">Unknown</Tag>;
         }
+
+        const statusConfig = {
+          "Awaiting Confirmation": { color: "orange" },
+          "Payment Confirmed": { color: "blue" },
+          "Booking Confirmed": { color: "green" },
+          "Awaiting Sample": { color: "purple" },
+          "In Progress": { color: "cyan" },
+          Completed: { color: "green" },
+          Cancelled: {
+            color: "red",
+            style: {
+              border: "1px solid #ff4d4f",
+              borderRadius: 4,
+              padding: "0 8px",
+            },
+          },
+        };
+
+        const config = statusConfig[status] || { color: "default" };
+
         return (
-          <Tag color={color} style={style}>
-            {status || "Unknown"}
+          <Tag color={config.color} style={config.style || {}}>
+            {status}
           </Tag>
         );
       },
@@ -466,7 +501,15 @@ function Overview() {
     },
   ];
 
-  const COLORS = ["#52c41a", "#faad14", "#ff4d4f", "#1890ff", "#722ed1"];
+  const COLORS = [
+    "#faad14",
+    "#1890ff",
+    "#52c41a",
+    "#722ed1",
+    "#13c2c2",
+    "#ff4d4f",
+    "#d9d9d9",
+  ];
 
   return (
     <div>

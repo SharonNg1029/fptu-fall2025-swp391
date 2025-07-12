@@ -170,7 +170,7 @@ const ViewReports = () => {
         } else if (status === "Delay") {
           color = "orange";
           icon = <ClockCircleOutlined />;
-        } else if (status === "Cancel") {
+        } else if (status === "Cancelled") {
           color = "red";
           icon = <CloseCircleOutlined />;
         }
@@ -507,7 +507,7 @@ const ViewReports = () => {
         } else if (status === "Delay") {
           color = "orange";
           icon = <ClockCircleOutlined />;
-        } else if (status === "Cancel") {
+        } else if (status === "Cancelled") {
           color = "red";
           icon = <CloseCircleOutlined />;
         }
@@ -598,8 +598,8 @@ const ViewReports = () => {
         if (status === "Delay") color = "orange";
         else if (status === "Pending") color = "blue";
         else if (status === "Completed") color = "green";
-        else if (status === "Cancel") color = "red";
-        else if (status === "Awaiting confirm") color = "gold";
+        else if (status === "Cancelled") color = "red";
+        else if (status === "Awaiting Confirmation") color = "gold";
         return <Tag color={color}>{status || "-"}</Tag>;
       },
     },
@@ -644,8 +644,11 @@ const ViewReports = () => {
             <Title level={3} style={{ margin: 0 }}>
               Reports Awaiting Assignment (
               {
-                bookingAssigned.filter((b) => b.status === "Awaiting confirm")
-                  .length
+                bookingAssigned.filter(
+                  (b) =>
+                    b.status === "Awaiting Confirmation" ||
+                    b.status === "Awaiting confirm"
+                ).length
               }
               )
             </Title>
@@ -662,7 +665,11 @@ const ViewReports = () => {
               loading={loading}
               columns={assignBookingColumns}
               dataSource={bookingAssigned
-                .filter((b) => b.status === "Awaiting confirm")
+                .filter(
+                  (b) =>
+                    b.status === "Awaiting confirm" ||
+                    b.status === "Awaiting Confirmation"
+                )
                 .sort((a, b) => {
                   // 1. Sort by appointmentDate (closest first)
                   const dateA = a.appointmentDate
@@ -745,10 +752,11 @@ const ViewReports = () => {
               {
                 reports.filter(
                   (r) =>
-                    r.isApproved === false ||
-                    r.isApproved === 0 ||
-                    r.isApproved === null ||
-                    typeof r.isApproved === "undefined"
+                    (r.isApproved === false ||
+                      r.isApproved === 0 ||
+                      r.isApproved === null ||
+                      typeof r.isApproved === "undefined") &&
+                    r.status !== "Pending"
                 ).length
               }
               )
@@ -768,10 +776,11 @@ const ViewReports = () => {
               dataSource={reports
                 .filter(
                   (r) =>
-                    r.isApproved === false ||
-                    r.isApproved === 0 ||
-                    r.isApproved === null ||
-                    typeof r.isApproved === "undefined"
+                    (r.isApproved === false ||
+                      r.isApproved === 0 ||
+                      r.isApproved === null ||
+                      typeof r.isApproved === "undefined") &&
+                    r.status !== "Pending"
                 )
                 .sort((a, b) => {
                   // 1. Sort by appointmentDate (closest first)
@@ -860,7 +869,7 @@ const ViewReports = () => {
                 <Option value="Pending">Pending</Option>
                 <Option value="Completed">Completed</Option>
                 <Option value="Delay">Delay</Option>
-                <Option value="Cancel">Cancel</Option>
+                <Option value="Cancelled">Cancelled</Option>
               </Select>
             </Col>
             <Col span={4}>
@@ -876,7 +885,7 @@ const ViewReports = () => {
                   )
                   .map((staff) => (
                     <Option key={staff.id} value={staff.id}>
-                      {staff.name}
+                      {staff.fullname || staff.name}
                     </Option>
                   ))}
               </Select>

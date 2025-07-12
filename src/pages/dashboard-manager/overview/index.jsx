@@ -72,9 +72,10 @@ const ManagerOverviewPage = () => {
   const [assignedBookings, setAssignedBookings] = useState([]);
 
   // --- Calculate reports needing assign/approve ---
-  // 1. Reports needing assign: status === "Awaiting confirm"
+  // 1. Reports needing assign: status === "Awaiting Confirmation"
   const reportsNeedAssign = assignedBookings.filter(
-    (b) => b.status === "Awaiting confirm"
+    (b) =>
+      b.status === "Awaiting Confirmation" || b.status === "Awaiting confirm"
   ).length;
   // 2. Reports needing approve: status !== "Completed" && isApproved !== true
   // (We don't have isApproved in assignedBookings, so only use status if needed)
@@ -124,24 +125,36 @@ const ManagerOverviewPage = () => {
 
     // 2. Test Status Distribution chart: đếm số lượng booking theo status thực tế
     const statusCountMap = {};
-    assignedBookings.forEach((b) => {
-      if (b.status === "Is paid") return; // Skip 'Is paid' status
-      if (!statusCountMap[b.status]) statusCountMap[b.status] = 0;
-      statusCountMap[b.status] += 1;
-    });
-    const statusColors = [
-      "#52c41a",
-      "#faad14",
-      "#ff4d4f",
-      "#1890ff",
-      "#722ed1",
-      "#13c2c2",
-      "#eb2f96",
-      "#b37feb",
-      "#fa8c16",
-      "#a0d911",
+    const validStatuses = [
+      "Awaiting Confirmation",
+      "Payment Confirmed",
+      "Booking Confirmed",
+      "Awaiting Sample",
+      "In Progress",
+      "Completed",
+      "Cancelled",
     ];
-    const totalBookings = assignedBookings.length;
+
+    assignedBookings.forEach((b) => {
+      // Only count valid statuses
+      if (validStatuses.includes(b.status)) {
+        if (!statusCountMap[b.status]) statusCountMap[b.status] = 0;
+        statusCountMap[b.status] += 1;
+      }
+    });
+
+    const statusColors = [
+      "#52c41a", // Green for Completed
+      "#faad14", // Orange for In Progress
+      "#ff4d4f", // Red for Cancelled
+      "#1890ff", // Blue for Booking Confirmed
+      "#722ed1", // Purple for Awaiting Sample
+      "#13c2c2", // Cyan for Payment Confirmed
+      "#eb2f96", // Pink for Awaiting Confirmation
+    ];
+    const totalBookings = assignedBookings.filter((b) =>
+      validStatuses.includes(b.status)
+    ).length;
     const testStatusDistribution = Object.entries(statusCountMap).map(
       ([status, value], idx) => ({
         name: status,

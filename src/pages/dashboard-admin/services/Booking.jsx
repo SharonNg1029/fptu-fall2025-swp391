@@ -29,14 +29,13 @@ const { Title } = Typography;
 const { Option } = Select;
 
 const statusList = [
-  "Waiting confirmed",
-  "Booking confirmed",
+  "Awaiting Confirmation",
+  "Payment Confirmed",
+  "Booking Confirmed",
   "Awaiting Sample",
   "In Progress",
-  "Ready",
-  "Pending Payment",
   "Completed",
-  "Cancel",
+  "Cancelled",
 ];
 
 const columns = [
@@ -74,12 +73,17 @@ const columns = [
     render: (status) => {
       let color = "default";
       let icon = <ClockCircleOutlined />;
-      if (status === "Waiting confirmed") {
-        color = "gold";
+
+      if (status === "Awaiting Confirmation") {
+        color = "orange";
         icon = <ClockCircleOutlined />;
       }
-      if (status === "Booking confirmed") {
+      if (status === "Payment Confirmed") {
         color = "blue";
+        icon = <CheckCircleOutlined />;
+      }
+      if (status === "Booking Confirmed") {
+        color = "green";
         icon = <CheckCircleOutlined />;
       }
       if (status === "Awaiting Sample") {
@@ -90,22 +94,15 @@ const columns = [
         color = "cyan";
         icon = <LoadingOutlined />;
       }
-      if (status === "Ready") {
-        color = "lime";
-        icon = <CheckCircleOutlined />;
-      }
-      if (status === "Pending Payment") {
-        color = "orange";
-        icon = <ExclamationCircleOutlined />;
-      }
       if (status === "Completed") {
         color = "green";
         icon = <CheckCircleOutlined />;
       }
-      if (status === "Cancel") {
+      if (status === "Cancelled") {
         color = "red";
         icon = <ExclamationCircleOutlined />;
       }
+
       return (
         <Tag icon={icon} color={color}>
           {status}
@@ -188,27 +185,7 @@ const Booking = () => {
   const filteredBookings = bookings.filter((booking) => {
     // Only allow filter and display for the specified statuses
     if (!statusList.includes(booking.status)) return false;
-    // Map status from Vietnamese to English for filtering
-    let statusEn = booking.status;
-    switch (booking.status) {
-      case "Chờ thanh toán":
-        statusEn = "Pending Payment";
-        break;
-      case "Đã thanh toán":
-        statusEn = "Paid";
-        break;
-      case "Đang chờ mẫu":
-        statusEn = "Awaiting Sample";
-        break;
-      case "Đang xét nghiệm":
-        statusEn = "In Progress";
-        break;
-      case "Hoàn tất":
-        statusEn = "Completed";
-        break;
-      default:
-        statusEn = booking.status;
-    }
+
     const matchesSearch =
       booking.bookingId?.toString().includes(searchText) ||
       booking.customerID?.toLowerCase().includes(searchText.toLowerCase()) ||
@@ -219,20 +196,23 @@ const Booking = () => {
         .includes(searchText.toLowerCase()) ||
       booking.paymentMethod?.toLowerCase().includes(searchText.toLowerCase()) ||
       booking.note?.toLowerCase().includes(searchText.toLowerCase());
-    // Case-insensitive status filter
+
+    // Direct status filter (no mapping needed since we use the correct statuses)
     const matchesStatus =
-      !statusFilter ||
-      (statusEn && statusEn.toLowerCase() === statusFilter.toLowerCase());
+      !statusFilter || (booking.status && booking.status === statusFilter);
+
     const matchesCollectionMethod =
       !collectionMethodFilter ||
       (booking.collectionMethod &&
         booking.collectionMethod.toLowerCase() ===
           collectionMethodFilter.toLowerCase());
+
     const matchesMediationMethod =
       !mediationMethodFilter ||
       (booking.mediationMethod &&
         booking.mediationMethod.toLowerCase() ===
           mediationMethodFilter.toLowerCase());
+
     return (
       matchesSearch &&
       matchesStatus &&
@@ -345,14 +325,8 @@ const Booking = () => {
               }
               style={{ width: "100%", minWidth: 180, maxWidth: 240 }}
               allowClear>
-              {/* Lấy danh sách collectionMethod duy nhất */}
-              {[...new Set(bookings.map((b) => b.collectionMethod))]
-                .filter(Boolean)
-                .map((method) => (
-                  <Option key={method} value={method}>
-                    {method}
-                  </Option>
-                ))}
+              <Option value="At Home">At Home</Option>
+              <Option value="At Facility">At Facility</Option>
             </Select>
           </Col>
           <Col xs={24} sm={8} md={6} lg={4} style={{ marginBottom: 8 }}>

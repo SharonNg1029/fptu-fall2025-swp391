@@ -205,11 +205,15 @@ const TestingProcessMonitoringPage = () => {
       render: (status) => {
         let color = "default";
         let icon = <ClockCircleOutlined />;
-        if (status === "Awaiting confirm") {
+        if (status === "Awaiting Confirmation") {
           color = "gold";
           icon = <ClockCircleOutlined />;
         }
-        if (status === "Booking confirmed") {
+        if (status === "Payment Confirmed") {
+          color = "orange";
+          icon = <CheckCircleOutlined />;
+        }
+        if (status === "Booking Confirmed") {
           color = "blue";
           icon = <CheckCircleOutlined />;
         }
@@ -221,19 +225,11 @@ const TestingProcessMonitoringPage = () => {
           color = "cyan";
           icon = <LoadingOutlined />;
         }
-        if (status === "Ready") {
-          color = "lime";
-          icon = <CheckCircleOutlined />;
-        }
-        if (status === "Pending payment") {
-          color = "orange";
-          icon = <ExclamationCircleOutlined />;
-        }
         if (status === "Completed") {
           color = "green";
           icon = <CheckCircleOutlined />;
         }
-        if (status === "Cancel") {
+        if (status === "Cancelled") {
           color = "red";
           icon = <ExclamationCircleOutlined />;
         }
@@ -244,14 +240,13 @@ const TestingProcessMonitoringPage = () => {
         );
       },
       filters: [
-        { text: "Awaiting confirm", value: "Awaiting confirm" },
-        { text: "Booking confirmed", value: "Booking confirmed" },
+        { text: "Awaiting Confirmation", value: "Awaiting Confirmation" },
+        { text: "Payment Confirmed", value: "Payment Confirmed" },
+        { text: "Booking Confirmed", value: "Booking Confirmed" },
         { text: "Awaiting Sample", value: "Awaiting Sample" },
         { text: "In Progress", value: "In Progress" },
-        { text: "Ready", value: "Ready" },
-        { text: "Pending payment", value: "Pending payment" },
         { text: "Completed", value: "Completed" },
-        { text: "Cancel", value: "Cancel" },
+        { text: "Cancelled", value: "Cancelled" },
       ],
       onFilter: (value, record) => record.status === value,
     },
@@ -372,14 +367,15 @@ const TestingProcessMonitoringPage = () => {
               style={{ width: "100%" }}
               allowClear={true}>
               <Option value="">All Statuses</Option>
-              <Option value="Awaiting confirm">Awaiting confirm</Option>
-              <Option value="Booking confirmed">Booking confirmed</Option>
+              <Option value="Awaiting Confirmation">
+                Awaiting Confirmation
+              </Option>
+              <Option value="Payment Confirmed">Payment Confirmed</Option>
+              <Option value="Booking Confirmed">Booking Confirmed</Option>
               <Option value="Awaiting Sample">Awaiting Sample</Option>
               <Option value="In Progress">In Progress</Option>
-              <Option value="Ready">Ready</Option>
-              <Option value="Pending payment">Pending payment</Option>
               <Option value="Completed">Completed</Option>
-              <Option value="Cancel">Cancel</Option>
+              <Option value="Cancelled">Cancelled</Option>
             </Select>
           </Col>
         </Row>

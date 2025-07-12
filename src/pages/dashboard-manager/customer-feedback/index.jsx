@@ -72,7 +72,6 @@ const CustomerFeedbackPage = () => {
       const tableColumns = [
         "Customer ID",
         "Booking ID",
-        "Title",
         "Content",
         "Rating",
         "Date",
@@ -80,7 +79,6 @@ const CustomerFeedbackPage = () => {
       const tableRows = filteredFeedback.map((feedback) => [
         feedback.customerID,
         feedback.bookingID,
-        feedback.title,
         feedback.content,
         feedback.rating,
         new Date(feedback.createAt).toLocaleDateString(),
@@ -98,31 +96,30 @@ const CustomerFeedbackPage = () => {
     }
   };
 
-  const filteredFeedback = feedbackList.filter((feedback) => {
-  const searchString = searchText.toLowerCase();
-  // Normalize data to prevent errors if some fields are null/undefined
-  const customerId = String(feedback.customerID || "").toLowerCase();
-  const bookingId = String(feedback.bookingID || "").toLowerCase();
-  const title = String(feedback.title || "").toLowerCase();
-  const content = String(feedback.content || "").toLowerCase();
+  const filteredFeedback = feedbackList
+    .filter((feedback) => {
+      const searchString = searchText.toLowerCase();
+      // Normalize data to prevent errors if some fields are null/undefined
+      const customerId = String(feedback.customerID || "").toLowerCase();
+      const bookingId = String(feedback.bookingID || "").toLowerCase();
+      const content = String(feedback.content || "").toLowerCase();
 
-  const matchesSearch =
-    customerId.includes(searchString) ||
-    bookingId.includes(searchString) ||
-    title.includes(searchString) ||
-    content.includes(searchString);
+      const matchesSearch =
+        customerId.includes(searchString) ||
+        bookingId.includes(searchString) ||
+        content.includes(searchString);
 
-  const matchesRating =
-    ratingFilter === null || feedback.rating === ratingFilter;
+      const matchesRating =
+        ratingFilter === null || feedback.rating === ratingFilter;
 
-  return matchesSearch && matchesRating;
-})
-// Sắp xếp theo ngày tạo mới nhất đến cũ nhất
-  .sort((a, b) => {
-    const dateA = a.createAt ? new Date(a.createAt) : new Date(0);
-    const dateB = b.createAt ? new Date(b.createAt) : new Date(0);
-    return dateB - dateA;
-  });
+      return matchesSearch && matchesRating;
+    })
+    // Sắp xếp theo ngày tạo mới nhất đến cũ nhất
+    .sort((a, b) => {
+      const dateA = a.createAt ? new Date(a.createAt) : new Date(0);
+      const dateB = b.createAt ? new Date(b.createAt) : new Date(0);
+      return dateB - dateA;
+    });
 
   const columns = [
     {
@@ -138,11 +135,6 @@ const CustomerFeedbackPage = () => {
       key: "bookingID",
       sorter: (a, b) =>
         String(a.bookingID || "").localeCompare(String(b.bookingID || "")),
-    },
-    {
-      title: "Title",
-      dataIndex: "title",
-      key: "title",
     },
     {
       title: "Content",
@@ -210,7 +202,7 @@ const CustomerFeedbackPage = () => {
         <Row gutter={[16, 16]} align="middle">
           <Col xs={24} sm={12} lg={10}>
             <Input
-              placeholder="Search by Customer ID, Booking ID, Title, Content..."
+              placeholder="Search by Customer ID, Booking ID, Content..."
               prefix={<SearchOutlined />}
               value={searchText}
               onChange={(e) => setSearchText(e.target.value)}
