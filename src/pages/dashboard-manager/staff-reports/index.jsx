@@ -91,7 +91,6 @@ const ViewReports = () => {
 
   const handleApproveReport = async (record) => {
     setApproveLoading(true);
-    // Defensive: try both reportID and id
     const reportId = record.reportID || record.id;
     if (!reportId) {
       toast.error("Cannot approve: missing reportID.");
@@ -101,11 +100,9 @@ const ViewReports = () => {
     }
     setApprovingReport(reportId);
     try {
-      // Gửi đúng kiểu dữ liệu cho backend: isApproved: true (boolean) theo DTO, truyền qua body (nếu backend yêu cầu)
-      await api.patch(`/manager/${reportId}/report`, { isApproved: true });
-      // Refetch both reports and bookingAssigned immediately after approve
+      // Gửi isApproved lên query string thay vì body để backend nhận đúng
+      await api.patch(`/manager/${reportId}/report?isApproved=true`);
       await fetchAllReports();
-      // Luôn hiển thị toast thành công nếu không có lỗi, không kiểm tra phản hồi nữa
       toast.success(`Report #${record.reportID} approved successfully!`);
     } catch (error) {
       if (
@@ -264,27 +261,31 @@ const ViewReports = () => {
             : item.isApproved,
       }));
       setReports(normalized);
-      // Lấy danh sách staff từ API riêng (nếu có), nếu không thì lấy từ tất cả các report và bookingAssigned
       let allStaff = [];
       try {
         const staffRes = await api.get("/manager/all-staff");
-        // Giả sử API trả về mảng staff có id và name
+        // Normalize API response based on the provided sample structure
         if (Array.isArray(staffRes.data)) {
           allStaff = staffRes.data.map((s) => ({
-            id: s.staffID || s.id,
-            name: s.name || s.staffName || s.staffID || s.id,
+            id: s.staffID,
+            fullname: s.fullname,
+            email: s.email,
+            phone: s.phone,
+            address: s.address,
+            gender: s.gender,
+            avatar: s.avatar,
+            dob: Array.isArray(s.dob)
+              ? new Date(s.dob[0], s.dob[1] - 1, s.dob[2])
+              : null,
           }));
-        } else if (Array.isArray(staffRes.data?.data)) {
-          allStaff = staffRes.data.data.map((s) => ({
-            id: s.staffID || s.id,
-            name: s.name || s.staffName || s.staffID || s.id,
-          }));
+        } else {
+          allStaff = [];
         }
       } catch {
-        // Nếu không có API riêng, fallback lấy từ report và bookingAssigned
+        // Fallback to extracting staff from reports if API fails
         const staffFromReports = normalized
           .filter((r) => r.staffID)
-          .map((r) => ({ id: r.staffID, name: r.staffID }));
+          .map((r) => ({ id: r.staffID, fullname: r.staffID }));
         allStaff = staffFromReports;
       }
       // Loại bỏ trùng lặp staff theo id
@@ -363,7 +364,6 @@ const ViewReports = () => {
   };
 
   const handleAssignStaff = async () => {
-    // Defensive: try both assignedID and assignedId (API/DB may use either)
     const assignId = selectedBooking?.assignedId || selectedBooking?.assignedID;
     if (!selectedBooking || !assignId) {
       toast.error("Invalid booking: missing assignedId.");
@@ -379,24 +379,22 @@ const ViewReports = () => {
         staffID: selectedStaff,
         managerID: managerID,
       });
+      setIsModalVisible(false);
+      setSelectedBooking(null);
+      setSelectedStaff(null);
+      // Refresh all reports and bookingAssigned after assign
+      await Promise.all([fetchAllReports(), fetchBookingAssigned()]);
       toast.success(
         `Successfully assigned ${selectedStaff} to report ${
           selectedBooking?.reportID || selectedBooking?.id
         }`
       );
-      setIsModalVisible(false);
-      setSelectedBooking(null);
-      setSelectedStaff(null);
-      // Refresh all reports and bookingAssigned after assign
-      fetchAllReports();
-      fetchBookingAssigned();
     } catch (error) {
       if (
         error.response &&
         error.response.data &&
         (typeof error.response.data === "string" || error.response.data.message)
       ) {
-        // Nếu response.data là string thì show trực tiếp, nếu có message thì show message
         toast.error(
           typeof error.response.data === "string"
             ? error.response.data
@@ -996,7 +994,7 @@ const ViewReports = () => {
       <Modal
         title={
           <span style={{ fontSize: 24, fontWeight: 600 }}>
-            Assign Staff to Report
+            Assign Staff to Booking
           </span>
         }
         open={isModalVisible}
@@ -1039,7 +1037,8 @@ const ViewReports = () => {
                 }>
                 {staffList.map((staff) => (
                   <Option key={staff.id} value={staff.id}>
-                    {staff.name}
+                    {staff.fullname || staff.name}{" "}
+                    {/* Ensure fullname is displayed */}
                   </Option>
                 ))}
               </Select>
