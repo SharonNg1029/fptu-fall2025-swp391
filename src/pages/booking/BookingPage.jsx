@@ -111,6 +111,7 @@ const ConfirmBookingModal = ({
   paymentMethod: paymentMethodProp,
   initialStep,
   navigate,
+  onModalClose, // Thêm callback để đóng modal từ parent
 }) => {
   const [currentStep, setCurrentStep] = useState(initialStep || 1);
   const [paymentMethod, setPaymentMethod] = useState(
@@ -137,9 +138,16 @@ const ConfirmBookingModal = ({
       "Grandparent Testing": "Xét nghiệm ADN Huyết thống Ông-Bà/Cháu",
       "DNA Testing for Birth Registration":
         "Xét nghiệm ADN cho Đăng ký Khai sinh",
+      "DNA Testing for Birth Certificate":
+        "Xét nghiệm ADN cho Giấy khai sinh",
       "DNA Testing for Immigration Cases": "Xét nghiệm ADN cho Vụ việc Nhập cư",
       "DNA Testing for Inheritance or Asset Division":
         "Xét nghiệm ADN cho Thừa kế hoặc Phân chia Tài sản",
+      // Thêm các dịch vụ khác nếu cần
+      "Uncle/Aunt Testing": "Xét nghiệm ADN Chú-Cháu/Cô-Cháu",
+      "Cousin Testing": "Xét nghiệm ADN Anh-Em họ",
+      "Y-Chromosome Testing": "Xét nghiệm ADN Nhiễm sắc thể Y",
+      "Mitochondrial DNA Testing": "Xét nghiệm ADN Ti thể",
     };
     return serviceTranslations[serviceName] || serviceName;
   };
@@ -299,7 +307,7 @@ const ConfirmBookingModal = ({
 
   const handleSignatureComplete = async () => {
     if (!signatureRef.current) {
-      message.error("Không tìm thấy vùng chữ ký!");
+      message.error("Signature area not found!");
       return;
     }
 
@@ -331,16 +339,20 @@ const ConfirmBookingModal = ({
         paymentCode,
         signature: signatureData,
         signatureId: signatureId,
-        status: "signed",
+        status: "Payment Confirmed", // Cập nhật status thành "Payment Confirmed"
         signedAt: new Date().toISOString(),
       };
+
+      // Gọi API để lưu booking với thông tin signature và status "Payment Confirmed"
+      await onConfirm(bookingDataWithSignature);
+
       setFinalBookingData(bookingDataWithSignature);
       setCurrentStep(4);
       setShowPDFOption(true);
-      message.success("Signature successful!");
+      message.success("Successful signature! Please download the PDF file to complete the registration process.");
     } catch (error) {
       console.error("Error processing signature:", error);
-      message.error("Có lỗi xảy ra khi xử lý chữ ký. Vui lòng thử lại!");
+      message.error("An error occurred while processing the signature. Please try again!");
     } finally {
       setIsProcessingSignature(false);
     }
@@ -492,7 +504,7 @@ const ConfirmBookingModal = ({
         console.error("No vnpUrl received from API:", data);
         processingMsg();
         message.error(
-          "Không thể tạo liên kết thanh toán VNPAY. Vui lòng thử lại!"
+          "Unable to create VNPAY payment link. Please try again!"
         );
         setIsSubmittingPayment(false);
         setIsRedirectingToVNPAY(false);
@@ -510,7 +522,7 @@ const ConfirmBookingModal = ({
             error.response.data.includes("no Session"))
         ) {
           message.error(
-            "Lỗi kết nối cơ sở dữ liệu từ server. Vui lòng thử lại sau!"
+            "Database connection error from server. Please try again later!"
           );
         } else {
           message.error(
@@ -527,7 +539,7 @@ const ConfirmBookingModal = ({
         );
       } else {
         console.error("Request configuration error:", error.message);
-        message.error("Lỗi thiết lập yêu cầu: " + error.message);
+        message.error("Request configuration error: " + error.message);
       }
 
       setIsSubmittingPayment(false);
@@ -543,28 +555,69 @@ const ConfirmBookingModal = ({
         !finalBookingData?.signature &&
         (!signatureRef.current || signatureRef.current.isEmpty())
       ) {
-        message.error("Không tìm thấy chữ ký. Vui lòng ký lại!");
+        message.error("Unable to find signature. Please sign again!");
         setIsGeneratingPDF(false);
         return;
       }
       const processingMsg = message.loading("Creating PDF file...", 0);
 
       try {
-        await generatePDF(true);
+        // Tạo PDF và đảm bảo download thành công
+        const pdfDoc = await generatePDF(false); // Tạo PDF nhưng chưa download
+        
+        // Download PDF một cách manual để có thể tracking
+        await new Promise((resolve, reject) => {
+          try {
+            pdfDoc.getBlob((blob) => {
+              if (!blob) {
+                reject(new Error("Unable to create PDF blob"));
+                return;
+              }
+              
+              // Tạo URL tạm thời để download
+              const url = window.URL.createObjectURL(blob);
+              const link = document.createElement('a');
+              link.href = url;
+              link.download = `DonYeuCauXetNghiemADN_${paymentCode || "DNA"}.pdf`;
+              document.body.appendChild(link);
+              
+              // Trigger download
+              link.click();
+              
+              // Cleanup
+              document.body.removeChild(link);
+              window.URL.revokeObjectURL(url);
+              
+              // Đợi một chút để đảm bảo download đã bắt đầu
+              setTimeout(() => {
+                resolve();
+              }, 1000);
+            });
+          } catch (error) {
+            reject(error);
+          }
+        });
+
         processingMsg();
         message.success("PDF file downloaded successfully!", 2);
 
+        // Chỉ cập nhật thông tin PDF đã tạo, không gọi API
         const updatedBookingData = {
           ...finalBookingData,
           pdfGenerated: true,
           pdfGeneratedAt: new Date().toISOString(),
-          status: "Payment Confirmed", 
         };
-        await onConfirm(updatedBookingData);
         setFinalBookingData(updatedBookingData);
-        setCurrentStep(4);
-        setIsPDFConfirmStep(false);
-        message.info("Redirecting to My Booking...", 1.5);
+
+        // Gọi callback để đóng modal từ parent component
+        if (onModalClose && typeof onModalClose === 'function') {
+          setTimeout(() => {
+            onModalClose();
+          }, 500);
+        }
+
+        // Chuyển hướng về My Booking
+        message.info("Redirecting to my booking page....", 1.5);
         setTimeout(() => {
           navigate("/my-booking");
         }, 1500);
@@ -572,12 +625,12 @@ const ConfirmBookingModal = ({
         processingMsg();
         console.error("Error creating PDF:", pdfError);
         message.error(
-          `Không thể tạo PDF: ${pdfError.message}. Vui lòng thử lại!`
+          `Unable to create PDF: ${pdfError.message}. Please try again!`
         );
       }
     } catch (error) {
       console.error("Error downloading PDF:", error);
-      message.error("Lỗi tạo PDF. Vui lòng thử lại!");
+      message.error("PDF creation error. Please try again!");
     } finally {
       setIsGeneratingPDF(false);
     }
@@ -1546,6 +1599,12 @@ const ConfirmBookingModal = ({
 
   const forceClose = () => {
     try {
+      // Ngăn đóng modal khi đang ở step 4 (PDF download)
+      if (currentStep === 4) {
+        message.warning("Vui lòng tải file PDF để hoàn tất quá trình đăng ký trước khi đóng!");
+        return;
+      }
+
       // Reset tất cả trạng thái
       setCurrentStep(1);
       setPaymentMethod("cash");
@@ -2371,7 +2430,7 @@ const ConfirmBookingModal = ({
           fontSize: "24px",
           fontWeight: "bold",
         }}>
-        ✍️ Please sign to confirm
+        ✍️ Please sign to confirm your Payment
       </Title>
 
       <div
@@ -2737,11 +2796,7 @@ const ConfirmBookingModal = ({
           </Button>,
         ];
       case 4:
-        return [
-          <Button key="back" onClick={() => setCurrentStep(3)}>
-            Back
-          </Button>,
-        ];
+        return [];
       default:
         return [];
     }
@@ -2792,27 +2847,9 @@ const ConfirmBookingModal = ({
       width={1000}
       destroyOnHidden
       centered
-      closable={true}
-      closeIcon={
-        <span
-          onClick={forceClose}
-          style={{
-            cursor: "pointer",
-            fontSize: "14px",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            width: "22px",
-            height: "22px",
-            borderRadius: "2px",
-          }}
-          onMouseEnter={(e) => (e.target.style.background = "#f0f0f0")}
-          onMouseLeave={(e) => (e.target.style.background = "transparent")}>
-          ✕
-        </span>
-      }
-      maskClosable={!isRedirectingToVNPAY && !isSubmittingPayment}
-      keyboard={!isRedirectingToVNPAY && !isSubmittingPayment}
+      closable={false}
+      maskClosable={!isRedirectingToVNPAY && !isSubmittingPayment && currentStep !== 4}
+      keyboard={!isRedirectingToVNPAY && !isSubmittingPayment && currentStep !== 4}
       styles={{
         body: {
           padding: "0",
@@ -2856,6 +2893,8 @@ const BookingPage = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSecondPersonPersonalId, setShowSecondPersonPersonalId] =
     useState(false);
+  const [apiSlots, setApiSlots] = useState([]);
+  const [loadingSlots, setLoadingSlots] = useState(false);
   const [showFirstPersonPersonalId, setShowFirstPersonPersonalId] =
     useState(false);
   const [modalInitialStep, setModalInitialStep] = useState(1);
@@ -2973,6 +3012,64 @@ const BookingPage = () => {
     return serviceCost + collectionCost + medicationCost + expressCost;
   };
 
+  // Function to fetch slots from API
+  const fetchSlots = useCallback(async (date) => {
+    if (!date) return;
+    
+    try {
+      setLoadingSlots(true);
+      console.log("🔄 Fetching slots for date:", date);
+      
+      // API expects date format YYYY-MM-DD
+      const response = await axios.get(`/services/slot?date=${date}`);
+      console.log("✅ API Response:", response.data);
+      
+      // Validate response format
+      if (!Array.isArray(response.data)) {
+        console.warn("⚠️ API response is not an array:", response.data);
+        setApiSlots([]);
+        return;
+      }
+      
+      // Filter slots for the selected date since API might return all slots
+      const selectedDateParts = date.split('-').map(Number); // [2025, 7, 13]
+      console.log("📅 Looking for slots with date parts:", selectedDateParts);
+      
+      const filteredSlots = response.data.filter(slot => {
+        if (!slot.date || !Array.isArray(slot.date) || slot.date.length !== 3) {
+          console.warn("⚠️ Invalid slot date format:", slot);
+          return false;
+        }
+
+        const isMatch = slot.date[0] === selectedDateParts[0] && // year
+                       slot.date[1] === selectedDateParts[1] && // month 
+                       slot.date[2] === selectedDateParts[2];   // day
+        
+        if (isMatch) {
+          console.log("✅ Found matching slot:", slot);
+        }
+        
+        return isMatch;
+      });
+      
+      console.log("� Filtered slots for selected date:", filteredSlots);
+      console.log(`📈 Total slots found: ${filteredSlots.length}`);
+      
+      setApiSlots(filteredSlots);
+      
+    } catch (error) {
+      console.error("❌ Error fetching slots:", error);
+      if (error.response) {
+        console.error("🚨 API Error Response:", error.response.data);
+        console.error("🚨 Status Code:", error.response.status);
+      }
+      message.error("Không thể tải thông tin slots. Vui lòng thử lại!");
+      setApiSlots([]);
+    } finally {
+      setLoadingSlots(false);
+    }
+  }, []);
+
   const timeSlots = [
     "8:15 - 9:15",
     "9:30 - 10:30",
@@ -2984,13 +3081,37 @@ const BookingPage = () => {
 
   const isTimeSlotDisabled = (time) => {
     if (!appointmentDate) return false;
+    
+    // Check if time has passed (existing logic)
     const today = moment().format("YYYY-MM-DD");
-    if (appointmentDate !== today) return false;
-    const [start] = time.split(" - ");
-    const [hour, minute] = start.split(":").map(Number);
-    const now = moment();
-    const slotTime = moment().hour(hour).minute(minute).second(0);
-    return slotTime.isBefore(now);
+    if (appointmentDate === today) {
+      const [start] = time.split(" - ");
+      const [hour, minute] = start.split(":").map(Number);
+      const now = moment();
+      const slotTime = moment().hour(hour).minute(minute).second(0);
+      if (slotTime.isBefore(now)) {
+        console.log(`⏰ Slot ${time} is disabled - past time`);
+        return true;
+      }
+    }
+    
+    // Check if slot is fully booked (currentBooking >= 3)
+    const slotInfo = apiSlots.find(slot => slot.timeRange === time);
+    if (slotInfo) {
+      console.log(`📊 Slot ${time} info:`, {
+        currentBooking: slotInfo.currentBooking,
+        isDisabled: slotInfo.currentBooking >= 3
+      });
+      
+      if (slotInfo.currentBooking >= 3) {
+        console.log(`🚫 Slot ${time} is disabled - fully booked (${slotInfo.currentBooking}/3)`);
+        return true;
+      }
+    } else {
+      console.log(`ℹ️ No booking info found for slot ${time}, allowing selection`);
+    }
+    
+    return false;
   };
 
   const areAllTimeSlotsDisabled = () => {
@@ -4206,8 +4327,9 @@ const BookingPage = () => {
       form.resetFields();
       setAppointmentDate("");
       setTimeSlot("");
-      setIsModalVisible(false);
-      setBookingData(null);
+      // Không đóng modal ở đây nữa vì chúng ta muốn hiển thị step 4 (PDF download)
+      // setIsModalVisible(false);  // Bỏ comment này
+      // setBookingData(null);      // Bỏ comment này để giữ booking data cho PDF
       setSelectedService(null);
       setSelectedCollectionMethod(null);
       setSelectedMedicationMethod("");
@@ -4235,6 +4357,13 @@ const BookingPage = () => {
     setIsModalVisible(false);
     setBookingData(null);
     setModalInitialStep(1); 
+  };
+
+  const handlePDFModalClose = () => {
+    // Đóng modal và reset dữ liệu sau khi tải PDF thành công
+    setIsModalVisible(false);
+    setBookingData(null);
+    setModalInitialStep(1);
   };
 
   useEffect(() => {
@@ -4353,6 +4482,15 @@ const BookingPage = () => {
       // ...removed debug log...
     }
   }, [showNotification]);
+
+  // useEffect to fetch slots when appointmentDate changes
+  useEffect(() => {
+    if (appointmentDate) {
+      fetchSlots(appointmentDate);
+    } else {
+      setApiSlots([]);
+    }
+  }, [appointmentDate, fetchSlots]);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -5014,12 +5152,20 @@ const BookingPage = () => {
                       disabledDate={disabledDate}
                       value={form.getFieldValue("appointmentDate")}
                       onChange={(date) => {
+                        const formattedDate = date ? date.format("YYYY-MM-DD") : "";
                         form.setFieldsValue({ appointmentDate: date });
-                        setAppointmentDate(
-                          date ? date.format("YYYY-MM-DD") : ""
-                        );
+                        setAppointmentDate(formattedDate);
                         form.setFieldsValue({ timeSlot: undefined });
                         setTimeSlot("");
+                        
+                        // Fetch slots for the selected date
+                        if (formattedDate) {
+                          console.log("📅 User selected date:", formattedDate);
+                          fetchSlots(formattedDate);
+                        } else {
+                          console.log("🗑️ Date cleared, resetting slots");
+                          setApiSlots([]);
+                        }
                       }}
                     />
                   </Form.Item>
@@ -5039,36 +5185,40 @@ const BookingPage = () => {
                           },
                         ]}>
                         <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                          {timeSlots.map((time) => {
-                            const isDisabled = isTimeSlotDisabled(time);
-                            return (
-                              <div
-                                key={time}
-                                className={`
-                              p-3 border-2 rounded-lg cursor-pointer transition-all duration-200 text-center flex items-center justify-center
-                              ${
-                                timeSlot === time
-                                  ? "border-blue-500 bg-blue-50 text-blue-700"
-                                  : isDisabled
-                                  ? "border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed"
-                                  : "border-gray-300 hover:border-blue-400 hover:bg-blue-50"
-                              }
-                            `}
-                                onClick={() => {
-                                  if (!isDisabled) {
-                                    setTimeSlot(time);
-                                    form.setFieldsValue({ timeSlot: time });
-                                  }
-                                }}>
-                                <span className="w-full text-base font-medium flex justify-center items-center">
-                                  {time}
-                                </span>
-                                {isDisabled && (
-                                  <div className="text-xs mt-1 ml-2">Past</div>
-                                )}
-                              </div>
-                            );
-                          })}
+                          {loadingSlots ? (
+                            <div className="col-span-full text-center py-4">
+                              <span className="text-gray-500">Loading slots...</span>
+                            </div>
+                          ) : (
+                            timeSlots.map((time) => {
+                              const isDisabled = isTimeSlotDisabled(time);
+                              
+                              return (
+                                <div
+                                  key={time}
+                                  className={`
+                                p-3 border-2 rounded-lg cursor-pointer transition-all duration-200 text-center flex items-center justify-center
+                                ${
+                                  timeSlot === time
+                                    ? "border-blue-500 bg-blue-50 text-blue-700"
+                                    : isDisabled
+                                    ? "border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed"
+                                    : "border-gray-300 hover:border-blue-400 hover:bg-blue-50"
+                                }
+                              `}
+                                  onClick={() => {
+                                    if (!isDisabled) {
+                                      setTimeSlot(time);
+                                      form.setFieldsValue({ timeSlot: time });
+                                    }
+                                  }}>
+                                  <span className="text-base font-medium">
+                                    {time}
+                                  </span>
+                                </div>
+                              );
+                            })
+                          )}
                         </div>
                       </Form.Item>
 
@@ -5078,8 +5228,7 @@ const BookingPage = () => {
                           <div className="flex items-center">
                             <ClockCircleOutlined className="text-yellow-600 mr-2" />
                             <span className="text-yellow-800 font-medium">
-                              All slots for today have been filled. Please come
-                              back another day!
+                              All slots for today have been filled. Please choose another day!
                             </span>
                           </div>
                         </div>
@@ -5910,6 +6059,7 @@ const BookingPage = () => {
         paymentMethod={paymentMethod}
         initialStep={modalInitialStep}
         navigate={navigate}
+        onModalClose={handlePDFModalClose}
       />
     </div>
   );
