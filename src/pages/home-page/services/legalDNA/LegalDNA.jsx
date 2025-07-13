@@ -8,7 +8,7 @@ import {
   FaTimes,
 } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
-import { useSelector } from "react-redux"; // ✅ Add useSelector
+import { useSelector } from "react-redux";
 import {
   legalServicesData,
   legalCollectionMethodsData,
@@ -93,12 +93,9 @@ const LegalServices = () => {
   const modalContentRef = useRef(null);
   const navigate = useNavigate();
 
-  // ✅ Add authentication check
   const userState = useSelector((state) => state.user);
   const isAuthenticated = userState?.isAuthenticated;
   const currentUser = userState?.currentUser;
-
-
 
   const formatToVND = (price) =>
     new Intl.NumberFormat("vi-VN", {
@@ -163,26 +160,11 @@ const LegalServices = () => {
     setIsScrolled(false);
   };
 
-  // ✅ Updated handleBookService với authentication check
   const handleBookService = (service, isExpressService = false) => {
-    console.log('🔍 Checking authentication for legal service booking...');
-    console.log('👤 User:', currentUser?.fullName || 'loclnx');
-    console.log('🔐 Authenticated:', isAuthenticated);
-    console.log('📅 Legal Booking Time:', '2025-07-02 12:16:28');
-    console.log('⚖️ Legal Service Type:', service.type);
-
     if (!isAuthenticated) {
-      console.log('❌ User not authenticated, redirecting to login...');
-      // Chuyển hướng đến trang login với return URL
       navigate(`/login?redirect=${encodeURIComponent(window.location.pathname)}`);
       return;
     }
-
-    console.log('✅ User authenticated, proceeding to legal service booking...');
-    console.log('📋 Legal Service ID:', service.serviceID);
-    console.log('⚡ Express Legal Service:', isExpressService);
-
-    // Nếu đã đăng nhập, tiến hành booking
     navigate(
       `/booking?serviceID=${encodeURIComponent(service.serviceID)}&express=${
         isExpressService ? "true" : "false"
@@ -517,7 +499,6 @@ const LegalServices = () => {
                 </div>
               </div>
               
-              {/* ✅ Authentication check for legal service booking buttons */}
               {!isAuthenticated && (
                 <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
                   <div className="flex items-center">

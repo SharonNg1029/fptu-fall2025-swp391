@@ -10,7 +10,7 @@ import {
   FaChevronRight,
 } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
-import { useSelector } from "react-redux"; // ✅ Add useSelector
+import { useSelector } from "react-redux";
 import {
   nonLegalServicesData,
   nonLegalCollectionMethodsData,
@@ -121,12 +121,9 @@ const NonLegalServices = () => {
   const scrollContainerRef = useRef(null);
   const navigate = useNavigate();
 
-  // ✅ Add authentication check
   const userState = useSelector((state) => state.user);
   const isAuthenticated = userState?.isAuthenticated;
   const currentUser = userState?.currentUser;
-
-
 
   const formatToVND = (price) =>
     new Intl.NumberFormat("vi-VN", {
@@ -215,25 +212,11 @@ const NonLegalServices = () => {
     setIsScrolled(false);
   };
 
-  // ✅ Updated handleBookService với authentication check
   const handleBookService = (service, isExpressService = false) => {
-    console.log('🔍 Checking authentication for booking...');
-    console.log('👤 User:', currentUser?.fullName || 'loclnx');
-    console.log('🔐 Authenticated:', isAuthenticated);
-    console.log('📅 Booking Time:', '2025-07-02 12:12:38');
-
     if (!isAuthenticated) {
-      console.log('❌ User not authenticated, redirecting to login...');
-      // Chuyển hướng đến trang login với return URL
       navigate(`/login?redirect=${encodeURIComponent(window.location.pathname)}`);
       return;
     }
-
-    console.log('✅ User authenticated, proceeding to booking...');
-    console.log('📋 Service ID:', service.serviceID);
-    console.log('⚡ Express Service:', isExpressService);
-
-    // Nếu đã đăng nhập, tiến hành booking
     navigate(
       `/booking?serviceID=${encodeURIComponent(service.serviceID)}&express=${
         isExpressService ? "true" : "false"
@@ -241,7 +224,6 @@ const NonLegalServices = () => {
     );
   };
 
-  // ===== RENDER COMPONENT =====
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-cyan-50 to-sky-50">
       {/* ===== PHẦN ĐẦU TRANG (HERO SECTION) ===== */}
@@ -459,7 +441,6 @@ const NonLegalServices = () => {
                         </div>
                       </>
                     )}
-                  {/* Nếu không có mediation methods (ví dụ At Facility), vẫn hiện giá */}
                   {!method.mediationMethods && (
                     <div className="text-2xl font-bold text-blue-600 mt-6">
                       {method.price === 0 ? "FREE" : formatToVND(method.price)}
@@ -598,7 +579,6 @@ const NonLegalServices = () => {
                 </div>
               </div>
               
-              {/* ✅ Authentication check for booking buttons */}
               {!isAuthenticated && (
                 <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
                   <div className="flex items-center">
@@ -619,7 +599,7 @@ const NonLegalServices = () => {
               <div className="flex gap-4">
                 <CustomButton
                   onClick={() => handleBookService(selectedService, false)}
-                  className="flex-1 bg-gradient-to-r from-teal-500 to-cyan-600 hover:from-teal-600 hover:to-cyan-700"
+                  className="flex-1 bg-gradient-to-r from-sky-600 to-blue-700 hover:from-sky-700 hover:to-blue-800"
                 >
                   {isAuthenticated ? 'Book Standard Service' : 'Sign In to Book Standard'}
                 </CustomButton>
