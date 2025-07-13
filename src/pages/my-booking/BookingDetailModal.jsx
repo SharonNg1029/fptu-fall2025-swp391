@@ -255,7 +255,7 @@ const BookingDetailModal = ({
                     </Col>
                     <Col span={12}>
                       <div style={{ padding: '12px 16px', backgroundColor: '#fafafa', borderRadius: 8, border: '1px solid #f0f0f0' }}>
-                        <Text type="secondary" style={{ fontSize: 12, display: 'block', marginBottom: 4 }}>TRANSPORTATION METHOD</Text>
+                        <Text type="secondary" style={{ fontSize: 12, display: 'block', marginBottom: 4 }}>MEDIATION METHOD</Text>
                         <Text strong style={{ fontSize: 14 }}>{getMediationLabel(medicationMethod)}</Text>
                       </div>
                     </Col>
@@ -396,7 +396,7 @@ const BookingDetailModal = ({
                             </Col>
                           </Row>
                           <div style={{ marginTop: 8 }}>
-                            <Text type="secondary" style={{ fontSize: 11 }}>ID CARD/PASSPORT</Text>
+                            <Text type="secondary" style={{ fontSize: 11 }}>PERSONAL ID</Text>
                             <br/>
                             <Text style={{ fontSize: 13 }}>{firstPerson?.personalId || firstPerson?.idNumber || '—'}</Text>
                           </div>
@@ -457,7 +457,7 @@ const BookingDetailModal = ({
                             </Col>
                           </Row>
                           <div style={{ marginTop: 8 }}>
-                            <Text type="secondary" style={{ fontSize: 11 }}>ID CARD/PASSPORT</Text>
+                            <Text type="secondary" style={{ fontSize: 11 }}>PERSONAL ID</Text>
                             <br/>
                             <Text style={{ fontSize: 13 }}>{secondPerson?.personalId || secondPerson?.idNumber || '—'}</Text>
                           </div>

@@ -1620,7 +1620,7 @@ const BlogDetail = () => {
         className="relative text-white h-[400px] flex items-center justify-center"
         style={{
           backgroundImage:
-            "url('https://drugtesters.net/wp-content/uploads/2024/12/MDT-1-768x432.png')",
+            "url('/images/close-up-hands-typing-keyboard.jpg')",
           backgroundSize: "cover",
           backgroundPosition: "center",
           backgroundRepeat: "no-repeat",

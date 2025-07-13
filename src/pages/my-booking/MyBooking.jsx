@@ -371,7 +371,7 @@ const MyBooking = () => {
       : true;
     
     return matchesSearch && matchesServiceType && matchesStatus && matchesPaymentMethod;
-  }).sort((a, b) => a.bookingId - b.bookingId) : [];
+  }).sort((a, b) => b.bookingId - a.bookingId) : [];
 
   const uniqueServices = Array.isArray(bookings) ? [...new Set(bookings.map((b) => b.serviceID))] : [];
   
