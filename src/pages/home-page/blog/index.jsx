@@ -176,7 +176,7 @@ const Blog = () => {
         className="relative text-white h-[600px] mt-10 flex items-center justify-center"
         style={{
           backgroundImage:
-            "url('https://drugtesters.net/wp-content/uploads/2024/12/MDT-1-768x432.png')",
+            "url('/images/close-up-hands-typing-keyboard.jpg')",
           backgroundSize: "cover",
           backgroundPosition: "center",
           backgroundRepeat: "no-repeat",
@@ -328,31 +328,35 @@ const Blog = () => {
                   )}
                 </div>
                 
-                <div className="p-6">
-                  <h3 className="text-xl font-bold mb-3 text-gray-800 group-hover:text-blue-600 transition-colors duration-300 line-clamp-2">
-                    <Link to={`/blog/${article.slug}`}>{article.title}</Link>
-                  </h3>
-                  
-                  <p className="text-gray-600 mb-4 line-clamp-3 leading-relaxed">{article.excerpt}</p>
-                  
-                  <div className="flex items-center justify-between text-sm text-gray-500 mb-6">
-                    <div className="flex items-center">
-                      <FaUser className="mr-2 text-blue-500" />
-                      <span className="font-medium">{article.author}</span>
-                    </div>
-                    <div className="flex items-center">
-                      <FaCalendar className="mr-2 text-blue-500" />
-                      <span>{formatDate(article.date)}</span>
+                <div className="p-6 flex flex-col h-[280px]">
+                  <div>
+                    <h3 className="text-xl font-bold mb-3 text-gray-800 group-hover:text-blue-600 transition-colors duration-300 line-clamp-2">
+                      <Link to={`/blog/${article.slug}`}>{article.title}</Link>
+                    </h3>
+                    
+                    <p className="text-gray-600 mb-4 line-clamp-3 leading-relaxed">{article.excerpt}</p>
+                    
+                    <div className="flex items-center justify-between text-sm text-gray-500 mb-6">
+                      <div className="flex items-center">
+                        <FaUser className="mr-2 text-blue-500" />
+                        <span className="font-medium">{article.author}</span>
+                      </div>
+                      <div className="flex items-center">
+                        <FaCalendar className="mr-2 text-blue-500" />
+                        <span>{formatDate(article.date)}</span>
+                      </div>
                     </div>
                   </div>
                   
-                  <Link
-                    to={`/blog/${article.slug}`}
-                    className="group/btn inline-flex items-center justify-center w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-3 rounded-2xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 transform hover:scale-105 font-semibold shadow-lg hover:shadow-xl"
-                  >
-                    <span>Read More</span>
-                    <FaArrowRight className="ml-2 group-hover/btn:translate-x-1 transition-transform duration-300" />
-                  </Link>
+                  <div className="mt-auto">
+                    <Link
+                      to={`/blog/${article.slug}`}
+                      className="group/btn inline-flex items-center justify-center w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-3 rounded-2xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 transform hover:scale-105 font-semibold shadow-lg hover:shadow-xl"
+                    >
+                      <span>Read More</span>
+                      <FaArrowRight className="ml-2 group-hover/btn:translate-x-1 transition-transform duration-300" />
+                    </Link>
+                  </div>
                 </div>
               </div>
             ))}
