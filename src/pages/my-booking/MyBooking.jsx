@@ -391,14 +391,30 @@ const MyBooking = () => {
         padding: '1.5rem',
         color: 'white'
       }}>
-        <div className="flex items-center mb-2">
-          <button
-            onClick={() => navigate(-1)}
-            className="flex items-center text-white hover:text-blue-200 transition-colors mr-4"
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center">
+            <button
+              onClick={() => navigate(-1)}
+              className="flex items-center text-white hover:text-blue-200 transition-colors mr-4"
+            >
+              <FaArrowLeft className="mr-2" />
+              Back
+            </button>
+          </div>
+          
+          {/* Logo với link về trang chủ */}
+          <div 
+            onClick={() => navigate('/')} 
+            className="cursor-pointer flex items-center"
+            style={{ marginRight: '20px' }}
           >
-            <FaArrowLeft className="mr-2" />
-            Back
-          </button>
+            <img 
+              src="/images/logo.png" 
+              alt="DNA Testing Logo" 
+              style={{ height: '40px' }}
+              className="hover:opacity-90 transition-opacity"
+            />
+          </div>
         </div>
         <h1 className="text-2xl font-bold">DNA Testing Booking</h1>
         <p className="text-blue-100">My Booking</p>
