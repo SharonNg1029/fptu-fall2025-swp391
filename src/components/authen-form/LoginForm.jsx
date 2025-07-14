@@ -184,12 +184,19 @@ function LoginForm() {
       }
     } catch (e) {
       console.error("Login error:", e);
-      const msg =
-        e.response?.data?.message ||
-        e.response?.data ||
-        e.message ||
-        "Login failed!";
-      toast.error(typeof msg === "string" ? msg : JSON.stringify(msg));
+      let msg = "Login failed!";
+      if (e.response && e.response.data) {
+        if (typeof e.response.data === "string") {
+          msg = e.response.data;
+        } else if (e.response.data.message) {
+          msg = e.response.data.message;
+        } else {
+          msg = JSON.stringify(e.response.data);
+        }
+      } else if (e.message) {
+        msg = e.message;
+      }
+      toast.error(msg);
     }
   }
 
