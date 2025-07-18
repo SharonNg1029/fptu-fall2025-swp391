@@ -512,7 +512,7 @@ const articles = [
           </tr>
           <tr style="background-color: #f8f9fa;">
             <td style="border: 1px solid #dee2e6; padding: 12px;">Xét nghiệm cô/dì/chú bác...</td>
-            <td style="border: 1px solid #dee2e6; padding: 12px; text-align: center;">3-4 người (bên ngoại)</td>
+            <td style="border: 1px solid #dee2e6; padding: 12px; text-align: center;">3-4 người</td>
             <td style="border: 1px solid #dee2e6; padding: 12px; text-align: center;">3,500,000 VNĐ</td>
             <td style="border: 1px solid #dee2e6; padding: 12px; text-align: center;">2,500,000 VNĐ</td>
           </tr>
@@ -534,19 +534,19 @@ const articles = [
           </tr>
           <tr>
             <td style="border: 1px solid #dee2e6; padding: 12px;">Xét nghiệm cha-con</td>
-            <td style="border: 1px solid #dee2e6; padding: 12px; text-align: center;">2-7 người (bao gồm)</td>
+            <td style="border: 1px solid #dee2e6; padding: 12px; text-align: center;">2-7 người</td>
             <td style="border: 1px solid #dee2e6; padding: 12px; text-align: center;">5,000,000 VNĐ</td>
             <td style="border: 1px solid #dee2e6; padding: 12px; text-align: center;">+2,500,000 VNĐ</td>
           </tr>
           <tr style="background-color: #f8f9fa;">
             <td style="border: 1px solid #dee2e6; padding: 12px;">Xét nghiệm mẹ-con</td>
-            <td style="border: 1px solid #dee2e6; padding: 12px; text-align: center;">2-7 người (bao gồm)</td>
+            <td style="border: 1px solid #dee2e6; padding: 12px; text-align: center;">2-7 người</td>
             <td style="border: 1px solid #dee2e6; padding: 12px; text-align: center;">6,000,000 VNĐ</td>
             <td style="border: 1px solid #dee2e6; padding: 12px; text-align: center;">+2,500,000 VNĐ</td>
           </tr>
           <tr>
             <td style="border: 1px solid #dee2e6; padding: 12px;">Xét nghiệm quan hệ khác, trong họ hàng</td>
-            <td style="border: 1px solid #dee2e6; padding: 12px; text-align: center;">2-7 người (bao gồm)</td>
+            <td style="border: 1px solid #dee2e6; padding: 12px; text-align: center;">2-7 người</td>
             <td style="border: 1px solid #dee2e6; padding: 12px; text-align: center;">6,000,000 VNĐ</td>
             <td style="border: 1px solid #dee2e6; padding: 12px; text-align: center;">+2,500,000 VNĐ</td>
           </tr>
@@ -592,20 +592,6 @@ const articles = [
           </li>
         </ul>
         
-        <div class="conclusion-box" style="background-color: #f0f8ff; padding: 20px; border-radius: 5px; margin: 20px 0; border: 1px solid #ccc;">
-          <h3 style="color: #1976D2; margin-top: 0;">Thông tin liên hệ</h3>
-          <p>Để được tư vấn chi tiết hoặc đặt lịch xét nghiệm, vui lòng liên hệ với Trung tâm xét nghiệm ADN Genetix:</p>
-          
-          <ul>
-            <li><strong>Hotline:</strong> 1900 1XXX</li>
-            <li><strong>Email:</strong> info@genetix.vn</li>
-            <li><strong>Website:</strong> www.genetix.vn</li>
-            <li><strong>Địa chỉ:</strong> Tầng 5, Tòa nhà A, 123 Đường Nguyễn Văn Linh, Quận 7, TP. Hồ Chí Minh</li>
-          </ul>
-          
-          <p>Genetix - Nơi công nghệ hiện đại gặp gỡ sự chính xác tuyệt đối. Chúng tôi cam kết bảo mật thông tin và quy trình xét nghiệm chuyên nghiệp.</p>
-        </div>
-      </div>
     `
   },
 // ... existing code ...
@@ -839,42 +825,42 @@ const articles = [
           </tr>
           <tr>
             <td style="border: 1px solid #dee2e6; padding: 12px;">Paternity Testing (Cha-Con)</td>
-            <td style="border: 1px solid #dee2e6; padding: 12px; text-align: center;">✅ Father - Child</td>
+            <td style="border: 1px solid #dee2e6; padding: 12px; text-align: center;">Father - Child</td>
             <td style="border: 1px solid #dee2e6; padding: 12px; text-align: center;"></td>
           </tr>
           <tr style="background-color: #f8f9fa;">
             <td style="border: 1px solid #dee2e6; padding: 12px;">Maternity Testing (Mẹ-Con)</td>
-            <td style="border: 1px solid #dee2e6; padding: 12px; text-align: center;">✅ Mother - Child</td>
+            <td style="border: 1px solid #dee2e6; padding: 12px; text-align: center;">Mother - Child</td>
             <td style="border: 1px solid #dee2e6; padding: 12px; text-align: center;"></td>
           </tr>
           <tr>
             <td style="border: 1px solid #dee2e6; padding: 12px;">NIPT (Thai nhi không xâm lấn)</td>
-            <td style="border: 1px solid #dee2e6; padding: 12px; text-align: center;">✅ Father - Child</td>
+            <td style="border: 1px solid #dee2e6; padding: 12px; text-align: center;">Father - Child</td>
             <td style="border: 1px solid #dee2e6; padding: 12px; text-align: center;">Mẫu của Child là null (tự động)</td>
           </tr>
           <tr style="background-color: #f8f9fa;">
             <td style="border: 1px solid #dee2e6; padding: 12px;">Sibling Testing (Anh/Chị/Em)</td>
-            <td style="border: 1px solid #dee2e6; padding: 12px; text-align: center;">✅ Sibling - Sibling</td>
+            <td style="border: 1px solid #dee2e6; padding: 12px; text-align: center;">Sibling - Sibling</td>
             <td style="border: 1px solid #dee2e6; padding: 12px; text-align: center;"></td>
           </tr>
           <tr>
             <td style="border: 1px solid #dee2e6; padding: 12px;">Grandparent Testing (Ông/Bà-Cháu)</td>
-            <td style="border: 1px solid #dee2e6; padding: 12px; text-align: center;">✅ Grandparent - Grandchild</td>
+            <td style="border: 1px solid #dee2e6; padding: 12px; text-align: center;">Grandparent - Grandchild</td>
             <td style="border: 1px solid #dee2e6; padding: 12px; text-align: center;"></td>
           </tr>
           <tr style="background-color: #f8f9fa;">
             <td style="border: 1px solid #dee2e6; padding: 12px;">DNA Testing for Birth Registration</td>
-            <td style="border: 1px solid #dee2e6; padding: 12px; text-align: center;">✅ Father - Child<br>✅ Mother - Child</td>
+            <td style="border: 1px solid #dee2e6; padding: 12px; text-align: center;">Father - Child<br>Mother - Child</td>
             <td style="border: 1px solid #dee2e6; padding: 12px; text-align: center;">Cho phép một trong hai</td>
           </tr>
           <tr>
             <td style="border: 1px solid #dee2e6; padding: 12px;">DNA Testing for Immigration</td>
-            <td style="border: 1px solid #dee2e6; padding: 12px; text-align: center;">✅ Father - Child<br>✅ Mother - Child<br>✅ Sibling - Sibling<br>✅ Grandparent - Grandchild</td>
+            <td style="border: 1px solid #dee2e6; padding: 12px; text-align: center;">Father - Child<br>Mother - Child<br>Sibling - Sibling<br>Grandparent - Grandchild</td>
             <td style="border: 1px solid #dee2e6; padding: 12px; text-align: center;">Phải chọn đúng cặp</td>
           </tr>
           <tr style="background-color: #f8f9fa;">
             <td style="border: 1px solid #dee2e6; padding: 12px;">DNA Testing for Inheritance</td>
-            <td style="border: 1px solid #dee2e6; padding: 12px; text-align: center;">1️⃣ Father/Mother - Child<br>2️⃣ Grandparent - Grandchild<br>3️⃣ Sibling - Sibling</td>
+            <td style="border: 1px solid #dee2e6; padding: 12px; text-align: center;"> Father/Mother - Child<br> Grandparent - Grandchild<br>Sibling - Sibling</td>
             <td style="border: 1px solid #dee2e6; padding: 12px; text-align: center;">Gợi ý theo thứ tự ưu tiên</td>
           </tr>
         </table>
