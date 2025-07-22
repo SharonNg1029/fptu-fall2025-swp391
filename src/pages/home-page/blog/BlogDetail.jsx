@@ -10,7 +10,7 @@ const articles = [
     category: "Knowledge",
     excerpt: "Discover the latest breakthroughs in DNA testing technology with 99.99% accuracy and rapid processing speed.",
     image: "https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=1200&h=800&fit=crop",
-    slug: "cong-nghe-xet-nghiem-adn-the-he-moi-2024",
+    slug: "next-generation-dna-testing-technology-2024",
     author: "Dr. Nguyen Minh Khoa",
     date: "2024-01-25",
     readTime: "15 min read",
@@ -279,7 +279,7 @@ const articles = [
     category: "Administration",
     excerpt: "A detailed guide to the required administrative procedures for conducting DNA tests as regulated by the Ministry of Health.",
     image: "https://images.unsplash.com/photo-1450101499163-c8848c66ca85?w=1200&h=800&fit=crop",
-    slug: "quy-trinh-hanh-chinh-xet-nghiem-adn-tai-viet-nam",
+    slug: "administrative-procedures-dna-testing-vietnam",
     author: "Lawyer Tran Van Minh",
     date: "2024-01-23",
     readTime: "8 min read",
@@ -477,330 +477,328 @@ const articles = [
       </div>
     `
   },
-// ... existing code ...
-{
-  id: 3,
-  title: "Breaking News: DNA Law 2025 Effective from March",
-  category: "News",
-  excerpt: "The new DNA testing law officially takes effect, bringing many positive changes for the public.",
-  image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=1200&h=800&fit=crop",
-  slug: "tin-moi-luat-adn-2024-co-hieu-luc-tu-thang-3",
-  author: "Reporter Le Thi Hoa",
-  date: "2025-04-22",
-  readTime: "15 min read",
-  featured: true,
-  tableOfContents: [
-    { id: "1", title: "Step 1: Overview of DNA Law 2025", level: 1 },
-    { id: "2", title: "Step 2: New Administrative Procedure Regulations", level: 1 },
-    { id: "3", title: "Step 3: Rights and Obligations of Participating Parties", level: 1 },
-    { id: "4", title: "Step 4: DNA Testing Implementation Process", level: 1 },
-    { id: "5", title: "Step 5: Legal Value of Test Results", level: 1 },
-    { id: "6", title: "Step 6: Implementation Guidelines and Application Timeline", level: 1 }
-  ],
-  content: `
-    <div class="blog-content">
-      <div style="background-color: #e8f4fd; padding: 20px; border-radius: 8px; margin-bottom: 25px; border-left: 4px solid #2196F3;">
-        <h3 style="color: #1976D2; margin-top: 0;">��️ OFFICIAL ANNOUNCEMENT</h3>
-        <p style="margin-bottom: 0; font-weight: 500;">Law No. 15/2025/QH15 on DNA testing in civil and criminal activities officially comes into effect from March 15, 2025, replacing previous regulations and establishing a unified legal framework for the whole country.</p>
-      </div>
+  {
+    id: 3,
+    title: "Breaking News: DNA Law 2025 Effective from March",
+    category: "News",
+    excerpt: "The new DNA testing law officially takes effect, bringing many positive changes for the public.",
+    image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=1200&h=800&fit=crop",
+    slug: "breaking-news-dna-law-2025-effective-march",
+    author: "Reporter Le Thi Hoa",
+    date: "2025-04-22",
+    readTime: "15 min read",
+    featured: true,
+    tableOfContents: [
+      { id: "1", title: "Step 1: Overview of DNA Law 2025", level: 1 },
+      { id: "2", title: "Step 2: New Administrative Procedure Regulations", level: 1 },
+      { id: "3", title: "Step 3: Rights and Obligations of Participating Parties", level: 1 },
+      { id: "4", title: "Step 4: DNA Testing Implementation Process", level: 1 },
+      { id: "5", title: "Step 5: Legal Value of Test Results", level: 1 },
+      { id: "6", title: "Step 6: Implementation Guidelines and Application Timeline", level: 1 }
+    ],
+    content: `
+      <div class="blog-content">
+        <div style="background-color: #e8f4fd; padding: 20px; border-radius: 8px; margin-bottom: 25px; border-left: 4px solid #2196F3;">
+          <h3 style="color: #1976D2; margin-top: 0;">️ OFFICIAL ANNOUNCEMENT</h3>
+          <p style="margin-bottom: 0; font-weight: 500;">Law No. 15/2025/QH15 on DNA testing in civil and criminal activities officially comes into effect from March 15, 2025, replacing previous regulations and establishing a unified legal framework for the whole country.</p>
+        </div>
 
-      <h2 id="1">Step 1: Overview of DNA Law 2025</h2>
-      <p>DNA Law 2025 was passed by the National Assembly of the 15th Legislature with 456/462 representatives in attendance, marking a significant step forward in improving the legal system of Vietnam on DNA testing.</p>
-      
-      <p><strong>Objectives of the Law:</strong></p>
-      <ul>
-        <li><strong>Unifying procedures:</strong> Establishing a unified legal framework for DNA testing across the country</li>
-        <li><strong>Protecting rights:</strong> Ensuring the legal rights of citizens in DNA testing activities</li>
-        <li><strong>Improving quality:</strong> Establishing high standards for DNA testing service quality</li>
-        <li><strong>Transparency:</strong> Enhancing transparency in the testing process and results</li>
-      </ul>
-      
-      <p><strong>Scope of application:</strong></p>
-      <ul>
-        <li>DNA testing for civil purposes (determining blood relationships, inheritance)</li>
-        <li>DNA testing in investigations, prosecutions, and trials</li>
-        <li>DNA testing for medical and scientific research purposes</li>
-        <li>Activities of entities conducting DNA testing</li>
-      </ul>
-      
-      <p><strong>Basic principles:</strong></p>
-      <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin: 15px 0;">
+        <h2 id="1">Step 1: Overview of DNA Law 2025</h2>
+        <p>DNA Law 2025 was passed by the National Assembly of the 15th Legislature with 456/462 representatives in attendance, marking a significant step forward in improving the legal system of Vietnam on DNA testing.</p>
+        
+        <p><strong>Objectives of the Law:</strong></p>
         <ul>
-          <li><strong>Voluntary:</strong> DNA testing must be based on the voluntary consent of all parties (except where the law specifies otherwise)</li>
-          <li><strong>Accuracy:</strong> Ensuring the highest accuracy in the testing process and results</li>
-          <li><strong>Confidentiality:</strong> Protecting personal information and test results</li>
-          <li><strong>Publicity, transparency:</strong> The testing process must be public and transparent</li>
+          <li><strong>Unifying procedures:</strong> Establishing a unified legal framework for DNA testing across the country</li>
+          <li><strong>Protecting rights:</strong> Ensuring the legal rights of citizens in DNA testing activities</li>
+          <li><strong>Improving quality:</strong> Establishing high standards for DNA testing service quality</li>
+          <li><strong>Transparency:</strong> Enhancing transparency in the testing process and results</li>
         </ul>
-      </div>
-
-      <h2 id="2">Step 2: New Administrative Procedure Regulations</h2>
-      <p>DNA Law 2025 significantly simplifies administrative procedures, reducing time and costs for the public:</p>
-      
-      <p><strong>Registration process:</strong></p>
-      <ul>
-        <li><strong>Simplified application:</strong> Only CCCD/CMND and simple registration form (uniform template)</li>
-        <li><strong>Online registration:</strong> Can be registered online through the national public service portal</li>
-        <li><strong>Processing time:</strong> Up to 3 working days (reduced from 7 days previously)</li>
-        <li><strong>Fee waiver:</strong> 25% reduction in fees, free for poor households</li>
-      </ul>
-      
-      <p><strong>One-stop service:</strong></p>
-      <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
-        <tr style="background-color: #f8f9fa;">
-          <th style="border: 1px solid #dee2e6; padding: 12px; text-align: left;">Step</th>
-          <th style="border: 1px solid #dee2e6; padding: 12px; text-align: left;">Procedure</th>
-          <th style="border: 1px solid #dee2e6; padding: 12px; text-align: center;">Time</th>
-        </tr>
-        <tr>
-          <td style="border: 1px solid #dee2e6; padding: 12px;">1</td>
-          <td style="border: 1px solid #dee2e6; padding: 12px;">Submission of documents at the one-stop service counter</td>
-          <td style="border: 1px solid #dee2e6; padding: 12px; text-align: center;">15 minutes</td>
-        </tr>
-        <tr style="background-color: #f8f9fa;">
-          <td style="border: 1px solid #dee2e6; padding: 12px;">2</td>
-          <td style="border: 1px solid #dee2e6; padding: 12px;">Review of documents and issuance of appointment slip</td>
-          <td style="border: 1px solid #dee2e6; padding: 12px; text-align: center;">30 minutes</td>
-        </tr>
-        <tr>
-          <td style="border: 1px solid #dee2e6; padding: 12px;">3</td>
-          <td style="border: 1px solid #dee2e6; padding: 12px;">DNA testing sample collection</td>
-          <td style="border: 1px solid #dee2e6; padding: 12px; text-align: center;">15 minutes</td>
-        </tr>
-        <tr style="background-color: #f8f9fa;">
-          <td style="border: 1px solid #dee2e6; padding: 12px;">4</td>
-          <td style="border: 1px solid #dee2e6; padding: 12px;">Receiving results</td>
-          <td style="border: 1px solid #dee2e6; padding: 12px; text-align: center;">24-48 hours</td>
-        </tr>
-      </table>
-      
-      <p><strong>Digital service:</strong></p>
-      <ul>
-        <li><strong>Mobile application:</strong> Launch of "Vietnam DNA" app for tracking progress</li>
-        <li><strong>Online payment:</strong> Support for online payment through electronic wallets, internet banking</li>
-        <li><strong>Digital results:</strong> Receive results via email with digital signature</li>
-        <li><strong>Cloud storage:</strong> Results are securely stored on the national system</li>
-      </ul>
-
-      <h2 id="3">Step 3: Rights and Obligations of Participating Parties</h2>
-      <p>DNA Law 2025 clearly defines the rights and obligations of each party involved to ensure fairness and transparency:</p>
-      
-      <p><strong>Rights of the person requesting testing:</strong></p>
-      <ul>
-        <li><strong>Right to information:</strong> Being fully explained about the process, costs, and time</li>
-        <li><strong>Right to choose:</strong> Free choice of testing facility with sufficient conditions</li>
-        <li><strong>Right to confidentiality:</strong> Personal information and results are kept absolutely confidential</li>
-        <li><strong>Right to appeal:</strong> Appeal when violations occur during the process</li>
-        <li><strong>Right to compensation:</strong> Being compensated for damages when errors occur</li>
-      </ul>
-      
-      <p><strong>Obligations of the person requesting testing:</strong></p>
-      <ul>
-        <li><strong>Providing accurate information:</strong> Declaring truthfully about personal background</li>
-        <li><strong>Following the procedure:</strong> Conducting the process correctly according to instructions</li>
-        <li><strong>Full payment:</strong> Paying for service fees according to regulations</li>
-        <li><strong>Confidentiality:</strong> Not disclosing the information of others</li>
-      </ul>
-      
-      <p><strong>Rights of the testing participant:</strong></p>
-      <div style="background-color: #e8f5e8; padding: 15px; border-radius: 5px; margin: 15px 0; border-left: 4px solid #4CAF50;">
+        
+        <p><strong>Scope of application:</strong></p>
         <ul>
-          <li><strong>Right to refuse:</strong> Has the right to refuse to participate in testing (except in cases mandated by law)</li>
-          <li><strong>Right to consultation:</strong> Being consulted about the meaning and consequences of testing</li>
-          <li><strong>Right to know results:</strong> Being informed about test results (if consented)</li>
-          <li><strong>Right to request sample destruction:</strong> Requesting destruction of biological samples after results</li>
+          <li>DNA testing for civil purposes (determining blood relationships, inheritance)</li>
+          <li>DNA testing in investigations, prosecutions, and trials</li>
+          <li>DNA testing for medical and scientific research purposes</li>
+          <li>Activities of entities conducting DNA testing</li>
         </ul>
-      </div>
-      
-      <p><strong>Obligations of the testing facility:</strong></p>
-      <ul>
-        <li><strong>Ensuring quality:</strong> Adhering to strict technical standards</li>
-        <li><strong>Confidentiality:</strong> Establishing a secure information system according to international standards</li>
-        <li><strong>Periodic reporting:</strong> Reporting activities to the management authority</li>
-        <li><strong>Training staff:</strong> Ensuring staff have the necessary professional skills</li>
-        <li><strong>Compensation for damages:</strong> Bearing responsibility for damages when errors occur</li>
-      </ul>
+        
+        <p><strong>Basic principles:</strong></p>
+        <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin: 15px 0;">
+          <ul>
+            <li><strong>Voluntary:</strong> DNA testing must be based on the voluntary consent of all parties (except where the law specifies otherwise)</li>
+            <li><strong>Accuracy:</strong> Ensuring the highest accuracy in the testing process and results</li>
+            <li><strong>Confidentiality:</strong> Protecting personal information and test results</li>
+            <li><strong>Publicity, transparency:</strong> The testing process must be public and transparent</li>
+          </ul>
+        </div>
 
-      <h2 id="4">Step 4: DNA Testing Implementation Process</h2>
-      <p>DNA Law 2025 specifies standardized procedures, ensuring consistency across the country:</p>
-      
-      <p><strong>Preparation phase:</strong></p>
-      <ul>
-        <li><strong>Initial consultation:</strong> Explaining the process, costs, time, and legal significance</li>
-        <li><strong>Signing a commitment:</strong> All parties sign a commitment to abide by the regulations</li>
-        <li><strong>Identity verification:</strong> Verifying CCCD/CMND and taking photographs of the record</li>
-        <li><strong>Document preparation:</strong> Recording all information about the parties involved</li>
-      </ul>
-      
-      <p><strong>Sample collection phase:</strong></p>
-      <div style="background-color: #fff3cd; padding: 15px; border-radius: 5px; margin: 15px 0; border-left: 4px solid #ffc107;">
-        <p><strong>⚠️ Important note:</strong> Sampling must be conducted by staff with certification, with at least 2 witnesses present and recorded.</p>
-      </div>
-      
-      <ul>
-        <li><strong>Equipment preparation:</strong> Using pre-certified sampling kits</li>
-        <li><strong>Saliva or cheek cell sampling:</strong> Preferred method, non-invasive</li>
-        <li><strong>Tissue culture sampling:</strong> Using cotton swabs for specific use</li>
-        <li><strong>Sample packaging:</strong> Storing in appropriate temperature conditions</li>
-        <li><strong>Transportation:</strong> Transporting samples to the laboratory within 24 hours</li>
-      </ul>
-      
-      <p><strong>Analysis phase:</strong></p>
-      <ul>
-        <li><strong>DNA extraction:</strong> Using automated technology</li>
-        <li><strong>PCR amplification:</strong> Amplifying target DNA segments</li>
-        <li><strong>Electrophoresis analysis:</strong> Analyzing genetic markers</li>
-        <li><strong>Data comparison:</strong> Using specialized software</li>
-        <li><strong>Quality control:</strong> Conducting cross-checks with standard samples</li>
-      </ul>
-      
-      <p><strong>Technical requirements:</strong></p>
-      <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
-        <tr style="background-color: #f8f9fa;">
-          <th style="border: 1px solid #dee2e6; padding: 12px; text-align: left;">Criteria</th>
-          <th style="border: 1px solid #dee2e6; padding: 12px; text-align: center;">Minimum Requirement</th>
-        </tr>
-        <tr>
-          <td style="border: 1px solid #dee2e6; padding: 12px;">Number of markers</td>
-          <td style="border: 1px solid #dee2e6; padding: 12px; text-align: center;">At least 20 markers</td>
-        </tr>
-        <tr style="background-color: #f8f9fa;">
-          <td style="border: 1px solid #dee2e6; padding: 12px;">Accuracy</td>
-          <td style="border: 1px solid #dee2e6; padding: 12px; text-align: center;">≥ 99.99%</td>
-        </tr>
-        <tr>
-          <td style="border: 1px solid #dee2e6; padding: 12px;">Report preparation time</td>
-          <td style="border: 1px solid #dee2e6; padding: 12px; text-align: center;">≤ 5 working days</td>
-        </tr>
-        <tr style="background-color: #f8f9fa;">
-          <td style="border: 1px solid #dee2e6; padding: 12px;">Sample storage</td>
-          <td style="border: 1px solid #dee2e6; padding: 12px; text-align: center;">At least 2 years</td>
-        </tr>
-      </table>
-
-      <h2 id="5">Step 5: Legal Value of Test Results</h2>
-      <p>DNA Law 2025 significantly enhances the legal value of DNA test results in legal procedures:</p>
-      
-      <p><strong>Evidence of scientific validity:</strong></p>
-      <ul>
-        <li><strong>Scientific evidence:</strong> Accepted as scientifically valid high-value evidence</li>
-        <li><strong>Convincing power:</strong> Strong persuasive power in civil and criminal cases</li>
-        <li><strong>Reliability:</strong> Accepted by the court with high confidence</li>
-        <li><strong>Mandatory:</strong> In some cases, the court may require it to be conducted</li>
-      </ul>
-      
-      <p><strong>Applications in various fields:</strong></p>
-      
-      <p><strong>1. Civil:</strong></p>
-      <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin: 15px 0;">
+        <h2 id="2">Step 2: New Administrative Procedure Regulations</h2>
+        <p>DNA Law 2025 significantly simplifies administrative procedures, reducing time and costs for the public:</p>
+        
+        <p><strong>Registration process:</strong></p>
         <ul>
-          <li><strong>Determining father-child relationship:</strong> Providing basis for birth registration</li>
-          <li><strong>Inheritance disputes:</strong> Determining legitimate heirs</li>
-          <li><strong>Divorce and child custody:</strong> Determining post-divorce child custody</li>
-          <li><strong>Adoption:</strong> Proving no blood relationship</li>
+          <li><strong>Simplified application:</strong> Only CCCD/CMND and simple registration form (uniform template)</li>
+          <li><strong>Online registration:</strong> Can be registered online through the national public service portal</li>
+          <li><strong>Processing time:</strong> Up to 3 working days (reduced from 7 days previously)</li>
+          <li><strong>Fee waiver:</strong> 25% reduction in fees, free for poor households</li>
         </ul>
-      </div>
-      
-      <p><strong>2. Criminal:</strong></p>
-      <ul>
-        <li><strong>Investigation of crimes:</strong> Determining the identity of suspects</li>
-        <li><strong>Evidence at trial:</strong> Providing evidence to convict or exonerate</li>
-        <li><strong>Identifying victims:</strong> In cases of accidents, disasters</li>
-        <li><strong>Re-examination:</strong> Basis for appeal in criminal cases</li>
-      </ul>
-      
-      <p><strong>3. Administrative:</strong></p>
-      <ul>
-        <li><strong>Immigration:</strong> Providing evidence of family relationships for visas</li>
-        <li><strong>Residency:</strong> Supporting family-based immigration applications</li>
-        <li><strong>Insurance:</strong> Determining beneficiaries of insurance</li>
-        <li><strong>Social assistance:</strong> Determining eligible recipients of social assistance</li>
-      </ul>
-      
-      <p><strong>Conditions for results to have legal value:</strong></p>
-      <div style="background-color: #e3f2fd; padding: 15px; border-radius: 5px; margin: 15px 0; border-left: 4px solid #2196F3;">
+        
+        <p><strong>One-stop service:</strong></p>
+        <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
+          <tr style="background-color: #f8f9fa;">
+            <th style="border: 1px solid #dee2e6; padding: 12px; text-align: left;">Step</th>
+            <th style="border: 1px solid #dee2e6; padding: 12px; text-align: left;">Procedure</th>
+            <th style="border: 1px solid #dee2e6; padding: 12px; text-align: center;">Time</th>
+          </tr>
+          <tr>
+            <td style="border: 1px solid #dee2e6; padding: 12px;">1</td>
+            <td style="border: 1px solid #dee2e6; padding: 12px;">Submission of documents at the one-stop service counter</td>
+            <td style="border: 1px solid #dee2e6; padding: 12px; text-align: center;">15 minutes</td>
+          </tr>
+          <tr style="background-color: #f8f9fa;">
+            <td style="border: 1px solid #dee2e6; padding: 12px;">2</td>
+            <td style="border: 1px solid #dee2e6; padding: 12px;">Review of documents and issuance of appointment slip</td>
+            <td style="border: 1px solid #dee2e6; padding: 12px; text-align: center;">30 minutes</td>
+          </tr>
+          <tr>
+            <td style="border: 1px solid #dee2e6; padding: 12px;">3</td>
+            <td style="border: 1px solid #dee2e6; padding: 12px;">DNA testing sample collection</td>
+            <td style="border: 1px solid #dee2e6; padding: 12px; text-align: center;">15 minutes</td>
+          </tr>
+          <tr style="background-color: #f8f9fa;">
+            <td style="border: 1px solid #dee2e6; padding: 12px;">4</td>
+            <td style="border: 1px solid #dee2e6; padding: 12px;">Receiving results</td>
+            <td style="border: 1px solid #dee2e6; padding: 12px; text-align: center;">24-48 hours</td>
+          </tr>
+        </table>
+        
+        <p><strong>Digital service:</strong></p>
         <ul>
-          <li><strong>Facility meets the requirements:</strong> Operating under the approved scope</li>
-          <li><strong>Following the procedure:</strong> Strictly following the technical process</li>
-          <li><strong>Staff certification:</strong> Conducted by staff trained and certified</li>
-          <li><strong>Witnessed:</strong> Sampling process has witnesses</li>
-          <li><strong>Proper storage:</strong> Samples are stored according to regulations</li>
+          <li><strong>Mobile application:</strong> Launch of "Vietnam DNA" app for tracking progress</li>
+          <li><strong>Online payment:</strong> Support for online payment through electronic wallets, internet banking</li>
+          <li><strong>Digital results:</strong> Receive results via email with digital signature</li>
+          <li><strong>Cloud storage:</strong> Results are securely stored on the national system</li>
         </ul>
-      </div>
 
-      <h2 id="6">Step 6: Implementation Guidelines and Application Timeline</h2>
-      <p>To ensure the effective implementation of DNA Law 2025, relevant authorities have developed specific timelines:</p>
-      
-      <p><strong>Phase 1 (March-June 2025): Initial rollout</strong></p>
-      <ul>
-        <li><strong>Training staff:</strong> Training for 100% relevant staff</li>
-        <li><strong>System update:</strong> Upgrading the management information system</li>
-        <li><strong>Trial implementation in 5 provinces/cities:</strong> Hanoi, Ho Chi Minh City, Da Nang, Can Tho, Hai Phong</li>
-        <li><strong>Publicity:</strong> Widely disseminated to the public</li>
-      </ul>
-      
-      <p><strong>Phase 2 (July-December 2025): Expanding implementation</strong></p>
-      <ul>
-        <li><strong>National-wide implementation:</strong> Applied to all 63 provinces/cities</li>
-        <li><strong>Improving procedures:</strong> Adjusting based on experience from trials</li>
-        <li><strong>Inter-sectoral data sharing:</strong> Sharing data between relevant authorities</li>
-        <li><strong>Impact assessment:</strong> Conducting impact assessments</li>
-      </ul>
-      
-      <p><strong>Phase 3 (From 2026): Completing and developing</strong></p>
-      <ul>
-        <li><strong>AI integration:</strong> Integrating artificial intelligence into the process</li>
-        <li><strong>Expanding services:</strong> Developing new services</li>
-        <li><strong>International cooperation:</strong> Establishing connections with international databases</li>
-        <li><strong>Research and development:</strong> Investing in new technology R&D</li>
-      </ul>
-      
-      <p><strong>Guidelines for the public:</strong></p>
-      <p><strong>Supporting policies:</strong></p>
-      <ul>
-        <li><strong>Free of charge:</strong> Poor and near-poor households receive 100% exemption</li>
-        <li><strong>50% reduction:</strong> Individuals with contributions to the revolution</li>
-        <li><strong>30% reduction:</strong> Students, the elderly, and the disabled</li>
-        <li><strong>Installment payments:</strong> Allowing installment payments for difficult cases</li>
-      </ul>
-      
-      <p><strong>Quality commitment:</strong></p>
-      <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
-        <tr style="background-color: #f8f9fa;">
-          <th style="border: 1px solid #dee2e6; padding: 12px; text-align: left;">Criteria</th>
-          <th style="border: 1px solid #dee2e6; padding: 12px; text-align: center;">Commitment</th>
-        </tr>
-        <tr>
-          <td style="border: 1px solid #dee2e6; padding: 12px;">Time to process application</td>
-          <td style="border: 1px solid #dee2e6; padding: 12px; text-align: center;">≤ 3 working days</td>
-        </tr>
-        <tr style="background-color: #f8f9fa;">
-          <td style="border: 1px solid #dee2e6; padding: 12px;">Time to receive results</td>
-          <td style="border: 1px solid #dee2e6; padding: 12px; text-align: center;">≤ 5 working days</td>
-        </tr>
-        <tr>
-          <td style="border: 1px solid #dee2e6; padding: 12px;">Accuracy</td>
-          <td style="border: 1px solid #dee2e6; padding: 12px; text-align: center;">≥ 99.99%</td>
-        </tr>
-        <tr style="background-color: #f8f9fa;">
-          <td style="border: 1px solid #dee2e6; padding: 12px;">Customer satisfaction rate</td>
-          <td style="border: 1px solid #dee2e6; padding: 12px; text-align: center;">≥ 95%</td>
-        </tr>
-      </table>
-      <p><strong>Conclusion:</strong></p>
-      <p>DNA Law 2025 marks a significant step forward in modernizing the legal system of Vietnam, bringing many practical benefits to the public. With specific implementation phases, the law not only simplifies procedures but also improves service quality, ensuring the rights of citizens and creating a favorable legal environment for the development of DNA testing in Vietnam.</p>
-      
-      <p>The public is encouraged to understand and take advantage of the new regulations to protect their legal rights, while also contributing to the construction of a civilized, modern society. The law's clear guidelines provide a clear path for the public and medical facilities to navigate, ensuring that everyone's rights are respected and their interests are protected.</p>
-    </div>
-  `
-},
- // ... existing code ...
+        <h2 id="3">Step 3: Rights and Obligations of Participating Parties</h2>
+        <p>DNA Law 2025 clearly defines the rights and obligations of each party involved to ensure fairness and transparency:</p>
+        
+        <p><strong>Rights of the person requesting testing:</strong></p>
+        <ul>
+          <li><strong>Right to information:</strong> Being fully explained about the process, costs, and time</li>
+          <li><strong>Right to choose:</strong> Free choice of testing facility with sufficient conditions</li>
+          <li><strong>Right to confidentiality:</strong> Personal information and results are kept absolutely confidential</li>
+          <li><strong>Right to appeal:</strong> Appeal when violations occur during the process</li>
+          <li><strong>Right to compensation:</strong> Being compensated for damages when errors occur</li>
+        </ul>
+        
+        <p><strong>Obligations of the person requesting testing:</strong></p>
+        <ul>
+          <li><strong>Providing accurate information:</strong> Declaring truthfully about personal background</li>
+          <li><strong>Following the procedure:</strong> Conducting the process correctly according to instructions</li>
+          <li><strong>Full payment:</strong> Paying for service fees according to regulations</li>
+          <li><strong>Confidentiality:</strong> Not disclosing the information of others</li>
+        </ul>
+        
+        <p><strong>Rights of the testing participant:</strong></p>
+        <div style="background-color: #e8f5e8; padding: 15px; border-radius: 5px; margin: 15px 0; border-left: 4px solid #4CAF50;">
+          <ul>
+            <li><strong>Right to refuse:</strong> Has the right to refuse to participate in testing (except in cases mandated by law)</li>
+            <li><strong>Right to consultation:</strong> Being consulted about the meaning and consequences of testing</li>
+            <li><strong>Right to know results:</strong> Being informed about test results (if consented)</li>
+            <li><strong>Right to request sample destruction:</strong> Requesting destruction of biological samples after results</li>
+          </ul>
+        </div>
+        
+        <p><strong>Obligations of the testing facility:</strong></p>
+        <ul>
+          <li><strong>Ensuring quality:</strong> Adhering to strict technical standards</li>
+          <li><strong>Confidentiality:</strong> Establishing a secure information system according to international standards</li>
+          <li><strong>Periodic reporting:</strong> Reporting activities to the management authority</li>
+          <li><strong>Training staff:</strong> Ensuring staff have the necessary professional skills</li>
+          <li><strong>Compensation for damages:</strong> Bearing responsibility for damages when errors occur</li>
+        </ul>
+
+        <h2 id="4">Step 4: DNA Testing Implementation Process</h2>
+        <p>DNA Law 2025 specifies standardized procedures, ensuring consistency across the country:</p>
+        
+        <p><strong>Preparation phase:</strong></p>
+        <ul>
+          <li><strong>Initial consultation:</strong> Explaining the process, costs, time, and legal significance</li>
+          <li><strong>Signing a commitment:</strong> All parties sign a commitment to abide by the regulations</li>
+          <li><strong>Identity verification:</strong> Verifying CCCD/CMND and taking photographs of the record</li>
+          <li><strong>Document preparation:</strong> Recording all information about the parties involved</li>
+        </ul>
+        
+        <p><strong>Sample collection phase:</strong></p>
+        <div style="background-color: #fff3cd; padding: 15px; border-radius: 5px; margin: 15px 0; border-left: 4px solid #ffc107;">
+          <p><strong>⚠️ Important note:</strong> Sampling must be conducted by staff with certification, with at least 2 witnesses present and recorded.</p>
+        </div>
+        
+        <ul>
+          <li><strong>Equipment preparation:</strong> Using pre-certified sampling kits</li>
+          <li><strong>Saliva or cheek cell sampling:</strong> Preferred method, non-invasive</li>
+          <li><strong>Tissue culture sampling:</strong> Using cotton swabs for specific use</li>
+          <li><strong>Sample packaging:</strong> Storing in appropriate temperature conditions</li>
+          <li><strong>Transportation:</strong> Transporting samples to the laboratory within 24 hours</li>
+        </ul>
+        
+        <p><strong>Analysis phase:</strong></p>
+        <ul>
+          <li><strong>DNA extraction:</strong> Using automated technology</li>
+          <li><strong>PCR amplification:</strong> Amplifying target DNA segments</li>
+          <li><strong>Electrophoresis analysis:</strong> Analyzing genetic markers</li>
+          <li><strong>Data comparison:</strong> Using specialized software</li>
+          <li><strong>Quality control:</strong> Conducting cross-checks with standard samples</li>
+        </ul>
+        
+        <p><strong>Technical requirements:</strong></p>
+        <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
+          <tr style="background-color: #f8f9fa;">
+            <th style="border: 1px solid #dee2e6; padding: 12px; text-align: left;">Criteria</th>
+            <th style="border: 1px solid #dee2e6; padding: 12px; text-align: center;">Minimum Requirement</th>
+          </tr>
+          <tr>
+            <td style="border: 1px solid #dee2e6; padding: 12px;">Number of markers</td>
+            <td style="border: 1px solid #dee2e6; padding: 12px; text-align: center;">At least 20 markers</td>
+          </tr>
+          <tr style="background-color: #f8f9fa;">
+            <td style="border: 1px solid #dee2e6; padding: 12px;">Accuracy</td>
+            <td style="border: 1px solid #dee2e6; padding: 12px; text-align: center;">≥ 99.99%</td>
+          </tr>
+          <tr>
+            <td style="border: 1px solid #dee2e6; padding: 12px;">Report preparation time</td>
+            <td style="border: 1px solid #dee2e6; padding: 12px; text-align: center;">≤ 5 working days</td>
+          </tr>
+          <tr style="background-color: #f8f9fa;">
+            <td style="border: 1px solid #dee2e6; padding: 12px;">Sample storage</td>
+            <td style="border: 1px solid #dee2e6; padding: 12px; text-align: center;">At least 2 years</td>
+          </tr>
+        </table>
+
+        <h2 id="5">Step 5: Legal Value of Test Results</h2>
+        <p>DNA Law 2025 significantly enhances the legal value of DNA test results in legal procedures:</p>
+        
+        <p><strong>Evidence of scientific validity:</strong></p>
+        <ul>
+          <li><strong>Scientific evidence:</strong> Accepted as scientifically valid high-value evidence</li>
+          <li><strong>Convincing power:</strong> Strong persuasive power in civil and criminal cases</li>
+          <li><strong>Reliability:</strong> Accepted by the court with high confidence</li>
+          <li><strong>Mandatory:</strong> In some cases, the court may require it to be conducted</li>
+        </ul>
+        
+        <p><strong>Applications in various fields:</strong></p>
+        
+        <p><strong>1. Civil:</strong></p>
+        <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin: 15px 0;">
+          <ul>
+            <li><strong>Determining father-child relationship:</strong> Providing basis for birth registration</li>
+            <li><strong>Inheritance disputes:</strong> Determining legitimate heirs</li>
+            <li><strong>Divorce and child custody:</strong> Determining post-divorce child custody</li>
+            <li><strong>Adoption:</strong> Proving no blood relationship</li>
+          </ul>
+        </div>
+        
+        <p><strong>2. Criminal:</strong></p>
+        <ul>
+          <li><strong>Investigation of crimes:</strong> Determining the identity of suspects</li>
+          <li><strong>Evidence at trial:</strong> Providing evidence to convict or exonerate</li>
+          <li><strong>Identifying victims:</strong> In cases of accidents, disasters</li>
+          <li><strong>Re-examination:</strong> Basis for appeal in criminal cases</li>
+        </ul>
+        
+        <p><strong>3. Administrative:</strong></p>
+        <ul>
+          <li><strong>Immigration:</strong> Providing evidence of family relationships for visas</li>
+          <li><strong>Residency:</strong> Supporting family-based immigration applications</li>
+          <li><strong>Insurance:</strong> Determining beneficiaries of insurance</li>
+          <li><strong>Social assistance:</strong> Determining eligible recipients of social assistance</li>
+        </ul>
+        
+        <p><strong>Conditions for results to have legal value:</strong></p>
+        <div style="background-color: #e3f2fd; padding: 15px; border-radius: 5px; margin: 15px 0; border-left: 4px solid #2196F3;">
+          <ul>
+            <li><strong>Facility meets the requirements:</strong> Operating under the approved scope</li>
+            <li><strong>Following the procedure:</strong> Strictly following the technical process</li>
+            <li><strong>Staff certification:</strong> Conducted by staff trained and certified</li>
+            <li><strong>Witnessed:</strong> Sampling process has witnesses</li>
+            <li><strong>Proper storage:</strong> Samples are stored according to regulations</li>
+          </ul>
+        </div>
+
+        <h2 id="6">Step 6: Implementation Guidelines and Application Timeline</h2>
+        <p>To ensure the effective implementation of DNA Law 2025, relevant authorities have developed specific timelines:</p>
+        
+        <p><strong>Phase 1 (March-June 2025): Initial rollout</strong></p>
+        <ul>
+          <li><strong>Training staff:</strong> Training for 100% relevant staff</li>
+          <li><strong>System update:</strong> Upgrading the management information system</li>
+          <li><strong>Trial implementation in 5 provinces/cities:</strong> Hanoi, Ho Chi Minh City, Da Nang, Can Tho, Hai Phong</li>
+          <li><strong>Publicity:</strong> Widely disseminated to the public</li>
+        </ul>
+        
+        <p><strong>Phase 2 (July-December 2025): Expanding implementation</strong></p>
+        <ul>
+          <li><strong>National-wide implementation:</strong> Applied to all 63 provinces/cities</li>
+          <li><strong>Improving procedures:</strong> Adjusting based on experience from trials</li>
+          <li><strong>Inter-sectoral data sharing:</strong> Sharing data between relevant authorities</li>
+          <li><strong>Impact assessment:</strong> Conducting impact assessments</li>
+        </ul>
+        
+        <p><strong>Phase 3 (From 2026): Completing and developing</strong></p>
+        <ul>
+          <li><strong>AI integration:</strong> Integrating artificial intelligence into the process</li>
+          <li><strong>Expanding services:</strong> Developing new services</li>
+          <li><strong>International cooperation:</strong> Establishing connections with international databases</li>
+          <li><strong>Research and development:</strong> Investing in new technology R&D</li>
+        </ul>
+        
+        <p><strong>Guidelines for the public:</strong></p>
+        <p><strong>Supporting policies:</strong></p>
+        <ul>
+          <li><strong>Free of charge:</strong> Poor and near-poor households receive 100% exemption</li>
+          <li><strong>50% reduction:</strong> Individuals with contributions to the revolution</li>
+          <li><strong>30% reduction:</strong> Students, the elderly, and the disabled</li>
+          <li><strong>Installment payments:</strong> Allowing installment payments for difficult cases</li>
+        </ul>
+        
+        <p><strong>Quality commitment:</strong></p>
+        <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
+          <tr style="background-color: #f8f9fa;">
+            <th style="border: 1px solid #dee2e6; padding: 12px; text-align: left;">Criteria</th>
+            <th style="border: 1px solid #dee2e6; padding: 12px; text-align: center;">Commitment</th>
+          </tr>
+          <tr>
+            <td style="border: 1px solid #dee2e6; padding: 12px;">Time to process application</td>
+            <td style="border: 1px solid #dee2e6; padding: 12px; text-align: center;">≤ 3 working days</td>
+          </tr>
+          <tr style="background-color: #f8f9fa;">
+            <td style="border: 1px solid #dee2e6; padding: 12px;">Time to receive results</td>
+            <td style="border: 1px solid #dee2e6; padding: 12px; text-align: center;">≤ 5 working days</td>
+          </tr>
+          <tr>
+            <td style="border: 1px solid #dee2e6; padding: 12px;">Accuracy</td>
+            <td style="border: 1px solid #dee2e6; padding: 12px; text-align: center;">≥ 99.99%</td>
+          </tr>
+          <tr style="background-color: #f8f9fa;">
+            <td style="border: 1px solid #dee2e6; padding: 12px;">Customer satisfaction rate</td>
+            <td style="border: 1px solid #dee2e6; padding: 12px; text-align: center;">≥ 95%</td>
+          </tr>
+        </table>
+        <p><strong>Conclusion:</strong></p>
+        <p>DNA Law 2025 marks a significant step forward in modernizing the legal system of Vietnam, bringing many practical benefits to the public. With specific implementation phases, the law not only simplifies procedures but also improves service quality, ensuring the rights of citizens and creating a favorable legal environment for the development of DNA testing in Vietnam.</p>
+        
+        <p>The public is encouraged to understand and take advantage of the new regulations to protect their legal rights, while also contributing to the construction of a civilized, modern society. The law's clear guidelines provide a clear path for the public and medical facilities to navigate, ensuring that everyone's rights are respected and their interests are protected.</p>
+      </div>
+    `
+  },
   {
     id: 4,
     title: "Resolving Inheritance Disputes through DNA Testing",
     category: "Civil Law",
     excerpt: "A comprehensive guide to the importance of DNA testing in resolving inheritance disputes in a fair and transparent manner.",
     image: "https://images.unsplash.com/photo-1589829545856-d10d557cf95f?w=1200&h=800&fit=crop",
-    slug: "giai-quyet-tranh-chap-thua-ke-bang-xet-nghiem-adn",
+    slug: "resolving-inheritance-disputes-through-dna-testing",
     author: "Judge Pham Thi Lan",
     date: "2024-01-20",
     readTime: "12 min read",
@@ -1182,7 +1180,7 @@ const articles = [
     category: "Knowledge",
     excerpt: "Discover the scientific basis behind DNA testing - a powerful tool that helps 'read' the unique, one-of-a-kind design of each person with incredible accuracy.",
     image: "https://images.unsplash.com/photo-1532187863486-abf9dbad1b69?w=1200&h=800&fit=crop",
-    slug: "nguyen-ly-hoat-dong-cua-xet-nghiem-adn",
+    slug: "decoding-life-understanding-dna-testing-mechanism",
     author: "Dr. Vu Thanh Son",
     date: "2024-01-18",
     readTime: "15 min read",
@@ -1420,14 +1418,13 @@ const articles = [
       </div>
     `
   },
-// ... existing code ...
   {
     id: 6,
     title: "Online DNA Testing Registration",
     category: "Administration",
     excerpt: "A quick guide to registering for DNA testing online, making the process convenient and hassle-free through the Ministry of Health's electronic system.",
     image: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=1200&h=800&fit=crop",
-    slug: "thu-tuc-dang-ky-xet-nghiem-adn-online",
+    slug: "online-dna-testing-registration",
     author: "Specialist Nguyen Van Duc",
     date: "2024-01-16",
     readTime: "7 min read",
@@ -1470,7 +1467,7 @@ const articles = [
     category: "News",
     excerpt: "Good news for the public as many DNA testing centers across the country are reducing service fees in February 2024.",
     image: "https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=1200&h=800&fit=crop",
-    slug: "cap-nhat-gia-xet-nghiem-adn-giam-30-trong-thang-2",
+    slug: "update-dna-testing-fees-reduced-30-percent-february",
     author: "Reporter Hoang Minh Tuấn",
     date: "2024-01-15",
     readTime: "4 min read",
@@ -1502,7 +1499,7 @@ const articles = [
     category: "Civil Law",
     excerpt: "Understanding the legal rights and obligations of all parties when conducting DNA testing under current law.",
     image: "https://images.unsplash.com/photo-1505664194779-8beaceb93744?w=1200&h=800&fit=crop",
-    slug: "quyen-loi-phap-ly-khi-thuc-hien-xet-nghiem-adn",
+    slug: "legal-rights-obligations-conducting-dna-testing",
     author: "Lawyer Do Thi Mai",
     date: "2024-01-12",
     readTime: "9 min read",
@@ -1538,7 +1535,7 @@ const articles = [
     category: "Knowledge",
     excerpt: "Artificial intelligence technology is revolutionizing the way we analyze and process DNA results.",
     image: "https://images.unsplash.com/photo-1677442136019-21780ecad995?w=1200&h=800&fit=crop",
-    slug: "ung-dung-ai-trong-phan-tich-ket-qua-adn",
+    slug: "ai-applications-dna-analysis",
     author: "Dr. Le Minh Hai",
     date: "2024-01-10",
     readTime: "11 min read",
