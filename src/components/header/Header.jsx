@@ -16,14 +16,18 @@ const Header = () => {
   const { currentUser: user, isAuthenticated } = useSelector((state) => state.user || {});
 
   // Tên hiển thị ưu tiên: fullName > name > firstName lastName > Guest
-  const userDisplayName = useMemo(() => {
-    if (!user) return "Guest";
-    if (user.fullName && user.fullName.trim()) return user.fullName;
-    if (user.name && user.name.trim()) return user.name;
-    const firstName = user.firstName || "";
-    const lastName = user.lastName || "";
-    const full = `${firstName} ${lastName}`.trim();
-    return full || "Guest";
+  const userAvatar = useMemo(() => {
+    if (!user) return "https://via.placeholder.com/48x48/6B7280/FFFFFF?text=U";
+    if (user.avatar) {
+      if (user.avatar.startsWith("http") || user.avatar.startsWith("https")) {
+        return user.avatar;
+      }
+      if (user.avatar.startsWith("/")) {
+        return `/api${user.avatar}`;
+      }
+      return `/api/${user.avatar}`;
+    }
+    return "https://i.pinimg.com/1200x/59/95/a7/5995a77843eb9f5752a0004b1c1250fb.jpg";
   }, [user]);
 
   // Avatar ưu tiên: file /media > avatar url > mặc định
@@ -319,11 +323,14 @@ const Header = () => {
                     tabIndex={-1}
                   >
                     <img
+
                       src={userAvatar}
+
                       alt={userDisplayName}
                       className="h-12 w-12 rounded-full object-cover border-2 border-gray-300"
                       onError={(e) => {
                         e.target.onerror = null;
+                        console.log("Avatar load failed, using fallback image");
                         e.target.src =
                           "https://via.placeholder.com/48x48/6B7280/FFFFFF?text=U";
                       }}

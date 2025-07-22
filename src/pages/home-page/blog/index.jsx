@@ -10,8 +10,10 @@ const articles = [
     category: "Knowledge",
     excerpt: "Illumina được ví như 'người khổng lồ' trong lĩnh vực giải trình tự Gen, là công ty thế giới về giải trình tự DNA và công nghệ sinh học phục vụ khách hàng trong việc nghiên cứu, lâm sàng và ứng dụng.",
     image: "https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=800&h=600&fit=crop",
+
     slug: "illumina-cong-nghe-tien-phong-xet-nghiem-gen-viet-nam",
     author: "DNA Testing",
+
     date: "2024-01-25",
     readTime: "10 min read",
     featured: true
@@ -22,9 +24,11 @@ const articles = [
     category: "Administration",
     excerpt: "Tìm hiểu sự khác biệt giữa xét nghiệm ADN dân sự và pháp lý để lựa chọn đúng loại xét nghiệm phù hợp với mục đích sử dụng của bạn.",
     image: "https://images.unsplash.com/photo-1450101499163-c8848c66ca85?w=800&h=600&fit=crop",
+
     slug: "xet-nghiem-adn-dan-su-va-phap-ly-so-sanh-diem-giong-va-khac-nhau",
     author: "GeneViet",
     date: "2024-03-15",
+
     readTime: "10 min read",
     featured: true
   },
@@ -34,10 +38,12 @@ const articles = [
     category: "Knowledge",
     excerpt: "Ngày nay, dịch vụ xét nghiệm ADN cha con dân sự được rất nhiều người quan tâm. Vậy, xét nghiệm ADN là gì? Chi phí hết bao nhiêu? Có thể sử dụng mẫu phẩm gì?",
     image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&h=600&fit=crop",
+
     slug: "xet-nghiem-adn-cha-con-dan-su-la-gi",
     author: "DNA Testing",
     date: "2024-06-25",
     readTime: "8 min read",
+
     featured: true
   },
   {
@@ -46,11 +52,13 @@ const articles = [
     category: "Knowledge",
     excerpt: "Hiểu rõ sự khác biệt giữa xét nghiệm ADN dân sự và hành chính để lựa chọn đúng loại xét nghiệm phù hợp với nhu cầu của bạn.",
     image: "https://images.unsplash.com/photo-1589829545856-d10d557cf95f?w=800&h=600&fit=crop",
+
     slug: "phan-biet-xet-nghiem-adn-dan-su-va-hanh-chinh",
     author: "TS. Nguyễn Văn Minh",
     date: "2024-06-20",
     readTime: "8 phút đọc",
     featured: true
+
   },
   {
     id: 5,
@@ -58,10 +66,12 @@ const articles = [
     category: "News",
     excerpt: "Trung tâm xét nghiệm ADN Genetix cung cấp đa dạng các gói dịch vụ xét nghiệm ADN với mức giá cạnh tranh và ưu đãi hấp dẫn.",
     image: "https://images.unsplash.com/photo-1532187863486-abf9dbad1b69?w=800&h=600&fit=crop",
+
     slug: "bang-gia-dich-vu-genetix",
     author: "Genetix DNA Center",
     date: "2024-06-15",
     readTime: "5 phút đọc",
+
     featured: true
   },
   {
@@ -70,8 +80,10 @@ const articles = [
     category: "Administration",
     excerpt: "Hướng dẫn chi tiết về thủ tục xét nghiệm ADN cho mục đích dân sự, cá nhân và mục đích pháp lý tại Trung tâm công nghệ sinh học phân tử ADNchacon.",
     image: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&h=600&fit=crop",
+
     slug: "thu-tuc-xet-nghiem-adn",
     author: "ADNchacon",
+
     date: "2024-01-16",
     readTime: "7 min read",
     featured: false
@@ -80,10 +92,12 @@ const articles = [
     id: 7,
     title: "Phân Tích Sâu Hệ Thống Booking Xét Nghiệm ADN: Từ Yêu Cầu Đến Triển Khai",
     category: "News",
+
     excerpt: "Phân tích chi tiết về quy trình thiết kế và triển khai hệ thống đặt lịch xét nghiệm ADN, từ yêu cầu nghiệp vụ đến trải nghiệm người dùng và quản lý trạng thái.",
     image: "/images/big-data.png",
     slug: "phan-tich-he-thong-booking-xet-nghiem-adn",
     author: "Phòng Phát Triển Sản Phẩm",
+
     date: "2024-01-15",
     readTime: "15 min read",
     featured: false
@@ -94,8 +108,10 @@ const articles = [
     category: "Civil",
     excerpt: "Ngày nay, bản kết quả của xét nghiệm ADN huyết thống không chỉ được sử dụng để xác định mối quan hệ huyết thống giữa cha và con trong gia đình, cũng như trong các thủ tục hành chính đăng ký khai sinh ở cấp xã/phường, mà còn được sử dụng làm bằng chứng trong các tranh chấp về quyền nuôi con, quyền cấp dưỡng và quyền thừa kế tại tòa án nhân dân các cấp.",
     image: "https://images.unsplash.com/photo-1505664194779-8beaceb93744?w=800&h=600&fit=crop",
+
     slug: "thong-tin-chi-tiet-xet-nghiem-adn-phap-ly-dna-testing",
     author: "DNA Testing",
+
     date: "2024-01-12",
     readTime: "9 min read",
     featured: true
@@ -106,7 +122,9 @@ const articles = [
     category: "Knowledge",
     excerpt: "Trí tuệ nhân tạo đang cách mạng hóa lĩnh vực sinh học bằng cách thiết kế các chuỗi ADN mới, mở ra kỷ nguyên mới cho công nghệ sinh học và y học.",
     image: "https://images.unsplash.com/photo-1677442136019-21780ecad995?w=800&h=600&fit=crop",
+
     slug: "ai-thiet-ke-chuoi-adn-ky-nguyen-moi-cong-nghe-sinh-hoc",
+
     author: "Dr. Le Minh Hai",
     date: "2024-01-10",
     readTime: "11 min read",

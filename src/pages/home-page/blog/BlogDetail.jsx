@@ -10,8 +10,10 @@ const articles = [
     category: "Knowledge",
     excerpt: "Illumina được ví như 'người khổng lồ' trong lĩnh vực giải trình tự Gen, là công ty thế giới về giải trình tự DNA và công nghệ sinh học phục vụ khách hàng trong việc nghiên cứu, lâm sàng và ứng dụng.",
     image: "https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=1200&h=800&fit=crop",
+
     slug: "illumina-cong-nghe-tien-phong-xet-nghiem-gen-viet-nam",
     author: "DNA Testing",
+
     date: "2024-01-25",
     readTime: "10 min read",
     featured: true,
@@ -69,6 +71,7 @@ const articles = [
     category: "Administration",
     excerpt: "Tìm hiểu sự khác biệt giữa xét nghiệm ADN dân sự và pháp lý để lựa chọn đúng loại xét nghiệm phù hợp với mục đích sử dụng của bạn.",
     image: "https://images.unsplash.com/photo-1450101499163-c8848c66ca85?w=1200&h=800&fit=crop",
+
     slug: "xet-nghiem-adn-dan-su-va-phap-ly-so-sanh-diem-giong-va-khac-nhau",
     author: "GeneViet",
     date: "2024-03-15",
@@ -77,6 +80,7 @@ const articles = [
     views: 2250,
     likes: 178,
     comments: 42,
+
     tableOfContents: [
       { id: "1", title: "Tìm hiểu về xét nghiệm ADN cho mục đích dân sự và mục đích pháp lý", level: 1 },
       { id: "2", title: "Xét nghiệm ADN dân sự và pháp lý giống và khác nhau như thế nào?", level: 1 },
@@ -223,7 +227,7 @@ const articles = [
       </div>
     `
   },
-// ... existing code ...
+
 {
   id: 3,
   title: "Xét nghiệm ADN cha con dân sự là gì?",
@@ -294,13 +298,14 @@ const articles = [
     </div>
   `
 },
- // ... existing code ...
+
   {
     id: 4,
     title: "Phân Biệt Xét Nghiệm ADN Dân Sự Và Hành Chính",
     category: "Knowledge",
     excerpt: "Hiểu rõ sự khác biệt giữa xét nghiệm ADN dân sự và hành chính để lựa chọn đúng loại xét nghiệm phù hợp với nhu cầu của bạn.",
     image: "https://images.unsplash.com/photo-1589829545856-d10d557cf95f?w=1200&h=800&fit=crop",
+
     slug: "phan-biet-xet-nghiem-adn-dan-su-va-hanh-chinh",
     author: "TS. Nguyễn Văn Minh",
     date: "2024-06-20",
@@ -309,6 +314,7 @@ const articles = [
     views: 1580,
     likes: 167,
     comments: 38,
+
     tableOfContents: [
       { id: "1", title: "So sánh xét nghiệm ADN dân sự và hành chính", level: 1 },
       { id: "2", title: "Xét nghiệm ADN dân sự - thử nghiệm 'vì mục đích cá nhân'", level: 1 },
@@ -464,10 +470,12 @@ const articles = [
     category: "Knowledge",
     excerpt: "Trung tâm xét nghiệm ADN Genetix cung cấp đa dạng các gói dịch vụ xét nghiệm ADN với mức giá cạnh tranh và ưu đãi hấp dẫn.",
     image: "https://images.unsplash.com/photo-1532187863486-abf9dbad1b69?w=1200&h=800&fit=crop",
+
     slug: "bang-gia-dich-vu-genetix",
     author: "Genetix DNA Center",
     date: "2024-06-15",
     readTime: "5 phút đọc",
+
     featured: true,
     views: 2650,
     likes: 194,
@@ -890,8 +898,10 @@ const articles = [
           </li>
         </ul>
         
+
         <p><strong>Vòng đời trạng thái của một Booking (Payment Success):</strong></p>
         <p>Awaiting Confirmation → Pending Payment (Chờ thanh toán) → Booking Confirmed (Đã xác nhận & phân công) → Awaiting Sample (Chờ lấy mẫu) → In Progress (Đang xử lý) → Ready (Sẵn sàng trả kết quả) → Completed (Hoàn thành).</p>
+
         
         <p><strong>Luồng trạng thái trên trang "My Booking" của khách hàng:</strong></p>
         <ul>
@@ -899,8 +909,10 @@ const articles = [
           <li>Đối với thu mẫu bởi CSYT: Đã xác nhận → Chờ thu mẫu → Đang xét nghiệm → Trả kết quả.</li>
         </ul>
         
+
         <h2 id="6">Phần 6: Diễn Giải Kết Quả Xét Nghiệm</h2>
         <p>Cuối cùng, kết quả xét nghiệm được kết luận dựa trên tỷ lệ trùng khớp ADN (Matching Percentage).</p>
+
         
         <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
           <tr style="background-color: #f8f9fa;">
@@ -946,8 +958,10 @@ const articles = [
     category: "Civil Law",
     excerpt: "Ngày nay, bản kết quả của xét nghiệm ADN huyết thống không chỉ được sử dụng để xác định mối quan hệ huyết thống giữa cha và con trong gia đình, cũng như trong các thủ tục hành chính đăng ký khai sinh ở cấp xã/phường, mà còn được sử dụng làm bằng chứng trong các tranh chấp về quyền nuôi con, quyền cấp dưỡng và quyền thừa kế tại tòa án nhân dân các cấp.",
     image: "https://images.unsplash.com/photo-1505664194779-8beaceb93744?w=1200&h=800&fit=crop",
+
     slug: "thong-tin-chi-tiet-xet-nghiem-adn-phap-ly-dna-testing",
     author: "DNA Testing",
+
     date: "2024-01-12",
     readTime: "9 min read",
     featured: false,
@@ -1036,7 +1050,9 @@ const articles = [
     category: "Knowledge",
     excerpt: "Trí tuệ nhân tạo đang cách mạng hóa lĩnh vực sinh học bằng cách thiết kế các chuỗi ADN mới, mở ra kỷ nguyên mới cho công nghệ sinh học và y học.",
     image: "https://images.unsplash.com/photo-1677442136019-21780ecad995?w=1200&h=800&fit=crop",
+
     slug: "ai-thiet-ke-chuoi-adn-ky-nguyen-moi-cong-nghe-sinh-hoc",
+
     author: "Dr. Le Minh Hai",
     date: "2024-01-10",
     readTime: "11 min read",
