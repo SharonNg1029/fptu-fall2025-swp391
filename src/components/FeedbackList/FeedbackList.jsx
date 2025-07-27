@@ -8,7 +8,7 @@ const getTop5StarFeedbacks = (feedbacks) => {
   return feedbacks
     .filter((fb) => fb.rating === 5)
     .sort((a, b) => dateToNumber(b.createAt) - dateToNumber(a.createAt))
-    .slice(0, 3)
+    .slice(0, 5)
     .map((fb) => ({
       fullName: fb.customerName || "Khách hàng", // dùng luôn customerName
       bookingID: fb.bookingID,
