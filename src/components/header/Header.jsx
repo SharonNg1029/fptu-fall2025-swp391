@@ -3,6 +3,7 @@ import { FiMenu, FiX, FiLogOut } from "react-icons/fi";
 import { Link, useLocation } from "react-router-dom";
 import { useSelector } from "react-redux";
 import LogOut from "../authen-form/LogOut";
+import { User } from "lucide-react";
 
 const Header = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -28,9 +29,9 @@ const Header = () => {
 
   // Avatar ưu tiên: file /media > avatar url > mặc định
   const userAvatar = useMemo(() => {
-    if (!user) return "/images/logo.png";
+    if (!user) return "";
     if (user.avatar?.startsWith("/media")) return `/api${user.avatar}`;
-    return user.avatar || "https://i.pinimg.com/1200x/59/95/a7/5995a77843eb9f5752a0004b1c1250fb.jpg";
+    return user.avatar || "";
   }, [user]);
 
   const navItems = [
@@ -318,15 +319,21 @@ const Header = () => {
                     style={{ background: "none", border: "none", padding: 0, cursor: "pointer" }}
                     tabIndex={-1}
                   >
-                    <img
-                      src={userAvatar}
-                      alt={userDisplayName}
-                      className="h-12 w-12 rounded-full object-cover border-2 border-gray-300"
-                      onError={(e) => {
-                        e.target.onerror = null;
-                        e.target.src = "/images/logo.png";
-                      }}
-                    />
+                    {user && (user.avatar || user.avatar?.startsWith("/media")) ? (
+                      <img
+                        src={userAvatar}
+                        alt={userDisplayName}
+                        className="h-12 w-12 rounded-full object-cover border-2 border-gray-300"
+                        onError={(e) => {
+                          e.target.onerror = null;
+                          e.target.src = "/images/logo.png";
+                        }}
+                      />
+                    ) : (
+                      <div className="h-12 w-12 rounded-full bg-white flex items-center justify-center border-2 border-blue-200">
+                        <User className="h-7 w-7 text-blue-800" />
+                      </div>
+                    )}
                   </button>
 
                   {showDropdown && (
