@@ -15,7 +15,7 @@ Genetix là nền tảng dịch vụ xét nghiệm DNA hiện đại, hỗ trợ
   - Theo dõi trạng thái từng đơn hàng: Waiting Confirmed → Booking Confirmed → Awaiting Sample → In Progress → Ready → Pending Payment → Completed hoặc Cancel.
 
 - **Thanh toán QR đa nền tảng:**  
-  Tích hợp QR code thanh toán qua Momo, VNPay, banking app.
+  Tích hợp QR code thanh toán qua VNPay.
 
 - **Quản lý kết quả & tải báo cáo:**  
   Xem kết quả online, tải về file PDF, tra cứu lịch sử xét nghiệm.
