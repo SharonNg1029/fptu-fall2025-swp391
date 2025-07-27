@@ -85,16 +85,16 @@ src/
 ## 💡 Một số tài khoản mẫu
 
 - **Admin:**  
-  - user: `ngannguye` / pass: `ngannguyen`
+  - user: `ngannguyen` / pass: `ngannguyen`
 
 - **Manager:**  
-  - user: `quan` / pass: `ngogiathanh`
+  - user: `hogiabao` / pass: `bao`
  
 - **Staff:**  
-  - user: `nganle` / pass: `nganle`
+  - user: `nganle` / pass: `ngan`
 
 - **Customer:**  
-  - user: `xuanloc` / pass: `xuanloc`
+  - user: `xuanloc` / pass: `loc`
 
 > Bạn có thể đăng ký tài khoản mới hoặc thử đăng ký/đăng nhập với Google.
 
