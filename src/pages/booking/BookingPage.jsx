@@ -142,7 +142,6 @@ const ConfirmBookingModal = ({
       "DNA Testing for Immigration Cases": "Xét nghiệm ADN cho Vụ việc Nhập cư",
       "DNA Testing for Inheritance or Asset Division":
         "Xét nghiệm ADN cho Thừa kế hoặc Phân chia Tài sản",
-      // Thêm các dịch vụ khác nếu cần
       "Uncle/Aunt Testing": "Xét nghiệm ADN Chú-Cháu/Cô-Cháu",
       "Cousin Testing": "Xét nghiệm ADN Anh-Em họ",
       "Y-Chromosome Testing": "Xét nghiệm ADN Nhiễm sắc thể Y",
