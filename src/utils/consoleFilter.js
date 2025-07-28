@@ -1,11 +1,5 @@
-/**
- * Console Filter Utility
- * 
- * This utility overrides the standard console methods to filter out 
- * all non-essential console messages in all environments.
- */
 
-// Store original console methods
+
 const originalConsole = {
   log: console.log,
   info: console.info,
@@ -14,9 +8,7 @@ const originalConsole = {
   error: console.error
 };
 
-// Create a filtered error function to suppress unwanted messages
 const filteredError = (message, ...args) => {
-  // Skip if the message includes any of these patterns
   const ignorePatterns = [
     '-ms-high-contrast',
     'Deprecation',
