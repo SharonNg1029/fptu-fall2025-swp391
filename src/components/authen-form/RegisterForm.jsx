@@ -18,7 +18,6 @@ import { GoogleOAuthProvider, GoogleLogin } from "@react-oauth/google";
 import { login } from "../../redux/features/userSlice";
 import { useDispatch } from "react-redux";
 import * as yup from 'yup';
-import moment from "moment";
 import { CheckCircle, XCircle } from "lucide-react";
 
 // ✅ Yup validation schema với vanilla JavaScript date validation
@@ -198,7 +197,7 @@ const formatPhoneNumber = (value) => {
   
   return numbers.slice(0, 10);
 };
-const RESEND_OTP_TIME = 300; // thời gian chờ resend OTP (giây)
+const RESEND_OTP_TIME = 60; // thời gian chờ resend OTP (giây)
 // Custom OTP Verification Component
 const OTPVerification = ({ email, onVerify, onClose }) => {
   const [otp, setOtp] = useState("");
@@ -217,6 +216,11 @@ const OTPVerification = ({ email, onVerify, onClose }) => {
       setCanResend(true);
     }
   }, [timeLeft]);
+
+  // Khi otp thay đổi thì luôn bật lại nút Verify OTP
+  useEffect(() => {
+    setLoading(false);
+  }, [otp]);
 
   const formatTime = (seconds) => {
     const minutes = Math.floor(seconds / 60);
@@ -313,10 +317,11 @@ const OTPVerification = ({ email, onVerify, onClose }) => {
         className="otp-input"
         placeholder="Enter 6-digit OTP"
         value={otp}
-        onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
+        onChange={e => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
+        onFocus={() => setLoading(false)}
         onKeyPress={handleKeyPress}
         maxLength={6}
-        disabled={timeLeft === 0}
+        disabled={loading}
       />
 
       <div>
@@ -334,7 +339,7 @@ const OTPVerification = ({ email, onVerify, onClose }) => {
         <button
           className="otp-resend-button"
           onClick={handleResend}
-          disabled={resendLoading || (!canResend && timeLeft > 0)}
+          disabled={resendLoading || !canResend}
         >
           {resendLoading && <span className="otp-button-loading"></span>}
           {timeLeft > 0 && !canResend
@@ -356,7 +361,7 @@ const OTPVerification = ({ email, onVerify, onClose }) => {
           lineHeight: "1.4",
         }}
       >
-        💡 Didn't receive the code? Check your spam folder or click "Resend OTP" after 5 minutes
+        💡 Didn't receive the code? Check your spam folder or click "Resend OTP" after 1 minutes
       </div>
     </div>
   );
@@ -994,11 +999,11 @@ function RegisterForm() {
 
           <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
             <div className="google-login-section">
-              <p className="google-login-label">Or sign up with Google</p>
+              <p className="google-login-label">Or sign in with Google</p>
               <GoogleLogin
                 onSuccess={handleGoogleSuccess}
                 onError={handleGoogleError}
-                text="signup_with"
+                text="signin_with"
               />
             </div>
           </GoogleOAuthProvider>

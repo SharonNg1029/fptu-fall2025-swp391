@@ -57,7 +57,8 @@ const ProfilePage = () => {
       currentUser?.managerID ||
       currentUser?.managerId ||
       currentUser?.adminID ||
-      currentUser?.adminId;
+      currentUser?.adminId ||
+      currentUser?.id;
   }
 
   useEffect(() => {
