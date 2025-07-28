@@ -51,7 +51,7 @@ Genetix là nền tảng dịch vụ xét nghiệm DNA hiện đại, hỗ trợ
 
 ## 📦 Backend API
 
-Dự án này sử dụng RESTful API từ Genetix Backend (Express.js). Bạn có thể tham khảo thêm hoặc cài đặt backend tại:
+Dự án này sử dụng RESTful API từ Genetix Backend (Spring Boot). Bạn có thể tham khảo thêm hoặc cài đặt backend tại:
 
 [https://github.com/baothanh4/swp391](https://github.com/baothanh4/swp391)
 
