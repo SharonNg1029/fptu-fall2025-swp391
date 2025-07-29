@@ -308,7 +308,7 @@ const ConfirmBookingModal = ({
     }
 
     if (signatureRef.current.isEmpty()) {
-      message.error("Vui lòng ký tên trước khi tiếp tục!");
+      message.error("Please sign before continuing!");
       return;
     }
 
@@ -318,7 +318,7 @@ const ConfirmBookingModal = ({
       const signatureData = signatureRef.current.toDataURL("image/png");
 
       if (!signatureData || signatureData.length < 100) {
-        message.error("Chữ ký không hợp lệ. Vui lòng ký lại!");
+        message.error("Signature is too short or invalid. Please sign again!");
         return;
       }
 
@@ -3336,12 +3336,6 @@ const BookingPage = () => {
       return Promise.reject(new Error("Invalid date of birth!"));
     }
 
-    const relationship = form.getFieldValue(["firstPerson", "relationship"]);
-
-    if (relationship === "Child") {
-      return Promise.resolve();
-    }
-
     const today = new Date();
 
     let age = today.getFullYear() - birthDate.getFullYear();
@@ -3352,6 +3346,19 @@ const BookingPage = () => {
       (monthDiff === 0 && today.getDate() < birthDate.getDate())
     ) {
       age--;
+    }
+
+    // Kiểm tra tuổi phải từ 0-100
+    if (age < 0 || age > 100) {
+      return Promise.reject(
+        new Error("Age must be between 0 and 100 years old!")
+      );
+    }
+
+    const relationship = form.getFieldValue(["firstPerson", "relationship"]);
+
+    if (relationship === "Child") {
+      return Promise.resolve();
     }
 
     if (age < 18) {
@@ -3397,6 +3404,13 @@ const BookingPage = () => {
       age--;
     }
 
+    // Kiểm tra tuổi phải từ 0-100
+    if (age < 0 || age > 100) {
+      return Promise.reject(
+        new Error("Age must be between 0 and 100 years old!")
+      );
+    }
+
     // Không yêu cầu tuổi tối thiểu cho Child và Grandchild
     // Sibling cũng không cần tuổi tối thiểu
     if (relationship !== "Child" && relationship !== "Grandchild" && relationship !== "Sibling" && age < 18) {
@@ -3433,6 +3447,47 @@ const BookingPage = () => {
         new Error("Phone number must be 10-11 digits (can start with +84)!")
       );
     }
+    return Promise.resolve();
+  };
+
+  const validateFullName = (_, value) => {
+    if (!value) {
+      return Promise.reject(new Error("Please enter your full name!"));
+    }
+
+    // Loại bỏ khoảng trắng thừa ở đầu và cuối
+    const trimmedValue = value.trim();
+
+    if (trimmedValue.length < 2) {
+      return Promise.reject(
+        new Error("Full name must be at least 2 characters!")
+      );
+    }
+
+    // Regex chỉ cho phép chữ cái (cả tiếng Việt), khoảng trắng
+    // Bao gồm: a-z, A-Z, và các ký tự tiếng Việt có dấu
+    const nameRegex = /^[a-zA-ZÀ-ỹ\s]+$/;
+    
+    if (!nameRegex.test(trimmedValue)) {
+      return Promise.reject(
+        new Error("Full name can only contain letters and spaces, no special characters!")
+      );
+    }
+
+    // Kiểm tra không có nhiều khoảng trắng liên tiếp
+    if (/\s{2,}/.test(trimmedValue)) {
+      return Promise.reject(
+        new Error("Full name cannot contain multiple consecutive spaces!")
+      );
+    }
+
+    // Kiểm tra không bắt đầu hoặc kết thúc bằng khoảng trắng (sau khi trim)
+    if (trimmedValue !== value) {
+      return Promise.reject(
+        new Error("Full name cannot start or end with spaces!")
+      );
+    }
+
     return Promise.resolve();
   };
 
@@ -3544,6 +3599,26 @@ const BookingPage = () => {
 
   const disabledDate = (current) => {
     return current && current < moment().startOf("day");
+  };
+
+  const disabledBirthDate = (current) => {
+    if (!current) return false;
+    
+    const today = moment();
+    const currentDate = moment(current);
+    
+    // Ngăn chọn ngày trong tương lai
+    if (currentDate.isAfter(today)) {
+      return true;
+    }
+    
+    // Ngăn chọn ngày sinh tạo ra tuổi > 100
+    const maxAge100Date = today.clone().subtract(100, 'years').startOf('day');
+    if (currentDate.isBefore(maxAge100Date)) {
+      return true;
+    }
+    
+    return false;
   };
 
   useEffect(() => {
@@ -5420,15 +5495,7 @@ const BookingPage = () => {
                       name={["firstPerson", "fullName"]}
                       label="Full name"
                       rules={[
-                        {
-                          required: true,
-                          message: "Please enter your full name!",
-                        },
-                        {
-                          min: 2,
-                          message:
-                            "First and last name must be at least 2 characters!",
-                        },
+                        { validator: validateFullName }
                       ]}
                     >
                       <Input
@@ -5448,9 +5515,7 @@ const BookingPage = () => {
                         style={{ width: "100%" }}
                         placeholder="Enter date of birth"
                         format="DD/MM/YYYY"
-                        disabledDate={(current) =>
-                          current && current > moment().endOf("day")
-                        }
+                        disabledDate={disabledBirthDate}
                         onChange={(date) => {
                           updateFirstPersonPersonalIdVisibility(date);
                         }}
@@ -5729,15 +5794,7 @@ const BookingPage = () => {
                       name={["secondPerson", "fullName"]}
                       label="Full name"
                       rules={[
-                        {
-                          required: true,
-                          message: "Please enter your full name!",
-                        },
-                        {
-                          min: 2,
-                          message:
-                            "First and last name must be at least 2 characters!",
-                        },
+                        { validator: validateFullName }
                       ]}
                     >
                       <Input
@@ -5758,9 +5815,7 @@ const BookingPage = () => {
                         style={{ width: "100%" }}
                         placeholder="Select date of birth"
                         format="DD/MM/YYYY"
-                        disabledDate={(current) =>
-                          current && current > moment().endOf("day")
-                        }
+                        disabledDate={disabledBirthDate}
                         onChange={handleSecondPersonDOBChange}
                       />
                     </Form.Item>
