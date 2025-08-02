@@ -1,9 +1,8 @@
 import React, { useEffect, useState } from "react";
-import { nonLegalServicesData } from "../../pages/home-page/services/non-legalDNA/data-non-legal/nonLegalData";
-import { legalServicesData } from "../../pages/home-page/services/legalDNA/data-legal/legalData";
+import { nonLegalServicesData } from "../../pages/home-page/all-services/non-legalDNA/data-non-legal/nonLegalData";
+import { legalServicesData } from "../../pages/home-page/all-services/legalDNA/data-legal/legalData";
 import { guideSteps } from "../../pages/home-page/guide/guideSteps";
 import { Link } from "react-router-dom";
-
 import api from "../../configs/axios";
 import FeedbackList from "../FeedbackList/FeedbackList";
 
@@ -16,8 +15,6 @@ const HomeContent = () => {
       .then(res => setFeedbacks(res.data))
       .catch(() => setFeedbacks([]));
   }, []);
-
-
 
   // Hàm toggle FAQ
   const toggleFAQ = (index) => {

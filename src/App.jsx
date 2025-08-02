@@ -8,10 +8,10 @@ import ManagerDashboard from "./components/dashboard-manager"; // New import
 import { PersistGate } from "redux-persist/integration/react";
 import { Provider } from "react-redux";
 import { persistor, store } from "./app/store";
-import NonLegalServices from "./pages/home-page/services/non-legalDNA/NonLegalDNA";
+import NonLegalServices from "./pages/home-page/all-services/non-legalDNA/NonLegalDNA";
 import OverviewPage from "./pages/dashboard-admin/overview";
-import ServicesOverview from "./pages/home-page/services";
-import LegalServices from "./pages/home-page/services/legalDNA/LegalDNA";
+import ServicesOverview from "./pages/home-page/all-services";
+import LegalServices from "./pages/home-page/all-services/legalDNA/LegalDNA";
 import HomeContent from "./components/home-content/HomeContent";
 import Guide from "./pages/home-page/guide";
 import Blog from "./pages/home-page/blog";

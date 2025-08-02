@@ -6,7 +6,6 @@ import LogOut from "../authen-form/LogOut";
 import { User } from "lucide-react";
 
 const Header = () => {
-  const [isOpen, setIsOpen] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
   const [showServicesDropdown, setShowServicesDropdown] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
@@ -16,23 +15,20 @@ const Header = () => {
   // CHUẨN HÓA LẤY USER
   const { currentUser: user, isAuthenticated } = useSelector((state) => state.user || {});
 
-  // Tên hiển thị ưu tiên: fullName > name > firstName lastName > Guest
+  // Tên hiển thị ưu tiên: fullName > Guest
   const userDisplayName = useMemo(() => {
     if (!user) return "Guest";
     if (user.fullName && user.fullName.trim()) return user.fullName;
-    if (user.name && user.name.trim()) return user.name;
-    const firstName = user.firstName || "";
-    const lastName = user.lastName || "";
-    const full = `${firstName} ${lastName}`.trim();
-    return full || "Guest";
+    return "Guest";
   }, [user]);
 
   // Avatar ưu tiên: file /media > avatar url > mặc định
-  const userAvatar = useMemo(() => {
-    if (!user) return "";
-    if (user.avatar?.startsWith("/media")) return `/api${user.avatar}`;
-    return user.avatar || "";
-  }, [user]);
+const userAvatar = useMemo(() => {
+  if (!user) return ""; // Nếu chưa có user thì trả về chuỗi rỗng (không có avatar)
+  if (user.avatar?.startsWith("/media")) return `/api${user.avatar}`; 
+  // Nếu user.avatar bắt đầu bằng "/media" thì trả về đường dẫn dạng "/api/media/..."
+  return user.avatar || ""; // Nếu có avatar thì trả về, nếu không thì trả về chuỗi rỗng
+}, [user]);
 
   const navItems = [
     { id: 1, label: "Home", href: "/" },
@@ -51,8 +47,6 @@ const Header = () => {
     { id: 5, label: "Blog", href: "/blog" },
     { id: 6, label: "Contact", href: "/contact" },
   ];
-
-  const toggleMenu = () => setIsOpen(!isOpen);
 
   let hoverTimeout;
 
@@ -111,25 +105,14 @@ const Header = () => {
     };
   };
 
-  const getMobileLinkStyles = (href) => {
-    const isActive = isActivePage(href);
-    return {
-      backgroundColor: isActive ? "#023670" : "transparent",
-      color: isActive ? "#ffffff" : "",
-      textDecoration: "none",
-    };
-  };
-
   // Callback khi logout thành công/lỗi/hủy
   const handleLogoutSuccess = () => {
     setShowLogoutConfirm(false);
     setShowDropdown(false);
-    setIsOpen(false);
   };
   const handleLogoutError = (error) => {
     setShowLogoutConfirm(false);
     setShowDropdown(false);
-    setIsOpen(false);
   };
   const handleLogoutCancel = () => {
     setShowLogoutConfirm(false);
@@ -142,7 +125,7 @@ const Header = () => {
     }, 100);
   };
 
-  // ✅ Updated avatar dropdown hover logic - giống services dropdown
+  // Updated avatar dropdown hover logic - giống services dropdown
   let avatarTimeout = null;
   const handleAvatarMouseEnter = () => {
     if (avatarTimeout) clearTimeout(avatarTimeout);
@@ -154,7 +137,7 @@ const Header = () => {
     }, 150);
   };
 
-  // ✅ Handle dropdown item clicks
+  // Handle dropdown item clicks
   const handleDropdownClick = () => {
     setShowDropdown(false);
     if (avatarTimeout) clearTimeout(avatarTimeout);
@@ -185,7 +168,7 @@ const Header = () => {
             </div>
 
             {/* Navigation */}
-            <nav className="w-1/3 hidden md:flex justify-center">
+            <nav className="w-1/3 flex justify-center">
               <div
                 className="flex items-center"
                 style={{ marginRight: "8px", gap: "35px" }}>
@@ -343,7 +326,7 @@ const Header = () => {
                       onMouseLeave={handleAvatarMouseLeave}
                     >
                       <div className="relative">
-                        {/* ✅ Arrow pointing up - positioned on the right side like services */}
+                        {/* Arrow pointing up - positioned on the right side like services */}
                         <div
                           className="absolute right-4 -top-2 w-0 h-0"
                           style={{
@@ -364,7 +347,7 @@ const Header = () => {
                           }}
                         />
                         
-                        {/* ✅ Dropdown content with same styling as services */}
+                        {/* Dropdown content with same styling as services */}
                         <div
                           className="rounded-md shadow-lg py-2 bg-white"
                           style={{
@@ -388,7 +371,7 @@ const Header = () => {
                             <div className="font-medium">Profile</div>
                           </Link>
                           
-                          {/* ✅ My Booking link */}
+                          {/* My Booking link */}
                           <Link
                             to="/my-booking"
                             className="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 transition-colors duration-200"
@@ -421,7 +404,7 @@ const Header = () => {
                   )}
                 </div>
               ) : (
-                <div className="hidden md:flex items-center space-x-3">
+                <div className="flex items-center space-x-3">
                   <Link
                     to="/login"
                     onClick={handleLinkClick}
@@ -454,140 +437,6 @@ const Header = () => {
                     onMouseLeave={(e) =>
                       (e.target.style.backgroundColor = "#023670")
                     }>
-                    Sign Up
-                  </Link>
-                </div>
-              )}
-
-              <button
-                onClick={toggleMenu}
-                className="md:hidden p-2 rounded-md focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white hover:bg-gray-200 transition-colors duration-200">
-                {isOpen ? <FiX size={24} /> : <FiMenu size={24} />}
-              </button>
-            </div>
-          </div>
-
-          {/* Mobile Menu */}
-          <div
-            className={`md:hidden transition-all duration-300 ${
-              isOpen ? "block" : "hidden"
-            }`}>
-            <div className="px-2 pt-2 pb-3 space-y-1 bg-gray-50 rounded-lg mt-2">
-              {navItems.map((item) => {
-                if (item.hasDropdown) {
-                  return (
-                    <div key={item.id}>
-                      <Link
-                        to={item.href}
-                        onClick={() => {
-                          setIsOpen(false);
-                          handleLinkClick();
-                        }}
-                        className="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:bg-gray-200 transition-colors duration-200 capitalize"
-                        style={{
-                          ...getMobileLinkStyles(item.href),
-                          textDecoration: "none",
-                        }}>
-                        {item.label}
-                      </Link>
-                      {item.dropdownItems.map((dropdownItem) => (
-                        <Link
-                          key={dropdownItem.id}
-                          to={dropdownItem.href}
-                          onClick={() => {
-                            setIsOpen(false);
-                            handleLinkClick();
-                          }}
-                          className="block w-full text-left pl-6 pr-3 py-2 text-sm text-gray-600 hover:bg-gray-200 transition-colors duration-200"
-                          style={{
-                            ...getMobileLinkStyles(dropdownItem.href),
-                            textDecoration: "none",
-                          }}>
-                          {dropdownItem.label}
-                        </Link>
-                      ))}
-                    </div>
-                  );
-                }
-                return (
-                  <Link
-                    key={item.id}
-                    to={item.href}
-                    onClick={() => {
-                      setIsOpen(false);
-                      handleLinkClick();
-                    }}
-                    className="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:bg-gray-200 transition-colors duration-200 capitalize"
-                    style={{
-                      ...getMobileLinkStyles(item.href),
-                      textDecoration: "none",
-                    }}>
-                    {item.label}
-                  </Link>
-                );
-              })}
-
-              {user && isAuthenticated ? (
-                <div className="pt-2 border-t border-gray-200">
-                  <div className="px-3 py-2 text-xs text-gray-500">
-                    <div className="font-medium text-gray-700">
-                      Hello, {userDisplayName}!
-                    </div>
-                  </div>
-                  <Link
-                    to="/profile"
-                    onClick={() => {
-                      setIsOpen(false);
-                      handleLinkClick();
-                    }}
-                    className="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:bg-gray-200 transition-colors duration-200"
-                    style={{ textDecoration: "none" }}>
-                    Profile
-                  </Link>
-                  {/* ✅ My Booking in mobile menu */}
-                  <Link
-                    to="/my-booking"
-                    onClick={() => {
-                      setIsOpen(false);
-                      handleLinkClick();
-                    }}
-                    className="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:bg-gray-200 transition-colors duration-200"
-                    style={{ textDecoration: "none" }}>
-                    My Booking
-                  </Link>
-                  <button
-                    onClick={() => setShowLogoutConfirm(true)}
-                    className="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-red-600 hover:bg-gray-200 transition-colors duration-200"
-                  >
-                    Logout
-                  </button>
-                </div>
-              ) : (
-                <div className="space-y-2 pt-2 border-t border-gray-200">
-                  <Link
-                    to="/login"
-                    onClick={() => {
-                      setIsOpen(false);
-                      handleLinkClick();
-                    }}
-                    className="w-full px-3 py-2 text-base font-medium text-white rounded-md transition-colors duration-200 block text-center"
-                    style={{
-                      backgroundColor: "#023670",
-                      textDecoration: "none",
-                    }}>
-                    Sign In
-                  </Link>
-                  <Link
-                    to="/register"
-                    onClick={() => {
-                      setIsOpen(false);
-                      handleLinkClick();
-                    }}
-                    className="w-full px-3 py-2 text-base font-medium text-white rounded-md transition-colors duration-200 block text-center"
-                    style={{
-                      backgroundColor: "#023670",
-                      textDecoration: "none",
-                    }}>
                     Sign Up
                   </Link>
                 </div>

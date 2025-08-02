@@ -3,30 +3,8 @@ import { useSelector, useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { DatePicker } from "antd";
 import moment from "moment";
-import {
-  selectUserRole,
-  selectCustomerID,
-  selectStaffID,
-  selectManagerID,
-  selectAdminID,
-} from "../../redux/features/userSlice";
-import {
-  User,
-  Mail,
-  Phone,
-  MapPin,
-  Calendar,
-  Edit3,
-  Save,
-  X,
-  Camera,
-  Shield,
-  CheckCircle,
-  AlertCircle,
-  ArrowLeft,
-  ChevronLeft,
-  ChevronRight,
-} from "lucide-react";
+import { selectUserRole, selectCustomerID, selectStaffID, selectManagerID, selectAdminID } from "../../redux/features/userSlice";
+import { User, Mail, Phone, MapPin, Calendar, Edit3, Save, X, Camera, Shield, CheckCircle, AlertCircle, ArrowLeft } from "lucide-react";
 import api from "../../configs/axios";
 import { updateUser } from "../../redux/features/userSlice";
 import toast from "react-hot-toast";
@@ -99,10 +77,10 @@ const ProfilePage = () => {
     hundredYearsAgo.setFullYear(today.getFullYear() - 100);
     const eighteenYearsAgo = new Date();
     eighteenYearsAgo.setFullYear(today.getFullYear() - 18);
-    
+
     today.setHours(23, 59, 59, 999);
     selectedDate.setHours(0, 0, 0, 0);
-    
+
     if (selectedDate > today) {
       return {
         isValid: false,
@@ -124,62 +102,23 @@ const ProfilePage = () => {
     return { isValid: true, message: "" };
   };
 
-  const fixVietnameseEncoding = (text) => {
-    if (!text || typeof text !== "string") return text;
-    try {
-      if (text.includes("%")) {
-        const decoded = decodeURIComponent(text);
-        if (decoded !== text) {
-          return decoded;
-        }
-      }
-      const replacements = {
-        "Nguy?n": "Nguyễn",
-        "Tr?n": "Trần",
-        "L?": "Lê",
-        "Ph?m": "Phạm",
-        "Hu?nh": "Huỳnh",
-        Võ: "Võ",
-        Ngô: "Ngô",
-        "Đ?ng": "Đặng",
-        Bùi: "Bùi",
-        "Đ?": "Đỗ",
-        "H?": "Hồ",
-        "Ng?": "Ngô",
-        Dương: "Dương",
-        "?": "ế", // Common ? replacement
-        á: "á",
-        à: "à",
-        ả: "ả",
-        ã: "ã",
-        ạ: "ạ",
-      };
-      let fixed = text;
-      Object.entries(replacements).forEach(([wrong, correct]) => {
-        if (fixed.includes(wrong)) {
-          fixed = fixed.replace(new RegExp(wrong, "g"), correct);
-        }
-      });
-      return fixed;
-    } catch (error) {
-      console.error("❌ Error fixing Vietnamese encoding:", error);
-      return text;
-    }
-  };
-
   const normalizeVietnamese = (text, shouldTrim = false) => {
     if (!text) return text;
-    let fixed = fixVietnameseEncoding(text);
-    fixed = fixed.normalize("NFD").normalize("NFC");
+    let normalized = text.normalize("NFD").normalize("NFC");
     if (shouldTrim) {
-      fixed = fixed.trim();
+      normalized = normalized.trim();
     }
-    return fixed;
+    return normalized;
   };
 
   const convertDatabaseGenderToUI = (dbGender) => {
-    console.log("🔍 convertDatabaseGenderToUI input:", dbGender, "type:", typeof dbGender);
-    
+    console.log(
+      "🔍 convertDatabaseGenderToUI input:",
+      dbGender,
+      "type:",
+      typeof dbGender
+    );
+
     // Chỉ xử lý cho tài khoản: 0 = Male, 1 = Female
     if (dbGender === 0 || dbGender === "0") {
       return "1"; // Male
@@ -192,8 +131,13 @@ const ProfilePage = () => {
   };
 
   const convertUIGenderToDatabase = (uiGender) => {
-    console.log("🔍 convertUIGenderToDatabase input:", uiGender, "type:", typeof uiGender);
-    
+    console.log(
+      "🔍 convertUIGenderToDatabase input:",
+      uiGender,
+      "type:",
+      typeof uiGender
+    );
+
     if (uiGender === "1" || uiGender === 1) {
       return 0; // Male
     }
@@ -204,8 +148,13 @@ const ProfilePage = () => {
   };
 
   const getGenderDisplayText = (dbGender) => {
-    console.log("🔍 getGenderDisplayText input:", dbGender, "type:", typeof dbGender);
-    
+    console.log(
+      "🔍 getGenderDisplayText input:",
+      dbGender,
+      "type:",
+      typeof dbGender
+    );
+
     // Chỉ xử lý cho tài khoản: 0 = Male, 1 = Female
     if (dbGender === 0 || dbGender === "0") return "Male";
     if (dbGender === 1 || dbGender === "1") return "Female";
@@ -284,24 +233,24 @@ const ProfilePage = () => {
   };
 
   const formatDateOfBirth = (dateValue) => {
-  if (!dateValue) return "Not provided";
-  let date;
-  if (Array.isArray(dateValue) && dateValue.length >= 3) {
-    const [year, month, day] = dateValue;
-    date = new Date(year, month - 1, day);
-  } else if (typeof dateValue === "string") {
-    date = new Date(dateValue);
-  } else if (dateValue instanceof Date) {
-    date = dateValue;
-  } else {
-    return "Not provided";
-  }
-  if (isNaN(date.getTime())) return "Not provided";
-  const dd = String(date.getDate()).padStart(2, '0');
-  const mm = String(date.getMonth() + 1).padStart(2, '0');
-  const yyyy = date.getFullYear();
-  return `${dd}/${mm}/${yyyy}`;
-};
+    if (!dateValue) return "Not provided";
+    let date;
+    if (Array.isArray(dateValue) && dateValue.length >= 3) {
+      const [year, month, day] = dateValue;
+      date = new Date(year, month - 1, day);
+    } else if (typeof dateValue === "string") {
+      date = new Date(dateValue);
+    } else if (dateValue instanceof Date) {
+      date = dateValue;
+    } else {
+      return "Not provided";
+    }
+    if (isNaN(date.getTime())) return "Not provided";
+    const dd = String(date.getDate()).padStart(2, "0");
+    const mm = String(date.getMonth() + 1).padStart(2, "0");
+    const yyyy = date.getFullYear();
+    return `${dd}/${mm}/${yyyy}`;
+  };
 
   useEffect(() => {
     const fetchUserProfile = async () => {
@@ -323,7 +272,10 @@ const ProfilePage = () => {
         });
         const profile = response.data.data || response.data[0] || response.data;
 
-        const fullName = getFieldValue(profile, "fullName", ["full_name", "fullname"]);
+        const fullName = getFieldValue(profile, "fullName", [
+          "full_name",
+          "fullname",
+        ]);
         const email = getFieldValue(profile, "email", ["Email"]);
         const phone = getFieldValue(profile, "phone", ["Phone"]);
         const address = getFieldValue(profile, "address", ["Address"]);
@@ -389,7 +341,7 @@ const ProfilePage = () => {
   }, []);
 
   const handleDateChange = (date) => {
-    const dateValue = date ? date.format('YYYY-MM-DD') : '';
+    const dateValue = date ? date.format("YYYY-MM-DD") : "";
     handleInputChange("dob", dateValue);
   };
 
@@ -426,7 +378,7 @@ const ProfilePage = () => {
         address: normalizeVietnamese(editForm.address, false) || null,
         dob: dobForDatabase,
         gender: genderForDatabase,
-        avatar: editForm.avatar || null
+        avatar: editForm.avatar || null,
       };
       const cleanFormData = Object.entries(formData).reduce(
         (acc, [key, value]) => {
@@ -434,9 +386,10 @@ const ProfilePage = () => {
             acc[key] = value;
           }
           return acc;
-        }, {}
+        },
+        {}
       );
-    
+
       await api.patch(updatePath, cleanFormData, {
         headers: {
           "Content-Type": "application/json; charset=utf-8",
@@ -497,7 +450,8 @@ const ProfilePage = () => {
           refreshedDobForInput = refreshedDob;
         }
       }
-      const refreshedGenderForUI = convertDatabaseGenderToUI(refreshedRawGender);
+      const refreshedGenderForUI =
+        convertDatabaseGenderToUI(refreshedRawGender);
       const updatedEditForm = {
         fullName: normalizeVietnamese(refreshedFullName, false) || "",
         dob: refreshedDobForInput,
@@ -505,7 +459,7 @@ const ProfilePage = () => {
         phone: normalizeVietnamese(refreshedPhone, true) || "",
         address: normalizeVietnamese(refreshedAddress, false) || "",
         gender: refreshedGenderForUI,
-        avatar: getFieldValue(refreshedProfile, "avatar", ["avatarPath"]) || ""
+        avatar: getFieldValue(refreshedProfile, "avatar", ["avatarPath"]) || "",
       };
       setEditForm(updatedEditForm);
       let newFullName = normalizeVietnamese(refreshedFullName, false) || "";
@@ -580,7 +534,8 @@ const ProfilePage = () => {
       const response = await api.post("/files/upload", formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
-      const uploadedPath = response?.data?.path || response?.data?.data || response?.data;
+      const uploadedPath =
+        response?.data?.path || response?.data?.data || response?.data;
       if (!uploadedPath) {
         throw new Error("Upload succeeded but no path returned.");
       }
@@ -588,7 +543,9 @@ const ProfilePage = () => {
       setPreviewUrl(preview);
       setEditForm((prev) => ({
         ...prev,
-        avatar: uploadedPath.startsWith("/media") ? uploadedPath : `/media/${uploadedPath}`,
+        avatar: uploadedPath.startsWith("/media")
+          ? uploadedPath
+          : `/media/${uploadedPath}`,
       }));
     } catch (error) {
       console.error("Upload failed:", error);
@@ -617,7 +574,10 @@ const ProfilePage = () => {
   };
 
   // Check if login method is google to hide Quick Actions
-  const loginMethod = userProfile?.account?.loginMethod || userProfile?.loginMethod || currentUser?.loginMethod;
+  const loginMethod =
+    userProfile?.account?.loginMethod ||
+    userProfile?.loginMethod ||
+    currentUser?.loginMethod;
   const shouldShowQuickActions = loginMethod !== "google";
 
   if (loading) {
@@ -650,7 +610,8 @@ const ProfilePage = () => {
   return (
     <div
       lang="vi"
-      className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
+      className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50"
+    >
       <style
         dangerouslySetInnerHTML={{
           __html: `
@@ -770,12 +731,14 @@ const ProfilePage = () => {
               className="p-8 relative"
               style={{
                 background: "linear-gradient(135deg, #023670 0%, #2563eb 100%)",
-              }}>
+              }}
+            >
               <div className="flex items-center space-x-4">
                 <button
                   onClick={goBack}
                   className="p-3 bg-white/20 text-white rounded-lg hover:bg-white/30 transition-colors vietnamese-button flex items-center justify-center"
-                  aria-label="Go back">
+                  aria-label="Go back"
+                >
                   <ArrowLeft className="h-5 w-5" />
                 </button>
 
@@ -794,8 +757,9 @@ const ProfilePage = () => {
                     )}
                     {isEditing && (
                       <>
-                        <button className="absolute -bottom-1 -right-1 bg-blue-600 text-white p-1.5 rounded-full shadow-lg transition-transform duration-200 hover:scale-110 hover:bg-blue-700 border-2 border-white"
-                                onClick={() => fileInputRef.current.click()}
+                        <button
+                          className="absolute -bottom-1 -right-1 bg-blue-600 text-white p-1.5 rounded-full shadow-lg transition-transform duration-200 hover:scale-110 hover:bg-blue-700 border-2 border-white"
+                          onClick={() => fileInputRef.current.click()}
                         >
                           <Camera className="h-3 w-3" />
                         </button>
@@ -807,7 +771,7 @@ const ProfilePage = () => {
                           className="hidden"
                         />
                       </>
-                    )}                  
+                    )}
                   </div>
                   <div className="text-white flex-1">
                     <h1 className="text-2xl font-bold mb-1 vietnamese-text vietnamese-header">
@@ -828,7 +792,8 @@ const ProfilePage = () => {
                     isEditing
                       ? "bg-gray-200 text-gray-800 hover:bg-gray-300"
                       : "bg-white text-blue-700 hover:bg-gray-100 hover:shadow-xl transform hover:-translate-y-0.5"
-                  }`}>
+                  }`}
+                >
                   {isEditing ? (
                     <X className="h-5 w-5" />
                   ) : (
@@ -877,24 +842,34 @@ const ProfilePage = () => {
                         style={{ width: "100%" }}
                         placeholder="Enter date of birth"
                         format="DD/MM/YYYY"
-                        value={editForm.dob ? moment(editForm.dob, 'YYYY-MM-DD') : null}
+                        value={
+                          editForm.dob
+                            ? moment(editForm.dob, "YYYY-MM-DD")
+                            : null
+                        }
                         disabledDate={(current) => {
                           if (!current) return false;
                           const today = new Date();
                           const hundredYearsAgo = new Date();
-                          hundredYearsAgo.setFullYear(today.getFullYear() - 100);
+                          hundredYearsAgo.setFullYear(
+                            today.getFullYear() - 100
+                          );
                           const eighteenYearsAgo = new Date();
-                          eighteenYearsAgo.setFullYear(today.getFullYear() - 18);
-                          
+                          eighteenYearsAgo.setFullYear(
+                            today.getFullYear() - 18
+                          );
+
                           const currentDate = current.toDate();
-                          
-                          return currentDate > today || currentDate < hundredYearsAgo || currentDate > eighteenYearsAgo;
+
+                          return (
+                            currentDate > today ||
+                            currentDate < hundredYearsAgo ||
+                            currentDate > eighteenYearsAgo
+                          );
                         }}
                         onChange={handleDateChange}
                         className={`vietnamese-input ${
-                          !dobValidation.isValid
-                            ? "border-red-500"
-                            : ""
+                          !dobValidation.isValid ? "border-red-500" : ""
                         }`}
                       />
                       {!dobValidation.isValid && (
@@ -945,14 +920,15 @@ const ProfilePage = () => {
                         onChange={(e) =>
                           handleInputChange("gender", e.target.value)
                         }
-                        className="w-full px-4 py-2.5 border border-gray-300 rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white vietnamese-input">
+                        className="w-full px-4 py-2.5 border border-gray-300 rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white vietnamese-input"
+                      >
                         <option value="" className="vietnamese-text">
                           Select gender
                         </option>
-                        <option value={1} className="vietnamese-text">
+                        <option value="1" className="vietnamese-text">
                           Male
                         </option>
-                        <option value={2} className="vietnamese-text">
+                        <option value="2" className="vietnamese-text">
                           Female
                         </option>
                       </select>
@@ -995,21 +971,21 @@ const ProfilePage = () => {
                     </div>
 
                     <div>
-  <label className="block text-sm font-semibold text-gray-600 mb-2 vietnamese-text">
-    Date of Birth
-  </label>
-  <div className="px-4 py-2.5 bg-gray-50 rounded-lg text-gray-800 flex items-center space-x-3 border border-gray-200">
-    <Calendar className="h-5 w-5 text-blue-700 flex-shrink-0" />
-    <span className="truncate vietnamese-text">
-      {formatDateOfBirth(
-        getFieldValue(userProfile, "dob", [
-          "DOB",
-          "dateOfBirth",
-        ])
-      )}
-    </span>
-  </div>
-</div>
+                      <label className="block text-sm font-semibold text-gray-600 mb-2 vietnamese-text">
+                        Date of Birth
+                      </label>
+                      <div className="px-4 py-2.5 bg-gray-50 rounded-lg text-gray-800 flex items-center space-x-3 border border-gray-200">
+                        <Calendar className="h-5 w-5 text-blue-700 flex-shrink-0" />
+                        <span className="truncate vietnamese-text">
+                          {formatDateOfBirth(
+                            getFieldValue(userProfile, "dob", [
+                              "DOB",
+                              "dateOfBirth",
+                            ])
+                          )}
+                        </span>
+                      </div>
+                    </div>
 
                     <div>
                       <label className="block text-sm font-semibold text-gray-600 mb-2 vietnamese-text">
@@ -1072,7 +1048,8 @@ const ProfilePage = () => {
                   <button
                     onClick={handleCancelEdit}
                     disabled={saving}
-                    className="px-6 py-2.5 border border-gray-300 text-gray-700 rounded-lg font-semibold transition-all duration-200 hover:bg-gray-100 disabled:opacity-50 vietnamese-button">
+                    className="px-6 py-2.5 border border-gray-300 text-gray-700 rounded-lg font-semibold transition-all duration-200 hover:bg-gray-100 disabled:opacity-50 vietnamese-button"
+                  >
                     <span className="vietnamese-text">Cancel</span>
                   </button>
                   <button
@@ -1086,7 +1063,8 @@ const ProfilePage = () => {
                     style={{
                       background:
                         "linear-gradient(135deg, #023670 0%, #2563eb 100%)",
-                    }}>
+                    }}
+                  >
                     {saving ? (
                       <>
                         <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
@@ -1112,7 +1090,7 @@ const ProfilePage = () => {
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
                     <span className="text-gray-600 font-mono vietnamese-text">
-                      Member Since&nbsp; 
+                      Member Since&nbsp;
                     </span>
                     <span className="text-gray-800 font-semibold vietnamese-text">
                       {formatMemberSince(
@@ -1131,7 +1109,8 @@ const ProfilePage = () => {
                   <div className="space-y-2">
                     <button
                       onClick={handleChangePassword}
-                      className="w-full text-left px-4 py-3 rounded-lg transition-all duration-200 flex items-center space-x-3 text-gray-700 font-medium hover:bg-gray-100 hover:text-blue-800 vietnamese-button">
+                      className="w-full text-left px-4 py-3 rounded-lg transition-all duration-200 flex items-center space-x-3 text-gray-700 font-medium hover:bg-gray-100 hover:text-blue-800 vietnamese-button"
+                    >
                       <Shield className="h-5 w-5 text-blue-700" />
                       <span className="vietnamese-text">Change Password</span>
                     </button>

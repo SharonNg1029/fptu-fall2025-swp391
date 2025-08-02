@@ -45,11 +45,11 @@ import axios from "../../configs/axios";
 import {
   legalServicesData,
   legalCollectionMethodsData,
-} from "../home-page/services/legalDNA/data-legal/legalData";
+} from "../home-page/all-services/legalDNA/data-legal/legalData";
 import {
   nonLegalServicesData,
   nonLegalCollectionMethodsData,
-} from "../home-page/services/non-legalDNA/data-non-legal/nonLegalData";
+} from "../home-page/all-services/non-legalDNA/data-non-legal/nonLegalData";
 import {
   FaCalendarAlt,
   FaClock,
