@@ -9,7 +9,7 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'http://103.90.227.214:8080',
+        target: process.env.VITE_API_PROXY_TARGET || 'http://103.90.227.214:8080',
         changeOrigin: true,
         secure: false,
         configure: (proxy, _options) => {
@@ -25,7 +25,7 @@ export default defineConfig({
         },
       },
       '/actuator': {
-        target: 'http://103.90.227.214:8080',
+        target: process.env.VITE_API_PROXY_TARGET || 'http://103.90.227.214:8080',
         changeOrigin: true,
         secure: false
       }

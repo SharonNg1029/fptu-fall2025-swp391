@@ -10,8 +10,7 @@ import { useDispatch } from "react-redux";
 import { login } from "../../redux/features/userSlice";
 
 function LoginForm() {
-  const GOOGLE_CLIENT_ID =
-    "26142191146-7u8f63rgtupdv8v6kv8ug307j55hjfob.apps.googleusercontent.com";
+  const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
