@@ -147,7 +147,7 @@ Dự án này sử dụng RESTful API từ Genetix Backend (Spring Boot). Bạn 
 
    > **Quan trọng:** File `.env` chứa thông tin nhạy cảm và đã được thêm vào `.gitignore`. **KHÔNG commit file này lên Git!**
 
-5. **Chạy ứng dụng:**evelopment Mode):\*\*
+5. **Chạy ứng dụng (Development Mode)**
 
    ```bash
    npm run dev
